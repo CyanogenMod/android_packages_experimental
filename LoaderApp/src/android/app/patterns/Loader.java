@@ -45,7 +45,7 @@ public abstract class Loader<D> {
         /**
          * Called on the thread that created the Loader when the load is complete.
          *
-         * @param id the ID of the loader that completed the load
+         * @param loader the loader that completed the load
          * @param data the result of the load
          */
         public void onLoadComplete(Loader loader, D data);
@@ -93,9 +93,9 @@ public abstract class Loader<D> {
      * Must be called from the UI thread
      */
     public void registerListener(int id, OnLoadCompleteListener<D> listener) {
-//        if (mListener != null) {
- //           throw new IllegalStateException("There is already a listener registered");
-  //      }
+        if (mListener != null) {
+            throw new IllegalStateException("There is already a listener registered");
+        }
         mListener = listener;
         mId = id;
     }

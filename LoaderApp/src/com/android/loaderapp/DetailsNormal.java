@@ -43,7 +43,9 @@ public class DetailsNormal extends LoaderActivity<ContactData> {
 
     @Override
     public void onInitializeLoaders() {
-        startLoading(LOADER_DETAILS, null);
+        Bundle args = new Bundle();
+        args.putParcelable("uri", getIntent().getData());
+        startLoading(LOADER_DETAILS, args);
     }
 
     @Override

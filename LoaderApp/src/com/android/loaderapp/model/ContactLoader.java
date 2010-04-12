@@ -28,7 +28,6 @@ import java.util.HashMap;
  * Loads a single Contact and all it constituent RawContacts.
  */
 public class ContactLoader extends Loader<ContactLoader.ContactData> {
-    Context mContext;
     Uri mLookupUri;
     ContactData mContact;
     ForceLoadContentObserver mObserver;
@@ -59,7 +58,7 @@ public class ContactLoader extends Loader<ContactLoader.ContactData> {
 
         @Override
         protected ContactData doInBackground(Void... args) {
-            ContentResolver resolver = mContext.getContentResolver();
+            ContentResolver resolver = getContext().getContentResolver();
             ContactData result = new ContactData();
 
             // Undo the lookup URI
@@ -147,7 +146,7 @@ public class ContactLoader extends Loader<ContactLoader.ContactData> {
                 if (mObserver == null) {
                     mObserver = new ForceLoadContentObserver();
                 }
-                mContext.getContentResolver().registerContentObserver(mLookupUri, true, mObserver);
+                getContext().getContentResolver().registerContentObserver(mLookupUri, true, mObserver);
                 deliverResult(result);
             }
         }
@@ -176,7 +175,7 @@ public class ContactLoader extends Loader<ContactLoader.ContactData> {
     public void stopLoading() {
         mContact = null;
         if (mObserver != null) {
-            mContext.getContentResolver().unregisterContentObserver(mObserver);
+            getContext().getContentResolver().unregisterContentObserver(mObserver);
         }
     }
 

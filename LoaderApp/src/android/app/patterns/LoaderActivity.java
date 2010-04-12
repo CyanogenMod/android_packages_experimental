@@ -28,6 +28,8 @@ import java.util.HashMap;
  */
 public abstract class LoaderActivity<D> extends Activity implements
         Loader.OnLoadCompleteListener<D> {
+    private boolean mStarted = false;
+
     static final class LoaderInfo {
         public Bundle args;
         public Loader loader;
@@ -53,9 +55,13 @@ public abstract class LoaderActivity<D> extends Activity implements
         }
         mLoaders.put(id, info);
         loader = onCreateLoader(id, args);
-        loader.registerListener(id, this);
-        loader.startLoading();
         info.loader = loader;
+        if (mStarted) {
+            // The activity will start all existing loaders in it's onStart(), so only start them
+            // here if we're past that point of the activitiy's life cycle
+            loader.registerListener(id, this);
+            loader.startLoading();
+        }
     }
 
     protected abstract Loader onCreateLoader(int id, Bundle args);
@@ -90,11 +96,12 @@ public abstract class LoaderActivity<D> extends Activity implements
             if (loader == null) {
                loader = onCreateLoader(id, info.args);
                info.loader = loader;
-            } else {
-                loader.registerListener(id, this);
             }
+            loader.registerListener(id, this);
             loader.startLoading();
         }
+
+        mStarted = true;
     }
 
     @Override
@@ -112,10 +119,12 @@ public abstract class LoaderActivity<D> extends Activity implements
             loader.unregisterListener(this);
 
             // The loader isn't getting passed along to the next instance so ask it to stop loading
-//            if (!isChangingConfigurations()) {
-//                loader.stopLoading();
-//            }
+            if (!isChangingConfigurations()) {
+                loader.stopLoading();
+            }
         }
+
+        mStarted = false;
     }
 
     @Override
