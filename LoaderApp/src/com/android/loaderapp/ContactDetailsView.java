@@ -20,6 +20,7 @@ import com.android.internal.widget.ContactHeaderWidget;
 import com.android.loaderapp.model.Collapser;
 import com.android.loaderapp.model.ContactsSource;
 import com.android.loaderapp.model.Sources;
+import com.android.loaderapp.model.TypePrecedence;
 import com.android.loaderapp.model.Collapser.Collapsible;
 import com.android.loaderapp.model.ContactLoader.ContactData;
 import com.android.loaderapp.model.ContactsSource.DataKind;

@@ -58,8 +58,8 @@ public class DetailsNormal extends LoaderActivity<ContactData> {
     }
 
     @Override
-    public void onLoadComplete(int id, ContactData data) {
-        switch (id) {
+    public void onLoadComplete(Loader loader, ContactData data) {
+        switch (loader.getId()) {
             case LOADER_DETAILS:
                 mDetails.setData(data);
                 break;

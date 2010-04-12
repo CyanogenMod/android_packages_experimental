@@ -61,7 +61,7 @@ public abstract class LoaderActivity<D> extends Activity implements
     protected abstract Loader onCreateLoader(int id, Bundle args);
     protected abstract void onInitializeLoaders();
 
-    public abstract void onLoadComplete(int id, D data);
+    public abstract void onLoadComplete(Loader loader, D data);
 
     @Override
     public void onCreate(Bundle savedState) {

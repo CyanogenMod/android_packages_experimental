@@ -101,8 +101,8 @@ public class HomeLarge extends LoaderActivity implements OnItemClickListener, On
     }
 
     @Override
-    public void onLoadComplete(int id, Object data) {
-        switch (id) {
+    public void onLoadComplete(Loader loader, Object data) {
+        switch (loader.getId()) {
             case LOADER_LIST:
                 mList.setCursor((Cursor) data);
                 break;
