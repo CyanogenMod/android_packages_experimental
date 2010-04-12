@@ -42,25 +42,48 @@ public abstract class Loader<D> {
     }
 
     public interface OnLoadCompleteListener<D> {
-        public void onLoadComplete(int id, D data);
+        /**
+         * Called on the thread that created the Loader when the load is complete.
+         *
+         * @param id the ID of the loader that completed the load
+         * @param data the result of the load
+         */
+        public void onLoadComplete(Loader loader, D data);
     }
 
+    /**
+     * Sends the result of the load to the register listener.
+     *
+     * @param data the result of the load
+     */
     protected void deliverResult(D data) {
         if (mListener != null) {
-            mListener.onLoadComplete(mId, data);
-            
+            mListener.onLoadComplete(this, data);
         }
     }
 
+    /**
+     * Stores away the application context associated with context. Since Loaders can be used
+     * across multiple activities it's dangerous to store the context directly.
+     *
+     * @param context used to retrieve the application context.
+     */
     public Loader(Context context) {
         mContext = context.getApplicationContext();
     }
 
     /**
-     * @return an application context
+     * @return an application context retrived from the Context passed to the constructor.
      */
     public Context getContext() {
         return mContext;
+    }
+
+    /**
+     * @return the ID of this loader
+     */
+    public int getId() {
+        return mId;
     }
 
     /**
@@ -108,11 +131,15 @@ public abstract class Loader<D> {
     public abstract void forceLoad();
 
     /**
-     * Stops delivery of updates.
+     * Stops delivery of updates until the next time {@link #startLoading()} is called
+     *
+     * Must be called from the UI thread
      */
     public abstract void stopLoading();
-    
+
     /**
+     * Destroys the loader and frees it's resources, making it unusable.
+     *
      * Must be called from the UI thread
      */
     public abstract void destroy();

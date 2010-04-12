@@ -23,7 +23,7 @@ import android.os.AsyncTask;
 public abstract class CursorLoader extends Loader<Cursor> {
     Cursor mCursor;
     ForceLoadContentObserver mObserver;
-    boolean mClosed;
+    boolean mStopped;
 
     final class LoadListTask extends AsyncTask<Void, Void, Cursor> {
         /* Runs on a worker thread */
@@ -41,8 +41,8 @@ public abstract class CursorLoader extends Loader<Cursor> {
         /* Runs on the UI thread */
         @Override
         protected void onPostExecute(Cursor cursor) {
-            if (mClosed) {
-                // An async query came in after the call to close()
+            if (mStopped) {
+                // An async query came in while the loader is stopped
                 cursor.close();
                 return;
             }
@@ -90,16 +90,17 @@ public abstract class CursorLoader extends Loader<Cursor> {
             mCursor.close();
             mCursor = null;
         }
+
+        // Make sure that any outstanding loads clean themselves up properly
+        mStopped = true;
     }
 
     @Override
     public void destroy() {
-        // Close up the cursor
+        // Ensure the loader is stopped
         stopLoading();
-        // Make sure that any outstanding loads clean themselves up properly
-        mClosed = true;
     }
-    
+
     /** Called from a worker thread to execute the desired query */
     protected abstract Cursor doQueryInBackground();
 }

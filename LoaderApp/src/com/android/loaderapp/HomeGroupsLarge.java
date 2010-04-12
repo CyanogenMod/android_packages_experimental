@@ -107,8 +107,8 @@ public class HomeGroupsLarge extends LoaderActivity<Cursor> implements OnItemCli
     }
 
     @Override
-    public void onLoadComplete(int id, Cursor data) {
-        switch (id) {
+    public void onLoadComplete(Loader loader, Cursor data) {
+        switch (loader.getId()) {
             case LOADER_LIST:
                 mContactsList.setCursor(data);
                 break;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.loaderapp;
+package com.android.loaderapp.model;
 
 import com.android.loaderapp.util.Constants;
 
