@@ -18,42 +18,52 @@ package android.app.patterns;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.os.AsyncTask;
+import android.net.Uri;
 
-public abstract class CursorLoader extends Loader<Cursor> {
+public class CursorLoader extends AsyncTaskLoader<Cursor> {
     Cursor mCursor;
     ForceLoadContentObserver mObserver;
     boolean mStopped;
+    Uri mUri;
+    String[] mProjection;
+    String mSelection;
+    String[] mSelectionArgs;
+    String mSortOrder;
 
-    final class LoadListTask extends AsyncTask<Void, Void, Cursor> {
-        /* Runs on a worker thread */
-        @Override
-        protected Cursor doInBackground(Void... params) {
-            Cursor cursor = doQueryInBackground();
-            // Ensure the data is loaded
-            if (cursor != null) {
-                cursor.getCount();
-                cursor.registerContentObserver(mObserver);
-            }
-            return cursor;
+    /* Runs on a worker thread */
+    @Override
+    protected Cursor loadInBackground() {
+        Cursor cursor = getContext().getContentResolver().query(mUri, mProjection, mSelection,
+                mSelectionArgs, mSortOrder);
+        // Ensure the cursor window is filled
+        if (cursor != null) {
+            cursor.getCount();
+            cursor.registerContentObserver(mObserver);
         }
-
-        /* Runs on the UI thread */
-        @Override
-        protected void onPostExecute(Cursor cursor) {
-            if (mStopped) {
-                // An async query came in while the loader is stopped
-                cursor.close();
-                return;
-            }
-            mCursor = cursor;
-            deliverResult(cursor);
-        }
+        return cursor;
     }
 
-    public CursorLoader(Context context) {
+    /* Runs on the UI thread */
+    @Override
+    protected void onLoadComplete(Cursor cursor) {
+        if (mStopped) {
+            // An async query came in while the loader is stopped
+            cursor.close();
+            return;
+        }
+        mCursor = cursor;
+        deliverResult(cursor);
+    }
+
+    public CursorLoader(Context context, Uri uri, String[] projection, String selection,
+            String[] selectionArgs, String sortOrder) {
         super(context);
-        mObserver = new ForceLoadContentObserver(); 
+        mObserver = new ForceLoadContentObserver();
+        mUri = uri;
+        mProjection = projection;
+        mSelection = selection;
+        mSelectionArgs = selectionArgs;
+        mSortOrder = sortOrder;
     }
 
     /**
@@ -102,7 +112,4 @@ public abstract class CursorLoader extends Loader<Cursor> {
         // Ensure the loader is stopped
         stopLoading();
     }
-
-    /** Called from a worker thread to execute the desired query */
-    protected abstract Cursor doQueryInBackground();
 }

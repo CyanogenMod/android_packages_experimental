@@ -18,7 +18,7 @@ package com.android.loaderapp;
 
 import com.android.loaderapp.ContactsListView.SimpleViewFactory;
 import com.android.loaderapp.model.ContactLoader;
-import com.android.loaderapp.model.VisibleContactsLoader;
+import com.android.loaderapp.model.ContactsListLoader;
 import com.android.loaderapp.model.ContactLoader.ContactData;
 import com.android.ui.phat.PhatTitleBar;
 import com.android.ui.phat.PhatTitleBar.OnActionListener;
@@ -44,7 +44,7 @@ public class HomeLarge extends LoaderActivity implements OnItemClickListener, On
 
     ContactsListView mList;
     ContactDetailsView mDetails;
-    VisibleContactsLoader mListLoader;
+    ContactsListLoader mListLoader;
     ContactLoader mDetailsLoader;
 
     @Override
@@ -89,8 +89,9 @@ public class HomeLarge extends LoaderActivity implements OnItemClickListener, On
     @Override
     protected Loader onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case LOADER_LIST:
-                return new VisibleContactsLoader(this);
+            case LOADER_LIST: {
+                return ContactsListLoader.newVisibleContactsLoader(this);
+            }
 
             case LOADER_DETAILS: {
                 Uri uri = args.getParcelable("uri");

@@ -17,8 +17,7 @@
 package com.android.loaderapp;
 
 import com.android.loaderapp.ContactsListView.SimpleViewFactory;
-import com.android.loaderapp.model.StrequentLoader;
-import com.android.loaderapp.model.VisibleContactsLoader;
+import com.android.loaderapp.model.ContactsListLoader;
 import com.android.ui.phat.PhatTitleBar;
 import com.android.ui.phat.PhatTitleBar.OnActionListener;
 
@@ -97,9 +96,9 @@ public class HomeGroupsLarge extends LoaderActivity<Cursor> implements OnItemCli
             case LOADER_LIST: {
                 boolean strequent = args.getBoolean("strequent");
                 if (strequent) {
-                    return new StrequentLoader(this);
+                    return ContactsListLoader.newStrequentContactsLoader(this);
                 } else {
-                    return new VisibleContactsLoader(this);
+                    return ContactsListLoader.newVisibleContactsLoader(this);
                 }
             }
         }
