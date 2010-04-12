@@ -65,6 +65,8 @@ public abstract class CursorLoader extends Loader<Cursor> {
      */
     @Override
     public void startLoading() {
+        mStopped = false;
+
         if (mCursor != null) {
             deliverResult(mCursor);
         } else {
