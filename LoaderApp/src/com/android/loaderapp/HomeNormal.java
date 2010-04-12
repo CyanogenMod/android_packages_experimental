@@ -17,7 +17,7 @@
 package com.android.loaderapp;
 
 import com.android.loaderapp.ContactsListView.SimpleViewFactory;
-import com.android.loaderapp.model.VisibleContactsLoader;
+import com.android.loaderapp.model.ContactsListLoader;
 
 import android.app.patterns.CursorLoader;
 import android.app.patterns.Loader;
@@ -55,8 +55,9 @@ public class HomeNormal extends LoaderActivity<Cursor> implements OnItemClickLis
     @Override
     protected Loader onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case LOADER_LIST:
-                return new VisibleContactsLoader(this);
+            case LOADER_LIST: {
+                return ContactsListLoader.newVisibleContactsLoader(this);
+            }
         }
         return null;
     }

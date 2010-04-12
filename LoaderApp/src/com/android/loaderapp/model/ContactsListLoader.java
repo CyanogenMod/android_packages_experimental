@@ -18,13 +18,12 @@ package com.android.loaderapp.model;
 
 import android.app.patterns.CursorLoader;
 import android.content.Context;
-import android.database.Cursor;
 import android.provider.ContactsContract.Contacts;
 
 /**
- * Loader for all visible contacts.
+ * Helper for loading contact lists.
  */
-public class VisibleContactsLoader extends CursorLoader {
+public class ContactsListLoader {
     public static final class ListQuery {
         private ListQuery() {}
 
@@ -47,15 +46,13 @@ public class VisibleContactsLoader extends CursorLoader {
         public static final int COLUMN_LOOKUP_KEY = 8;
     }
 
-    public VisibleContactsLoader(Context context) {
-        super(context);
+    public static CursorLoader newVisibleContactsLoader(Context context) {
+        return new CursorLoader(context, Contacts.CONTENT_URI, ListQuery.COLUMNS, 
+                Contacts.IN_VISIBLE_GROUP + "=1", null, Contacts.SORT_KEY_PRIMARY);
     }
 
-    @Override
-    protected Cursor doQueryInBackground() {
-        Cursor cursor = getContext().getContentResolver().query(Contacts.CONTENT_URI,
-                ListQuery.COLUMNS, Contacts.IN_VISIBLE_GROUP + "=1", null,
-                Contacts.SORT_KEY_PRIMARY);
-        return cursor;
+    public static CursorLoader newStrequentContactsLoader(Context context) {
+        return new CursorLoader(context, Contacts.CONTENT_STREQUENT_URI, ListQuery.COLUMNS,
+                null, null, null);
     }
 }

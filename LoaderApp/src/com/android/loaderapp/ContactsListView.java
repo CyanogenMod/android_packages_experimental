@@ -16,7 +16,7 @@
 
 package com.android.loaderapp;
 
-import com.android.loaderapp.model.VisibleContactsLoader.ListQuery;
+import com.android.loaderapp.model.ContactsListLoader.ListQuery;
 
 import android.content.Context;
 import android.database.Cursor;
