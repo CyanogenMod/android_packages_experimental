@@ -16,7 +16,6 @@
 
 package com.android.loaderapp;
 
-import com.android.loaderapp.ContactsListView.SimpleViewFactory;
 import com.android.loaderapp.model.ContactLoader;
 import com.android.loaderapp.model.ContactsListLoader;
 import com.android.loaderapp.model.ContactLoader.ContactData;
@@ -31,19 +30,17 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
 
-public class HomeLarge extends LoaderActivity implements OnItemClickListener, OnActionListener {
+public class HomeLarge extends LoaderActivity implements ContactsListCoupler.Controller, OnActionListener {
     private static final int ACTION_ID_SEARCH = 0;
     private static final int ACTION_ID_ADD = 1;
 
     private static final int LOADER_LIST = 1;
     private static final int LOADER_DETAILS = 2;
 
-    ContactsListView mList;
-    ContactDetailsView mDetails;
+    ContactsListCoupler mListCoupler;
+    ContactCoupler mDetails;
     ContactsListLoader mListLoader;
     ContactLoader mDetailsLoader;
 
@@ -53,12 +50,13 @@ public class HomeLarge extends LoaderActivity implements OnItemClickListener, On
 
         setContentView(R.layout.large_home);
 
-        mList = (ContactsListView) findViewById(android.R.id.list);
-        mList.setViewFactory(new SimpleViewFactory(R.layout.large_list_item));
-        mList.setOnItemClickListener(this);
+        ListView list = (ListView) findViewById(android.R.id.list);
+        mListCoupler = new ContactsListCoupler(this, list);
+        mListCoupler.setViewFactory(new ListCoupler.ResourceViewFactory(R.layout.large_list_item));
+        mListCoupler.setController(this);
 
-        mDetails = (ContactDetailsView) findViewById(R.id.contact_details);
-        mDetails.setCallbacks(new ContactDetailsView.DefaultCallbacks(this));
+        mDetails = new ContactCoupler(this, findViewById(R.id.contact_details));
+        mDetails.setController(new ContactCoupler.DefaultController(this));
 
         final PhatTitleBar titleBar = (PhatTitleBar) findViewById(R.id.title_bar);
         final Resources resources = getResources();
@@ -105,7 +103,7 @@ public class HomeLarge extends LoaderActivity implements OnItemClickListener, On
     public void onLoadComplete(Loader loader, Object data) {
         switch (loader.getId()) {
             case LOADER_LIST:
-                mList.setCursor((Cursor) data);
+                mListCoupler.setCursor((Cursor) data);
                 break;
 
             case LOADER_DETAILS:
@@ -114,10 +112,10 @@ public class HomeLarge extends LoaderActivity implements OnItemClickListener, On
         }
     }
 
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    public void onContactSelected(Uri contactUri) {
         // The user clicked on an item in the left side pane, start loading the data for it
         Bundle args = new Bundle();
-        args.putParcelable("uri", mList.getContactUri(position));
+        args.putParcelable("uri", contactUri);
         startLoading(LOADER_DETAILS, args);
     }
 }
