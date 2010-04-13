@@ -73,7 +73,7 @@ public abstract class Loader<D> {
     }
 
     /**
-     * @return an application context retrived from the Context passed to the constructor.
+     * @return an application context retrieved from the Context passed to the constructor.
      */
     public Context getContext() {
         return mContext;

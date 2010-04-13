@@ -25,6 +25,7 @@ import android.net.Uri;
 import android.os.Bundle;
 
 public class DetailsNormal extends LoaderActivity<ContactData> {
+    static final String ARG_URI = "uri";
     static final int LOADER_DETAILS = 1;
 
     ContactCoupler mCoupler;
@@ -44,7 +45,7 @@ public class DetailsNormal extends LoaderActivity<ContactData> {
     @Override
     public void onInitializeLoaders() {
         Bundle args = new Bundle();
-        args.putParcelable("uri", getIntent().getData());
+        args.putParcelable(ARG_URI, getIntent().getData());
         startLoading(LOADER_DETAILS, args);
     }
 
@@ -52,7 +53,7 @@ public class DetailsNormal extends LoaderActivity<ContactData> {
     protected Loader onCreateLoader(int id, Bundle args) {
         switch (id) {
             case LOADER_DETAILS: {
-                Uri uri = args.getParcelable("uri");
+                Uri uri = args.getParcelable(ARG_URI);
                 return new ContactLoader(this, uri);
             }
         }
