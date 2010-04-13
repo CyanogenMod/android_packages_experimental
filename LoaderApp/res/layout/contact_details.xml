@@ -14,7 +14,7 @@
      limitations under the License.
 -->
 
-<com.android.loaderapp.ContactDetailsView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/contact_details"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -48,6 +48,6 @@
             android:lineSpacingMultiplier="0.92"
         />
     </ScrollView>
-            
-</com.android.loaderapp.ContactDetailsView>
+
+</LinearLayout>
 

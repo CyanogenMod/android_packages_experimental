@@ -42,7 +42,7 @@
         android:layout_weight="1"
         android:orientation="horizontal"
     >
-        <com.android.loaderapp.ContactsListView android:id="@android:id/list"
+        <ListView android:id="@android:id/list"
             android:layout_width="0dip"
             android:layout_weight="1"
             android:layout_height="match_parent"

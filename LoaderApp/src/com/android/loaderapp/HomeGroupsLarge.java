@@ -16,7 +16,6 @@
 
 package com.android.loaderapp;
 
-import com.android.loaderapp.ContactsListView.SimpleViewFactory;
 import com.android.loaderapp.model.ContactsListLoader;
 import com.android.ui.phat.PhatTitleBar;
 import com.android.ui.phat.PhatTitleBar.OnActionListener;
@@ -37,14 +36,15 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class HomeGroupsLarge extends LoaderActivity<Cursor> implements OnItemClickListener, OnActionListener {
+public class HomeGroupsLarge extends LoaderActivity<Cursor> implements OnItemClickListener,
+        OnActionListener, ContactsListCoupler.Controller {
     private static final int ACTION_ID_SEARCH = 0;
     private static final int ACTION_ID_ADD = 1;
 
     private static final int LOADER_LIST = 1;
 
     ListView mGroups;
-    ContactsListView mContactsList;
+    ContactsListCoupler mContactsList;
     CursorLoader mLoader;
 
     @Override
@@ -61,9 +61,9 @@ public class HomeGroupsLarge extends LoaderActivity<Cursor> implements OnItemCli
                 groupsList, new String[] { "name" }, new int[] { android.R.id.text1 }));
         mGroups.setOnItemClickListener(this);
 
-        mContactsList = (ContactsListView) findViewById(android.R.id.list);
-        mContactsList.setViewFactory(new SimpleViewFactory(R.layout.normal_list_item));
-        mContactsList.setOnItemClickListener(this);
+        mContactsList = new ContactsListCoupler(this, (ListView) findViewById(android.R.id.list));
+        mContactsList.setViewFactory(new ListCoupler.ResourceViewFactory(R.layout.normal_list_item));
+        mContactsList.setController(this);
 
         final PhatTitleBar titleBar = (PhatTitleBar) findViewById(R.id.title_bar);
         final Resources resources = getResources();
@@ -115,22 +115,20 @@ public class HomeGroupsLarge extends LoaderActivity<Cursor> implements OnItemCli
     }
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (parent == mGroups) {
-            Bundle args = new Bundle();
-            if (position == 0) {
-                args.putBoolean("strequent", false);
-            } else if (position == 1) {
-                args.putBoolean("strequent", true);
-            }
-            startLoading(LOADER_LIST, args);
-        } else {
-            // The user clicked on an item in the the list, start an activity to view it
-            Uri contactUri = mContactsList.getContactUri(position);
-            if (contactUri != null) {
-                Intent intent = new Intent(this, DetailsNormal.class);
-                intent.setData(contactUri);
-                startActivity(intent);
-            }
+        Bundle args = new Bundle();
+        if (position == 0) {
+            args.putBoolean("strequent", false);
+        } else if (position == 1) {
+            args.putBoolean("strequent", true);
+        }
+        startLoading(LOADER_LIST, args);
+    }
+
+    public void onContactSelected(Uri contactUri) {
+        if (contactUri != null) {
+            Intent intent = new Intent(this, DetailsNormal.class);
+            intent.setData(contactUri);
+            startActivity(intent);
         }
     }
 }

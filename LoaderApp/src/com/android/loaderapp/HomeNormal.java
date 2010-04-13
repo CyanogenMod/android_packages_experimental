@@ -16,7 +16,6 @@
 
 package com.android.loaderapp;
 
-import com.android.loaderapp.ContactsListView.SimpleViewFactory;
 import com.android.loaderapp.model.ContactsListLoader;
 
 import android.app.patterns.CursorLoader;
@@ -26,14 +25,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
 
-public class HomeNormal extends LoaderActivity<Cursor> implements OnItemClickListener {
+public class HomeNormal extends LoaderActivity<Cursor> implements ContactsListCoupler.Controller {
     static final int LOADER_LIST = 1;
 
-    ContactsListView mList;
+    ContactsListCoupler mCoupler;
     CursorLoader mLoader;
 
     @Override
@@ -42,9 +39,9 @@ public class HomeNormal extends LoaderActivity<Cursor> implements OnItemClickLis
 
         setContentView(R.layout.normal_home);
 
-        mList = (ContactsListView) findViewById(android.R.id.list);
-        mList.setViewFactory(new SimpleViewFactory(R.layout.normal_list_item));
-        mList.setOnItemClickListener(this);
+        mCoupler = new ContactsListCoupler(this, (ListView) findViewById(android.R.id.list));
+        mCoupler.setViewFactory(new ListCoupler.ResourceViewFactory(R.layout.normal_list_item));
+        mCoupler.setController(this);
     }
 
     @Override
@@ -66,14 +63,13 @@ public class HomeNormal extends LoaderActivity<Cursor> implements OnItemClickLis
     public void onLoadComplete(Loader loader, Cursor data) {
         switch (loader.getId()) {
             case LOADER_LIST:
-                mList.setCursor(data);
+                mCoupler.setCursor(data);
                 break;
         }
     }
 
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    public void onContactSelected(Uri contactUri) {
         // The user clicked on an item in the the list, start an activity to view it
-        Uri contactUri = mList.getContactUri(position);
         if (contactUri != null) {
             Intent intent = new Intent(this, DetailsNormal.class);
             intent.setData(contactUri);

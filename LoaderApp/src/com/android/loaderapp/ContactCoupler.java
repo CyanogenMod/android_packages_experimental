@@ -59,7 +59,6 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredPostal;
 import android.provider.ContactsContract.CommonDataKinds.Website;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -67,7 +66,6 @@ import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -75,16 +73,39 @@ import android.widget.AdapterView.OnItemClickListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ContactDetailsView extends LinearLayout
-        implements OnItemClickListener, OnClickListener {
-    private static final String TAG = "ContactDetailsView";
+public class ContactCoupler implements OnClickListener, OnItemClickListener {
+    Context mContext;
+    private static final String TAG = "ContactCoupler";
 
-    public ContactDetailsView(Context context) {
-        super(context);
-    }
+    public ContactCoupler(Context context, View view) {
+        mContext = context;
 
-    public ContactDetailsView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        mContactHeaderWidget = (ContactHeaderWidget) view.findViewById(R.id.contact_header_widget);
+        mContactHeaderWidget.showStar(true);
+        mContactHeaderWidget.setExcludeMimes(new String[] { Contacts.CONTENT_ITEM_TYPE });
+
+        mListView = (ListView) view.findViewById(android.R.id.list);
+        mListView.setScrollBarStyle(ListView.SCROLLBARS_OUTSIDE_OVERLAY);
+        mListView.setOnItemClickListener(this);
+        // Don't set it to mListView yet.  We do so later when we bind the adapter.
+        mEmptyView = view.findViewById(android.R.id.empty);
+
+        // Build the list of sections. The order they're added to mSections dictates the
+        // order they are displayed in the list.
+        mSections.add(mPhoneEntries);
+        mSections.add(mSmsEntries);
+        mSections.add(mEmailEntries);
+        mSections.add(mImEntries);
+        mSections.add(mPostalEntries);
+        mSections.add(mNicknameEntries);
+        mSections.add(mOrganizationEntries);
+        mSections.add(mGroupEntries);
+        mSections.add(mOtherEntries);
+
+        //TODO Read this value from a preference
+        mShowSmsLinksForAllPhones = true;
     }
 
     public void setData(ContactData data) {
@@ -98,19 +119,19 @@ public class ContactDetailsView extends LinearLayout
         bindData();
     }
 
-    public interface Callbacks {
-        public void onPrimaryClick(ViewEntry entry);
-        public void onSecondaryClick(ViewEntry entry);
+    public interface Controller {
+        public void onPrimaryAction(ViewEntry entry);
+        public void onSecondaryAction(ViewEntry entry);
     }
 
-    public static final class DefaultCallbacks implements Callbacks {
+    public static final class DefaultController implements Controller {
         private Context mContext;
 
-        public DefaultCallbacks(Context context) {
+        public DefaultController(Context context) {
             mContext = context;
         }
 
-        public void onPrimaryClick(ViewEntry entry) {
+        public void onPrimaryAction(ViewEntry entry) {
             Intent intent = entry.intent;
             if (intent != null) {
                 try {
@@ -121,7 +142,7 @@ public class ContactDetailsView extends LinearLayout
             }
         }
 
-        public void onSecondaryClick(ViewEntry entry) {
+        public void onSecondaryAction(ViewEntry entry) {
             Intent intent = entry.secondaryIntent;
             if (intent != null) {
                 try {
@@ -133,22 +154,22 @@ public class ContactDetailsView extends LinearLayout
         }
     }
 
-    public void setCallbacks(Callbacks callbacks) {
-        mCallbacks = callbacks;
+    public void setController(Controller controller) {
+        mController = controller;
     }
 
     public void onItemClick(AdapterView parent, View v, int position, long id) {
-        if (mCallbacks != null) {
+        if (mController != null) {
             ViewEntry entry = ViewAdapter.getEntry(mSections, position, SHOW_SEPARATORS);
             if (entry != null) {
-                mCallbacks.onPrimaryClick(entry);
+                mController.onPrimaryAction(entry);
             }
         }
     }
 
     public void onClick(View v) {
-        if (mCallbacks != null) {
-            mCallbacks.onSecondaryClick((ViewEntry) v.getTag());
+        if (mController != null) {
+            mController.onSecondaryAction((ViewEntry) v.getTag());
         }
     }
 
@@ -157,7 +178,7 @@ public class ContactDetailsView extends LinearLayout
     protected Uri mLookupUri;
     private ViewAdapter mAdapter;
     private int mNumPhoneNumbers = 0;
-    private Callbacks mCallbacks;
+    private Controller mController;
 
     /**
      * A list of distinct contact IDs included in the current contact.
@@ -205,39 +226,6 @@ public class ContactDetailsView extends LinearLayout
 
     private ListView mListView;
     private boolean mShowSmsLinksForAllPhones;
-
-    @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-
-        Context context = getContext();
-        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-        mContactHeaderWidget = (ContactHeaderWidget) findViewById(R.id.contact_header_widget);
-        mContactHeaderWidget.showStar(true);
-        mContactHeaderWidget.setExcludeMimes(new String[] { Contacts.CONTENT_ITEM_TYPE });
-
-        mListView = (ListView) findViewById(android.R.id.list);
-        mListView.setScrollBarStyle(ListView.SCROLLBARS_OUTSIDE_OVERLAY);
-        mListView.setOnItemClickListener(this);
-        // Don't set it to mListView yet.  We do so later when we bind the adapter.
-        mEmptyView = findViewById(android.R.id.empty);
-
-        // Build the list of sections. The order they're added to mSections dictates the
-        // order they are displayed in the list.
-        mSections.add(mPhoneEntries);
-        mSections.add(mSmsEntries);
-        mSections.add(mEmailEntries);
-        mSections.add(mImEntries);
-        mSections.add(mPostalEntries);
-        mSections.add(mNicknameEntries);
-        mSections.add(mOrganizationEntries);
-        mSections.add(mGroupEntries);
-        mSections.add(mOtherEntries);
-
-        //TODO Read this value from a preference
-        mShowSmsLinksForAllPhones = true;
-    }
 
     private void bindData() {
 
@@ -642,7 +630,7 @@ public class ContactDetailsView extends LinearLayout
                 views.presenceIcon = (ImageView) v.findViewById(R.id.presence_icon);
                 views.secondaryActionButton = (ImageView) v.findViewById(
                         R.id.secondary_action_button);
-                views.secondaryActionButton.setOnClickListener(ContactDetailsView.this);
+                views.secondaryActionButton.setOnClickListener(ContactCoupler.this);
                 views.secondaryActionDivider = v.findViewById(R.id.divider);
                 v.setTag(views);
             }

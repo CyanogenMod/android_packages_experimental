@@ -27,7 +27,7 @@ import android.os.Bundle;
 public class DetailsNormal extends LoaderActivity<ContactData> {
     static final int LOADER_DETAILS = 1;
 
-    ContactDetailsView mDetails;
+    ContactCoupler mCoupler;
     Uri mUri;
 
     @Override
@@ -35,8 +35,8 @@ public class DetailsNormal extends LoaderActivity<ContactData> {
         super.onCreate(savedState);
 
         setContentView(R.layout.contact_details);
-        mDetails = (ContactDetailsView) findViewById(R.id.contact_details);
-        mDetails.setCallbacks(new ContactDetailsView.DefaultCallbacks(this));
+        mCoupler = new ContactCoupler(this, findViewById(R.id.contact_details));
+        mCoupler.setController(new ContactCoupler.DefaultController(this));
 
         mUri = getIntent().getData();
     }
@@ -63,7 +63,7 @@ public class DetailsNormal extends LoaderActivity<ContactData> {
     public void onLoadComplete(Loader loader, ContactData data) {
         switch (loader.getId()) {
             case LOADER_DETAILS:
-                mDetails.setData(data);
+                mCoupler.setData(data);
                 break;
         }
     }
