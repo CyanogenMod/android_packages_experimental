@@ -77,6 +77,18 @@
             </intent-filter>
         </activity-alias>
 
+        <activity android:name="ViewContact"
+            android:label="@string/viewContactDesription"
+            android:theme="@style/TallTitleBarTheme"
+        >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.item/contact" android:host="com.android.contacts" />
+                <data android:mimeType="vnd.android.cursor.item/raw_contact" android:host="com.android.contacts" />
+            </intent-filter>
+        </activity>
+
         <activity android:name="HomeLarge"
             android:label="@string/app_name_large"
             android:theme="@style/TallTitleBarTheme"

@@ -21,6 +21,7 @@ import com.android.ui.phat.PhatTitleBar;
 import com.android.ui.phat.PhatTitleBar.OnActionListener;
 
 import android.app.patterns.CursorLoader;
+import android.app.patterns.ListCoupler;
 import android.app.patterns.Loader;
 import android.app.patterns.LoaderActivity;
 import android.content.Intent;
@@ -36,15 +37,23 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class HomeGroupsLarge extends LoaderActivity<Cursor> implements OnItemClickListener,
-        OnActionListener, ContactsListCoupler.Controller {
+public class HomeGroupsLarge extends LoaderActivity<Cursor> implements OnActionListener,
+        ContactsListCoupler.Controller, GroupsListCoupler.Controller {
     private static final int ACTION_ID_SEARCH = 0;
     private static final int ACTION_ID_ADD = 1;
 
+    private static final int LOADER_GROUPS = 0;
     private static final int LOADER_LIST = 1;
 
-    ListView mGroups;
-    ContactsListCoupler mContactsList;
+    private static final int LIST_MODE_ALL_CONTACTS = 1;
+    private static final int LIST_MODE_FAVORITES = 2;
+    private static final int LIST_MODE_GROUP = 3;
+
+    private static final String ARG_MODE = "mode";
+    private static final String ARG_GROUP = "group";
+
+    ContactsListCoupler mContactsCoupler;
+    GroupsListCoupler mGroupsCoupler;
     CursorLoader mLoader;
 
     @Override
@@ -53,75 +62,103 @@ public class HomeGroupsLarge extends LoaderActivity<Cursor> implements OnItemCli
 
         setContentView(R.layout.groups_home);
 
-        mGroups = (ListView) findViewById(R.id.groups);
-        MatrixCursor groupsList = new MatrixCursor(new String[] { "_id", "name" });
-        groupsList.newRow().add(1).add("All Contacts");
-        groupsList.newRow().add(2).add("Favorites");
-        mGroups.setAdapter(new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1,
-                groupsList, new String[] { "name" }, new int[] { android.R.id.text1 }));
-        mGroups.setOnItemClickListener(this);
+        mGroupsCoupler = new GroupsListCoupler(this, (ListView) findViewById(R.id.groups));
+        mGroupsCoupler.setController(this);
 
-        mContactsList = new ContactsListCoupler(this, (ListView) findViewById(android.R.id.list));
-        mContactsList.setViewFactory(new ListCoupler.ResourceViewFactory(R.layout.normal_list_item));
-        mContactsList.setController(this);
+        mContactsCoupler = new ContactsListCoupler(this,
+                (ListView) findViewById(android.R.id.list));
+        mContactsCoupler.setViewFactory(
+                new ListCoupler.ResourceViewFactory(R.layout.normal_list_item));
+        mContactsCoupler.setController(this);
 
         final PhatTitleBar titleBar = (PhatTitleBar) findViewById(R.id.title_bar);
         final Resources resources = getResources();
 
-        titleBar.addAction(ACTION_ID_SEARCH, resources.getDrawable(android.R.drawable.ic_menu_search),
-                "Search", this);
-        titleBar.addAction(ACTION_ID_ADD, resources.getDrawable(android.R.drawable.ic_menu_add),
-                "Add", this);
+        titleBar.addAction(ACTION_ID_SEARCH,
+                resources.getDrawable(android.R.drawable.ic_menu_search), "Search", this);
+        titleBar.addAction(ACTION_ID_ADD,
+                resources.getDrawable(android.R.drawable.ic_menu_add), "Add", this);
     }
 
     public void onAction(int id) {
         switch (id) {
-            case ACTION_ID_SEARCH:
+            case ACTION_ID_SEARCH: {
                 startSearch(null, false, null, true);
                 break;
+            }
 
-            case ACTION_ID_ADD:
+            case ACTION_ID_ADD: {
                 startActivity(new Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI));
                 break;
+            }
         }
     }
 
     @Override
     public void onInitializeLoaders() {
+        startLoading(LOADER_GROUPS, null);
     }
 
     @Override
     protected Loader onCreateLoader(int id, Bundle args) {
         switch (id) {
+            case LOADER_GROUPS: {
+                return new GroupsListLoader(this);
+            }
+
             case LOADER_LIST: {
-                boolean strequent = args.getBoolean("strequent");
-                if (strequent) {
-                    return ContactsListLoader.newStrequentContactsLoader(this);
-                } else {
-                    return ContactsListLoader.newVisibleContactsLoader(this);
+                int mode = args.getInt(ARG_MODE);
+                switch (mode) {
+                    case LIST_MODE_FAVORITES: {
+                        return ContactsListLoader.newStrequentContactsLoader(this);
+                    }
+
+                    case LIST_MODE_ALL_CONTACTS: {
+                        return ContactsListLoader.newVisibleContactsLoader(this);
+                    }
+
+                    case LIST_MODE_GROUP: {
+                        String group = args.getString(ARG_GROUP);
+                        return ContactsListLoader.newContactGroupLoader(this, group);
+                    }
                 }
             }
         }
+
         return null;
     }
 
     @Override
     public void onLoadFinished(Loader loader, Cursor data) {
         switch (loader.getId()) {
+            case LOADER_GROUPS: {
+                mGroupsCoupler.setData(data);
+                break;
+            }
+
             case LOADER_LIST: {
-                mContactsList.setCursor(data);
+                mContactsCoupler.setData(data);
                 break;
             }
         }
     }
 
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    public void onAllContactsSelected() {
         Bundle args = new Bundle();
-        if (position == 0) {
-            args.putBoolean("strequent", false);
-        } else if (position == 1) {
-            args.putBoolean("strequent", true);
-        }
+        args.putInt(ARG_MODE, LIST_MODE_ALL_CONTACTS);
+        startLoading(LOADER_LIST, args);
+    }
+
+    public void onFavoritesSelected() {
+        Bundle args = new Bundle();
+        args.putInt(ARG_MODE, LIST_MODE_FAVORITES);
+        startLoading(LOADER_LIST, args);
+    }
+
+    public void onGroupSelected(String title) {
+        Bundle args = new Bundle();
+        args.putInt(ARG_MODE, LIST_MODE_GROUP);
+        args.putString(ARG_GROUP, title);
         startLoading(LOADER_LIST, args);
     }
 

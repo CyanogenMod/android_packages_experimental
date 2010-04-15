@@ -19,4 +19,5 @@
 
     android:singleLine="true"
     android:ellipsize="end"
-    android:textAppearance="?android:attr/textAppearanceMediumInverse" />
+    android:textAppearance="?android:attr/textAppearanceMediumInverse"
+/>

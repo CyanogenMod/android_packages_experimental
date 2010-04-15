@@ -14,9 +14,11 @@
  * limitations under the License
  */
 
-package com.android.loaderapp;
+package android.app.patterns;
 
-import com.android.loaderapp.model.ContactsListLoader.ListQuery;
+import com.android.loaderapp.R;
+import com.android.loaderapp.R.id;
+import com.android.loaderapp.model.ContactsListLoader;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -24,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -50,8 +53,16 @@ public class ListCoupler {
     }
 
     /** Sets the cursor that the list displays */
-    public void setCursor(Cursor cursor) {
+    public void setData(Cursor cursor) {
         mAdapter.changeCursor(cursor);
+    }
+
+    protected ListView getList() {
+        return mList;
+    }
+
+    protected ListAdapter getAdapter() {
+        return mAdapter;
     }
 
     /**
@@ -73,7 +84,7 @@ public class ListCoupler {
 
         public void bindView(View view, Context context, Cursor cursor) {
             TextView name = (TextView) view.findViewById(R.id.name);
-            name.setText(cursor.getString(ListQuery.COLUMN_NAME));
+            name.setText(cursor.getString(ContactsListLoader.COLUMN_NAME));
         }
     }
     

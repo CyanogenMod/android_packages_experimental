@@ -16,8 +16,9 @@
 
 package com.android.loaderapp;
 
-import com.android.loaderapp.model.ContactsListLoader.ListQuery;
+import com.android.loaderapp.model.ContactsListLoader;
 
+import android.app.patterns.ListCoupler;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -53,14 +54,14 @@ public class ContactsListCoupler extends ListCoupler implements OnItemClickListe
             throw new IllegalArgumentException("Position not in list bounds");
         }
 
-        final Cursor cursor = (Cursor) mList.getAdapter().getItem(position);
+        final Cursor cursor = (Cursor) getAdapter().getItem(position);
         if (cursor == null) {
             return null;
         }
 
         // Build and return soft, lookup reference
-        final long contactId = cursor.getLong(ListQuery.COLUMN_ID);
-        final String lookupKey = cursor.getString(ListQuery.COLUMN_LOOKUP_KEY);
+        final long contactId = cursor.getLong(ContactsListLoader.COLUMN_ID);
+        final String lookupKey = cursor.getString(ContactsListLoader.COLUMN_LOOKUP_KEY);
         return Contacts.getLookupUri(contactId, lookupKey);
     }
 
