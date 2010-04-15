@@ -22,6 +22,7 @@ import com.android.loaderapp.model.ContactLoader.ContactData;
 import com.android.ui.phat.PhatTitleBar;
 import com.android.ui.phat.PhatTitleBar.OnActionListener;
 
+import android.app.patterns.ListCoupler;
 import android.app.patterns.Loader;
 import android.app.patterns.LoaderActivity;
 import android.content.Intent;
@@ -38,6 +39,8 @@ public class HomeLarge extends LoaderActivity implements ContactsListCoupler.Con
 
     private static final int LOADER_LIST = 1;
     private static final int LOADER_DETAILS = 2;
+
+    private static final String ARG_URI = "uri";
 
     ContactsListCoupler mListCoupler;
     ContactCoupler mDetails;
@@ -82,6 +85,12 @@ public class HomeLarge extends LoaderActivity implements ContactsListCoupler.Con
     @Override
     public void onInitializeLoaders() {
         startLoading(LOADER_LIST, null);
+        Intent intent = getIntent();
+        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+            Bundle args = new Bundle();
+            args.putParcelable(ARG_URI, intent.getData());
+            startLoading(LOADER_DETAILS, args);
+        }
     }
 
     @Override
@@ -92,7 +101,7 @@ public class HomeLarge extends LoaderActivity implements ContactsListCoupler.Con
             }
 
             case LOADER_DETAILS: {
-                Uri uri = args.getParcelable("uri");
+                Uri uri = args.getParcelable(ARG_URI);
                 return new ContactLoader(this, uri);
             }
         }
@@ -103,7 +112,7 @@ public class HomeLarge extends LoaderActivity implements ContactsListCoupler.Con
     public void onLoadFinished(Loader loader, Object data) {
         switch (loader.getId()) {
             case LOADER_LIST: {
-                mListCoupler.setCursor((Cursor) data);
+                mListCoupler.setData((Cursor) data);
                 break;
             }
 
@@ -117,7 +126,7 @@ public class HomeLarge extends LoaderActivity implements ContactsListCoupler.Con
     public void onContactSelected(Uri contactUri) {
         // The user clicked on an item in the left side pane, start loading the data for it
         Bundle args = new Bundle();
-        args.putParcelable("uri", contactUri);
+        args.putParcelable(ARG_URI, contactUri);
         startLoading(LOADER_DETAILS, args);
     }
 }

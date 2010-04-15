@@ -19,6 +19,7 @@ package com.android.loaderapp;
 import com.android.loaderapp.model.ContactsListLoader;
 
 import android.app.patterns.CursorLoader;
+import android.app.patterns.ListCoupler;
 import android.app.patterns.Loader;
 import android.app.patterns.LoaderActivity;
 import android.content.Intent;
@@ -63,7 +64,7 @@ public class HomeNormal extends LoaderActivity<Cursor> implements ContactsListCo
     public void onLoadFinished(Loader loader, Cursor data) {
         switch (loader.getId()) {
             case LOADER_LIST: {
-                mCoupler.setCursor(data);
+                mCoupler.setData(data);
                 break;
             }
         }
