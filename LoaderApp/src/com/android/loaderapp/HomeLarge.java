@@ -100,15 +100,17 @@ public class HomeLarge extends LoaderActivity implements ContactsListCoupler.Con
     }
 
     @Override
-    public void onLoadComplete(Loader loader, Object data) {
+    public void onLoadFinished(Loader loader, Object data) {
         switch (loader.getId()) {
-            case LOADER_LIST:
+            case LOADER_LIST: {
                 mListCoupler.setCursor((Cursor) data);
                 break;
+            }
 
-            case LOADER_DETAILS:
+            case LOADER_DETAILS: {
                 mDetails.setData((ContactData) data);
                 break;
+            }
         }
     }
 

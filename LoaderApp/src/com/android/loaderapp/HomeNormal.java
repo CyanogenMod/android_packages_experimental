@@ -60,11 +60,12 @@ public class HomeNormal extends LoaderActivity<Cursor> implements ContactsListCo
     }
 
     @Override
-    public void onLoadComplete(Loader loader, Cursor data) {
+    public void onLoadFinished(Loader loader, Cursor data) {
         switch (loader.getId()) {
-            case LOADER_LIST:
+            case LOADER_LIST: {
                 mCoupler.setCursor(data);
                 break;
+            }
         }
     }
 
