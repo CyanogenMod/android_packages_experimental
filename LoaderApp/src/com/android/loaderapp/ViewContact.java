@@ -30,7 +30,7 @@ public class ViewContact extends Activity {
         Configuration config = getResources().getConfiguration();
         int screenLayoutSize = config.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
         if (screenLayoutSize == Configuration.SCREENLAYOUT_SIZE_LARGE) {
-            intent.setClass(this, HomeLarge.class);
+            intent.setClass(this, HomeXLarge.class);
         } else {
             intent.setClass(this, DetailsNormal.class);
         }

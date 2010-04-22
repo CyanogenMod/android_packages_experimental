@@ -32,7 +32,7 @@
 
         phat:colorFilter="#ff84b140"
         phat:icon="@drawable/ic_launcher_contacts"
-        phat:title="@string/app_name_large"
+        phat:title="@string/app_name_xlarge"
         phat:titleBarType="normal"
     />
 
@@ -42,14 +42,13 @@
         android:layout_weight="1"
         android:orientation="horizontal"
     >
-        <ListView android:id="@android:id/list"
+        <FrameLayout android:id="@+id/contacts_list"
             android:layout_width="0dip"
             android:layout_weight="1"
             android:layout_height="match_parent"
-            android:background="#222"
         />
 
-        <include layout="@layout/contact_details"
+        <FrameLayout android:id="@+id/contact_details"
             android:layout_width="0dip"
             android:layout_weight="2"
             android:layout_height="match_parent"

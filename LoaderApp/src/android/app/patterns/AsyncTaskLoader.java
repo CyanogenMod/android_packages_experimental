@@ -25,7 +25,7 @@ import android.os.AsyncTask;
  * @param <D> the data type to be loaded.
  */
 public abstract class AsyncTaskLoader<D> extends Loader<D> {
-    final class LoadListTask extends AsyncTask<Void, Void, D> {
+    final class LoadTask extends AsyncTask<Void, Void, D> {
         /* Runs on a worker thread */
         @Override
         protected D doInBackground(Void... params) {
@@ -39,7 +39,7 @@ public abstract class AsyncTaskLoader<D> extends Loader<D> {
         }
     }
 
-    private LoadListTask mTask;
+    private LoadTask mTask;
 
     public AsyncTaskLoader(Context context) {
         super(context);
@@ -51,7 +51,7 @@ public abstract class AsyncTaskLoader<D> extends Loader<D> {
      */
     @Override
     public void forceLoad() {
-        mTask = new LoadListTask();
+        mTask = new LoadTask();
         mTask.execute((Void[]) null);
     }
 
@@ -61,7 +61,7 @@ public abstract class AsyncTaskLoader<D> extends Loader<D> {
      *
      * @return <tt>false</tt> if the task could not be cancelled,
      *         typically because it has already completed normally, or
-     *         because {@link startLoading()} hasn't been called, and
+     *         because {@link #startLoading()} hasn't been called, and
      *         <tt>true</tt> otherwise
      */
     public boolean cancelLoad() {
@@ -71,7 +71,7 @@ public abstract class AsyncTaskLoader<D> extends Loader<D> {
         return false;
     }
     
-    private void dispatchOnLoadComplete(D data) {
+    void dispatchOnLoadComplete(D data) {
         mTask = null;
         onLoadComplete(data);
     }

@@ -16,57 +16,23 @@
 
 package com.android.loaderapp;
 
-import com.android.loaderapp.model.ContactLoader;
-import com.android.loaderapp.model.ContactLoader.ContactData;
+import com.android.loaderapp.fragments.ContactFragment;
+import com.android.loaderapp.fragments.ContactFragment;
 
-import android.app.patterns.Loader;
-import android.app.patterns.LoaderActivity;
-import android.net.Uri;
+import android.app.Activity;
+import android.app.FragmentTransaction;
 import android.os.Bundle;
 
-public class DetailsNormal extends LoaderActivity<ContactData> {
-    static final String ARG_URI = "uri";
-    static final int LOADER_DETAILS = 1;
-
-    ContactCoupler mCoupler;
-    Uri mUri;
-
+public class DetailsNormal extends Activity {
     @Override
     public void onCreate(Bundle savedState) {
         super.onCreate(savedState);
 
-        setContentView(R.layout.contact_details);
-        mCoupler = new ContactCoupler(this, findViewById(R.id.contact_details));
-        mCoupler.setController(new ContactCoupler.DefaultController(this));
+        ContactFragment frag = new ContactFragment(getIntent().getData(),
+                new ContactFragment.DefaultController(this));
 
-        mUri = getIntent().getData();
-    }
-
-    @Override
-    public void onInitializeLoaders() {
-        Bundle args = new Bundle();
-        args.putParcelable(ARG_URI, getIntent().getData());
-        startLoading(LOADER_DETAILS, args);
-    }
-
-    @Override
-    protected Loader onCreateLoader(int id, Bundle args) {
-        switch (id) {
-            case LOADER_DETAILS: {
-                Uri uri = args.getParcelable(ARG_URI);
-                return new ContactLoader(this, uri);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public void onLoadFinished(Loader loader, ContactData data) {
-        switch (loader.getId()) {
-            case LOADER_DETAILS: {
-                mCoupler.setData(data);
-                break;
-            }
-        }
+        FragmentTransaction transaction = openFragmentTransaction();
+        transaction.add(frag, android.R.id.content);
+        transaction.commit();
     }
 }

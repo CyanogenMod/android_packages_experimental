@@ -16,58 +16,26 @@
 
 package com.android.loaderapp;
 
-import com.android.loaderapp.model.ContactsListLoader;
+import com.android.loaderapp.fragments.ContactsListFragment;
 
-import android.app.patterns.CursorLoader;
-import android.app.patterns.ListCoupler;
-import android.app.patterns.Loader;
-import android.app.patterns.LoaderActivity;
+import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.widget.ListView;
 
-public class HomeNormal extends LoaderActivity<Cursor> implements ContactsListCoupler.Controller {
+public class HomeNormal extends Activity implements ContactsListFragment.Controller {
     static final int LOADER_LIST = 1;
 
-    ContactsListCoupler mCoupler;
-    CursorLoader mLoader;
+    ContactsListFragment mFragment;
 
     @Override
     public void onCreate(Bundle savedState) {
         super.onCreate(savedState);
 
-        setContentView(R.layout.normal_home);
+        setContentView(R.layout.home_normal);
 
-        mCoupler = new ContactsListCoupler(this, (ListView) findViewById(android.R.id.list));
-        mCoupler.setViewFactory(new ListCoupler.ResourceViewFactory(R.layout.normal_list_item));
-        mCoupler.setController(this);
-    }
-
-    @Override
-    public void onInitializeLoaders() {
-        startLoading(LOADER_LIST, null);
-    }
-
-    @Override
-    protected Loader onCreateLoader(int id, Bundle args) {
-        switch (id) {
-            case LOADER_LIST: {
-                return ContactsListLoader.newVisibleContactsLoader(this);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public void onLoadFinished(Loader loader, Cursor data) {
-        switch (loader.getId()) {
-            case LOADER_LIST: {
-                mCoupler.setData(data);
-                break;
-            }
-        }
+        mFragment = (ContactsListFragment) findFragmentById(R.id.list);
+        mFragment.setController(this);
     }
 
     public void onContactSelected(Uri contactUri) {

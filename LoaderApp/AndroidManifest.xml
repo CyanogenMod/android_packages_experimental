@@ -53,9 +53,9 @@
             </intent-filter>
         </activity-alias>
 
-        <activity-alias android:name="FrontDoorLarge"
+        <activity-alias android:name="FrontDoorXLarge"
             android:targetActivity="FrontDoor"
-            android:label="@string/app_name_large"
+            android:label="@string/app_name_xlarge"
         >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -65,9 +65,9 @@
             </intent-filter>
         </activity-alias>
 
-        <activity-alias android:name="FrontDoorGroupsLarge"
+        <activity-alias android:name="FrontDoorGroupsXLarge"
             android:targetActivity="FrontDoor"
-            android:label="@string/app_name_large_groups"
+            android:label="@string/app_name_xlarge_groups"
         >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -89,13 +89,13 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="HomeLarge"
-            android:label="@string/app_name_large"
+        <activity android:name="HomeXLarge"
+            android:label="@string/app_name_xlarge"
             android:theme="@style/TallTitleBarTheme"
         />
 
-        <activity android:name="HomeGroupsLarge"
-            android:label="@string/app_name_large_groups"
+        <activity android:name="HomeGroupsXLarge"
+            android:label="@string/app_name_xlarge_groups"
             android:theme="@style/TallTitleBarTheme"
         />
 
