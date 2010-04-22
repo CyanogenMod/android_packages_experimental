@@ -85,15 +85,6 @@ public class CursorLoader extends AsyncTaskLoader<Cursor> {
     }
 
     /**
-     * Force an asynchronous load. Unlike {@link #startLoading()} this will ignore a previously
-     * loaded data set and load a new one.
-     */
-    @Override
-    public void forceLoad() {
-        new LoadListTask().execute((Void[]) null);
-    }
-
-    /**
      * Must be called from the UI thread
      */
     @Override
@@ -103,6 +94,9 @@ public class CursorLoader extends AsyncTaskLoader<Cursor> {
             mCursor = null;
         }
 
+        // Attempt to cancel the current load task if possible.
+        cancelLoad();
+
         // Make sure that any outstanding loads clean themselves up properly
         mStopped = true;
     }
@@ -111,5 +105,29 @@ public class CursorLoader extends AsyncTaskLoader<Cursor> {
     public void destroy() {
         // Ensure the loader is stopped
         stopLoading();
+    }
+
+    public String[] getProjection() {
+        return mProjection;
+    }
+
+    public void setProjection(String[] projection) {
+        mProjection = projection;
+    }
+
+    public String getSelection() {
+        return mSelection;
+    }
+
+    public void setSelection(String selection) {
+        mSelection = selection;
+    }
+
+    public String[] getSelectionArgs() {
+        return mSelectionArgs;
+    }
+
+    public void setSelectionArgs(String[] selectionArgs) {
+        mSelectionArgs = selectionArgs;
     }
 }
