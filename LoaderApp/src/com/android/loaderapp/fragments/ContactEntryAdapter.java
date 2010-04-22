@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.loaderapp;
+package com.android.loaderapp.fragments;
 
 import android.content.Context;
 import android.net.Uri;

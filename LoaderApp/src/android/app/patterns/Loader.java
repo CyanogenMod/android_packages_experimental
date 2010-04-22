@@ -48,7 +48,7 @@ public abstract class Loader<D> {
          * @param loader the loader that completed the load
          * @param data the result of the load
          */
-        public void onLoadComplete(Loader loader, D data);
+        public void onLoadComplete(Loader<D> loader, D data);
     }
 
     /**

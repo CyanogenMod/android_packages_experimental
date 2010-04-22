@@ -20,8 +20,8 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">LoaderApp</string>
     <string name="app_name_normal">LoaderApp Normal</string>
-    <string name="app_name_large">LoaderApp Large</string>
-    <string name="app_name_large_groups">LoaderApp Groups</string>
+    <string name="app_name_xlarge">LoaderApp XLarge</string>
+    <string name="app_name_xlarge_groups">LoaderApp Groups</string>
 
     <!-- Title for the activity that shows contacts.  This is the name
          used in the Launcher icon. -->

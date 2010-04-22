@@ -16,26 +16,21 @@
 
 package android.app.patterns;
 
-
-import android.app.Activity;
+import android.app.Fragment;
 import android.os.Bundle;
 
 import java.util.HashMap;
 
-/**
- * The idea here was to abstract the generic life cycle junk needed to properly keep loaders going.
- * It didn't work out as-is because registering the callbacks post config change didn't work.
- */
-public abstract class LoaderActivity<D> extends Activity implements
-        Loader.OnLoadCompleteListener<D> {
+public abstract class LoaderManagingFragment<D> extends Fragment
+        implements Loader.OnLoadCompleteListener<D> {
     private boolean mStarted = false;
 
-    static final class LoaderInfo {
+    static final class LoaderInfo<D> {
         public Bundle args;
-        public Loader loader;
+        public Loader<D> loader;
     }
-    private HashMap<Integer, LoaderInfo> mLoaders;
-    private HashMap<Integer, LoaderInfo> mInactiveLoaders;
+    private HashMap<Integer, LoaderInfo<D>> mLoaders;
+    private HashMap<Integer, LoaderInfo<D>> mInactiveLoaders;
 
     /**
      * Registers a loader with this activity, registers the callbacks on it, and starts it loading.
@@ -43,17 +38,17 @@ public abstract class LoaderActivity<D> extends Activity implements
      * when the new loader completes it's work. The callback will be delivered before the old loader
      * is destroyed.
      */
-    protected void startLoading(int id, Bundle args) {
-        LoaderInfo info = mLoaders.get(id);
+    protected Loader<D> startLoading(int id, Bundle args) {
+        LoaderInfo<D> info = mLoaders.get(id);
         if (info != null) {
             // Keep track of the previous instance of this loader so we can destroy
             // it when the new one completes.
             mInactiveLoaders.put(id, info);
         }
-        info = new LoaderInfo();
+        info = new LoaderInfo<D>();
         info.args = args;
         mLoaders.put(id, info);
-        Loader loader = onCreateLoader(id, args);
+        Loader<D> loader = onCreateLoader(id, args);
         info.loader = loader;
         if (mStarted) {
             // The activity will start all existing loaders in it's onStart(), so only start them
@@ -61,22 +56,23 @@ public abstract class LoaderActivity<D> extends Activity implements
             loader.registerListener(id, this);
             loader.startLoading();
         }
+        return loader;
     }
 
-    protected abstract Loader onCreateLoader(int id, Bundle args);
+    protected abstract Loader<D> onCreateLoader(int id, Bundle args);
     protected abstract void onInitializeLoaders();
-    protected abstract void onLoadFinished(Loader loader, D data);
+    protected abstract void onLoadFinished(Loader<D> loader, D data);
 
-    public final void onLoadComplete(Loader loader, D data) {
+    public final void onLoadComplete(Loader<D> loader, D data) {
         // Notify of the new data so the app can switch out the old data before
         // we try to destroy it.
         onLoadFinished(loader, data);
 
         // Look for an inactive loader and destroy it if found
         int id = loader.getId();
-        LoaderInfo info = mInactiveLoaders.get(id);
+        LoaderInfo<D> info = mInactiveLoaders.get(id);
         if (info != null) {
-            Loader oldLoader = info.loader;
+            Loader<D> oldLoader = info.loader;
             if (oldLoader != null) {
                 oldLoader.destroy();
             }
@@ -90,14 +86,15 @@ public abstract class LoaderActivity<D> extends Activity implements
 
         if (mLoaders == null) {
             // Look for a passed along loader and create a new one if it's not there
-            mLoaders = (HashMap<Integer, LoaderInfo>) getLastNonConfigurationInstance();
+// TODO: uncomment once getLastNonConfigurationInstance method is available
+//            mLoaders = (HashMap<Integer, LoaderInfo>) getLastNonConfigurationInstance();
             if (mLoaders == null) {
-                mLoaders = new HashMap<Integer, LoaderInfo>();
+                mLoaders = new HashMap<Integer, LoaderInfo<D>>();
                 onInitializeLoaders();
             }
         }
         if (mInactiveLoaders == null) {
-            mInactiveLoaders = new HashMap<Integer, LoaderInfo>();
+            mInactiveLoaders = new HashMap<Integer, LoaderInfo<D>>();
         }
     }
 
@@ -107,9 +104,9 @@ public abstract class LoaderActivity<D> extends Activity implements
 
         // Call out to sub classes so they can start their loaders
         // Let the existing loaders know that we want to be notified when a load is complete
-        for (HashMap.Entry<Integer, LoaderInfo> entry : mLoaders.entrySet()) {
-            LoaderInfo info = entry.getValue();
-            Loader loader = info.loader;
+        for (HashMap.Entry<Integer, LoaderInfo<D>> entry : mLoaders.entrySet()) {
+            LoaderInfo<D> info = entry.getValue();
+            Loader<D> loader = info.loader;
             int id = entry.getKey();
             if (loader == null) {
                loader = onCreateLoader(id, info.args);
@@ -126,9 +123,9 @@ public abstract class LoaderActivity<D> extends Activity implements
     public void onStop() {
         super.onStop();
 
-        for (HashMap.Entry<Integer, LoaderInfo> entry : mLoaders.entrySet()) {
-            LoaderInfo info = entry.getValue();
-            Loader loader = info.loader;
+        for (HashMap.Entry<Integer, LoaderInfo<D>> entry : mLoaders.entrySet()) {
+            LoaderInfo<D> info = entry.getValue();
+            Loader<D> loader = info.loader;
             if (loader == null) {
                 continue;
             }
@@ -137,9 +134,10 @@ public abstract class LoaderActivity<D> extends Activity implements
             loader.unregisterListener(this);
 
             // The loader isn't getting passed along to the next instance so ask it to stop loading
-            if (!isChangingConfigurations()) {
+// TODO: uncomment once isChangingConfig method is available
+//            if (!getActivity().isChangingConfigurations()) {
                 loader.stopLoading();
-            }
+//            }
         }
 
         mStarted = false;
@@ -158,9 +156,9 @@ public abstract class LoaderActivity<D> extends Activity implements
         super.onDestroy();
 
         if (mLoaders != null) {
-            for (HashMap.Entry<Integer, LoaderInfo> entry : mLoaders.entrySet()) {
-                LoaderInfo info = entry.getValue();
-                Loader loader = info.loader;
+            for (HashMap.Entry<Integer, LoaderInfo<D>> entry : mLoaders.entrySet()) {
+                LoaderInfo<D> info = entry.getValue();
+                Loader<D> loader = info.loader;
                 if (loader == null) {
                     continue;
                 }
@@ -170,11 +168,11 @@ public abstract class LoaderActivity<D> extends Activity implements
     }
 
     /** 
-     * Returns the Loader with the given id or null if no matching Loader
+     * @return the Loader with the given id or null if no matching Loader
      * is found.
      */
-    public Loader getLoader(int id) {
-        LoaderInfo loaderInfo = mLoaders.get(id);
+    public Loader<D> getLoader(int id) {
+        LoaderInfo<D> loaderInfo = mLoaders.get(id);
         if (loaderInfo != null) {
             return mLoaders.get(id).loader;
         }

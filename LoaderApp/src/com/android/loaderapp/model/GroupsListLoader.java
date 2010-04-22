@@ -14,7 +14,7 @@
  * limitations under the License
  */
 
-package com.android.loaderapp;
+package com.android.loaderapp.model;
 
 import android.app.patterns.CursorLoader;
 import android.content.Context;

@@ -14,10 +14,12 @@
  * limitations under the License
  */
 
-package com.android.loaderapp;
+package com.android.loaderapp.fragments;
 
 import com.android.internal.widget.ContactHeaderWidget;
+import com.android.loaderapp.R;
 import com.android.loaderapp.model.Collapser;
+import com.android.loaderapp.model.ContactLoader;
 import com.android.loaderapp.model.ContactsSource;
 import com.android.loaderapp.model.Sources;
 import com.android.loaderapp.model.TypePrecedence;
@@ -31,6 +33,8 @@ import com.android.loaderapp.util.DataStatus;
 import com.google.android.collect.Lists;
 import com.google.android.collect.Maps;
 
+import android.app.patterns.Loader;
+import android.app.patterns.LoaderManagingFragment;
 import android.content.ActivityNotFoundException;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -43,6 +47,7 @@ import android.graphics.drawable.Drawable;
 import android.net.ParseException;
 import android.net.Uri;
 import android.net.WebAddress;
+import android.os.Bundle;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Data;
@@ -73,14 +78,30 @@ import android.widget.AdapterView.OnItemClickListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ContactCoupler implements OnClickListener, OnItemClickListener {
-    Context mContext;
+public class ContactFragment extends LoaderManagingFragment<ContactData>
+        implements OnClickListener, OnItemClickListener {
     private static final String TAG = "ContactCoupler";
 
-    public ContactCoupler(Context context, View view) {
-        mContext = context;
+    static final String ARG_URI = "uri";
+    static final int LOADER_DETAILS = 1;
 
-        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    Uri mUri;
+
+    public ContactFragment(Uri uri, ContactFragment.Controller controller) {
+        mUri = uri;
+        mController = controller;
+    }
+
+    @Override
+    public void onCreate(Bundle savedState) {
+        super.onCreate(savedState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container) {
+        View view = inflater.inflate(R.layout.contact_details, container, false);
+
+        mInflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         mContactHeaderWidget = (ContactHeaderWidget) view.findViewById(R.id.contact_header_widget);
         mContactHeaderWidget.showStar(true);
@@ -106,6 +127,42 @@ public class ContactCoupler implements OnClickListener, OnItemClickListener {
 
         //TODO Read this value from a preference
         mShowSmsLinksForAllPhones = true;
+
+        return view;
+    }
+
+    @Override
+    public void onInitializeLoaders() {
+        if (mUri != null) {
+            loadContact(mUri);
+        }
+    }
+
+    @Override
+    protected Loader onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case LOADER_DETAILS: {
+                Uri uri = args.getParcelable(ARG_URI);
+                return new ContactLoader(getActivity(), uri);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<ContactData> loader, ContactData data) {
+        switch (loader.getId()) {
+            case LOADER_DETAILS: {
+                setData(data);
+                break;
+            }
+        }
+    }
+
+    public void loadContact(Uri uri) {
+        Bundle args = new Bundle();
+        args.putParcelable(ARG_URI, uri);
+        startLoading(LOADER_DETAILS, args);
     }
 
     public void setData(ContactData data) {
@@ -208,9 +265,6 @@ public class ContactCoupler implements OnClickListener, OnItemClickListener {
 
     protected ArrayList<Long> mWritableRawContactIds = new ArrayList<Long>();
 
-    private boolean mHasEntities = false;
-    private boolean mHasStatuses = false;
-
     private long mNameRawContactId = -1;
     private int mDisplayNameSource = DisplayNameSources.UNDEFINED;
 
@@ -240,7 +294,7 @@ public class ContactCoupler implements OnClickListener, OnItemClickListener {
         Collapser.collapseList(mImEntries);
 
         if (mAdapter == null) {
-            mAdapter = new ViewAdapter(mContext, mSections);
+            mAdapter = new ViewAdapter(getActivity(), mSections);
             mListView.setAdapter(mAdapter);
         } else {
             mAdapter.setSections(mSections, SHOW_SEPARATORS);
@@ -273,7 +327,7 @@ public class ContactCoupler implements OnClickListener, OnItemClickListener {
             return;
         }
         
-        final Context context = mContext;
+        final Context context = getActivity();
         final Sources sources = Sources.getInstance(context);
 
         // Build up method entries
@@ -599,8 +653,6 @@ public class ContactCoupler implements OnClickListener, OnItemClickListener {
     }
 
     private final class ViewAdapter extends ContactEntryAdapter<ViewEntry> {
-
-
         ViewAdapter(Context context, ArrayList<ArrayList<ViewEntry>> sections) {
             super(context, sections, SHOW_SEPARATORS);
         }
@@ -630,7 +682,7 @@ public class ContactCoupler implements OnClickListener, OnItemClickListener {
                 views.presenceIcon = (ImageView) v.findViewById(R.id.presence_icon);
                 views.secondaryActionButton = (ImageView) v.findViewById(
                         R.id.secondary_action_button);
-                views.secondaryActionButton.setOnClickListener(ContactCoupler.this);
+                views.secondaryActionButton.setOnClickListener(ContactFragment.this);
                 views.secondaryActionDivider = v.findViewById(R.id.divider);
                 v.setTag(views);
             }
@@ -738,19 +790,5 @@ public class ContactCoupler implements OnClickListener, OnItemClickListener {
                 textView.setEllipsize(null);
             }
         }
-    }
-
-    private interface StatusQuery {
-        final String[] PROJECTION = new String[] {
-                Data._ID,
-                Data.STATUS,
-                Data.STATUS_RES_PACKAGE,
-                Data.STATUS_ICON,
-                Data.STATUS_LABEL,
-                Data.STATUS_TIMESTAMP,
-                Data.PRESENCE,
-        };
-
-        final int _ID = 0;
     }
 }

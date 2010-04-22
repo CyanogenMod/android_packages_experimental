@@ -32,7 +32,7 @@
 
         phat:colorFilter="#ff84b140"
         phat:icon="@drawable/ic_launcher_contacts"
-        phat:title="@string/app_name_large_groups"
+        phat:title="@string/app_name_xlarge_groups"
         phat:titleBarType="normal"
     />
 
@@ -42,14 +42,14 @@
         android:layout_weight="1"
         android:orientation="horizontal"
     >
-        <ListView android:id="@+id/groups"
+        <FrameLayout android:id="@+id/groups"
             android:layout_width="0dip"
             android:layout_weight="1"
             android:layout_height="match_parent"
             android:background="#222"
         />
 
-        <ListView android:id="@android:id/list"
+        <FrameLayout android:id="@android:id/list"
             android:layout_width="0dip"
             android:layout_weight="2"
             android:layout_height="match_parent"

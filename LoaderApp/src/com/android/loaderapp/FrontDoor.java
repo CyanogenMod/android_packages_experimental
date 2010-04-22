@@ -32,18 +32,18 @@ public final class FrontDoor extends Activity {
         if ("com.android.loaderapp.FrontDoorNormal".equals(componentName)) {
             // The user clicked on the normal front door
             startActivity(new Intent(this, HomeNormal.class));
-        } else if ("com.android.loaderapp.FrontDoorLarge".equals(componentName)) {
+        } else if ("com.android.loaderapp.FrontDoorXLarge".equals(componentName)) {
             // The user clicked on the large front door
-            startActivity(new Intent(this, HomeLarge.class));
-        } else if ("com.android.loaderapp.FrontDoorGroupsLarge".equals(componentName)) {
+            startActivity(new Intent(this, HomeXLarge.class));
+        } else if ("com.android.loaderapp.FrontDoorGroupsXLarge".equals(componentName)) {
             // The user clicked on the groups large front door
-            startActivity(new Intent(this, HomeGroupsLarge.class));
+            startActivity(new Intent(this, HomeGroupsXLarge.class));
         } else {
             // The user clicked on the config based front door
             Configuration config = getResources().getConfiguration();
             int screenLayoutSize = config.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
-            if (screenLayoutSize == Configuration.SCREENLAYOUT_SIZE_LARGE) {
-                startActivity(new Intent(this, HomeLarge.class));
+            if (screenLayoutSize == Configuration.SCREENLAYOUT_SIZE_XLARGE) {
+                startActivity(new Intent(this, HomeXLarge.class));
             } else {
                 // Default to the normal layout
                 startActivity(new Intent(this, HomeNormal.class));
