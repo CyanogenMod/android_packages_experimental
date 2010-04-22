@@ -168,4 +168,16 @@ public abstract class LoaderActivity<D> extends Activity implements
             }
         }
     }
+
+    /** 
+     * Returns the Loader with the given id or null if no matching Loader
+     * is found.
+     */
+    public Loader getLoader(int id) {
+        LoaderInfo loaderInfo = mLoaders.get(id);
+        if (loaderInfo != null) {
+            return mLoaders.get(id).loader;
+        }
+        return null;
+    }
 }
