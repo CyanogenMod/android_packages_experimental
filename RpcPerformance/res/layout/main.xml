@@ -7,21 +7,38 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:stretchColumns="true">
+
+  <TableRow>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Iteration count:"
+        />
+
+    <EditText android:id="@+id/iterations_edit"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:numeric="integer"
+        android:singleLine="true"
+        android:text="100"
+        />
+  </TableRow>
+
   <TableRow>
     <LinearLayout android:layout_height="wrap_content"
                   android:layout_width="wrap_content"
                   android:orientation="vertical">
       <TextView  
-         android:id="@+id/lookup_text"
+         android:id="@+id/file_read_text"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
-         android:text="Get Setting xproc:"
+         android:text="Seek + read cached:"
          />
       <Button
-         android:id="@+id/lookup_button"
+         android:id="@+id/file_read_button"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
-         android:text="Reads"
+         android:text="File read"
          />
     </LinearLayout>
 
@@ -29,46 +46,82 @@
                   android:layout_width="wrap_content"
                   android:orientation="vertical">
       <TextView  
-         android:id="@+id/bg_read_text"
+         android:id="@+id/file_write_text"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Open + write + close:"
+         />
+      <Button
+         android:id="@+id/file_write_button"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="File write"
+         />
+    </LinearLayout>
+  </TableRow>
+
+  <TableRow>
+    <LinearLayout android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:orientation="vertical">
+      <TextView  
+         android:id="@+id/settings_read_text"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Settings read xproc:"
+         />
+      <Button
+         android:id="@+id/settings_read_button"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Settings read"
+         />
+    </LinearLayout>
+
+    <LinearLayout android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:orientation="vertical">
+      <TextView  
+         android:id="@+id/settings_sleep_text"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
          android:text="... + post sleep:"
          />
       <Button
-         android:id="@+id/bg_read_button"
+         android:id="@+id/settings_sleep_button"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
-         android:text="Read2"
+         android:text="Sleep + Read"
          />
     </LinearLayout>
   </TableRow>
-  
+
   <TableRow>
     <LinearLayout android:layout_height="wrap_content"
                   android:layout_width="wrap_content"
                   android:orientation="vertical">
       <TextView  
-         android:id="@+id/bg_write_text"
+         android:id="@+id/settings_write_text"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
-         android:text="Background writes:" />
+         android:text="Settings write:" />
       <Button
-         android:id="@+id/bg_write_button"
+         android:id="@+id/settings_write_button"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
-         android:text="Writes" />
+         android:text="Settings write" />
     </LinearLayout>
 
     <LinearLayout android:layout_height="wrap_content"
                   android:layout_width="wrap_content"
                   android:orientation="vertical">
       <TextView  
-         android:id="@+id/bg_writedup_text"
+         android:id="@+id/settings_writedup_text"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
-         android:text="Background dup writes:" />
+         android:text="Settings dup write:" />
       <Button
-         android:id="@+id/bg_writedup_button"
+         android:id="@+id/settings_writedup_button"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
          android:text="Dup writes" />
@@ -203,7 +256,6 @@
          android:text="cp.Call() no exist" />
     </LinearLayout>
   </TableRow>
-
 </TableLayout>
 
 </ScrollView>
