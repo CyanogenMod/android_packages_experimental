@@ -83,12 +83,20 @@ TOTAL_CPU_LABEL = """
 jiffies: <nobr>%(sys)d sys</nobr>, <nobr>%(user)d user</nobr>
 """
 
+CPU_SPEED_LABEL = """
+<nobr>average CPU speed</nobr>
+"""
+
 CONTEXT_LABEL = """
 context: <nobr>%(switches)d switches</nobr>
 """
 
 FAULTS_LABEL = """
 <nobr>page faults:</nobr> <nobr>%(major)d major</nobr>
+"""
+
+BINDER_LABEL = """
+binder: <nobr>%(calls)d calls</nobr>
 """
 
 PROC_CPU_LABEL = """
@@ -98,10 +106,16 @@ jiffies: <nobr>%(sys)d sys</nobr>, <nobr>%(user)d user</nobr>
 """
 
 YAFFS_LABEL = """
-<span style="font-size: 150%%">%(partition)s</span> (yaffs)<br>
+<span style="font-size: 150%%">yaffs: %(partition)s</span><br>
 pages: <nobr>%(nPageReads)d read</nobr>,
 <nobr>%(nPageWrites)d written</nobr><br>
 blocks: <nobr>%(nBlockErasures)d erased</nobr>
+"""
+
+NET_LABEL = """
+<span style="font-size: 150%%">net: %(interface)s</span><br>
+bytes: <nobr>%(tx)d tx</nobr>,
+<nobr>%(rx)d rx</nobr><br>
 """
 
 PAGE_END = """
@@ -139,7 +153,7 @@ def WriteOutput(history, log_filename, filename):
     if not os.path.isdir(files_dir): os.makedirs(files_dir)
 
     sorted_history = sorted(history.iteritems())
-    date_window = [1000 * sorted_history[0][0], 1000 * sorted_history[-1][0]]
+    date_window = [1000 * sorted_history[1][0], 1000 * sorted_history[-1][0]]
 
     #
     # Output total CPU statistics
@@ -189,35 +203,75 @@ def WriteOutput(history, log_filename, filename):
     })
 
     #
+    # Output CPU speed statistics
+    #
+
+    cpu_speed = {}
+    speed_key = "/sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state:"
+
+    last_state = {}
+    for when, state in sorted_history:
+        total_time = total_cycles = 0
+        for key in state:
+            if not key.startswith(speed_key): continue
+
+            last = int(last_state.get(key, -1))
+            next = int(state.get(key, -1))
+            if last != -1 and next != -1:
+                speed = int(key[len(speed_key):])
+                total_time += next - last
+                total_cycles += (next - last) * speed
+
+        if total_time > 0: cpu_speed[when] = total_cycles / total_time
+        last_state = state
+
+    WriteChartData(
+        ["kHz"], [cpu_speed],
+        os.path.join(files_dir, "cpu_speed.csv"))
+
+    out.append(CHART % {
+        "id": cgi.escape("cpu_speed"),
+        "id_js": json.write("cpu_speed"),
+        "label_html": CPU_SPEED_LABEL,
+        "filename_js": json.write(files_url + "/cpu_speed.csv"),
+        "options_js": json.write({
+            "colors": ["navy"],
+            "dateWindow": date_window,
+            "fillGraph": True,
+            "height": 50,
+            "includeZero": True,
+        }),
+    })
+
+    #
     # Output total context switch statistics
     #
 
-    switches = {}
+    context_switches = {}
 
     last_state = {}
     for when, state in sorted_history:
         last = int(last_state.get("/proc/stat:ctxt", -1))
         next = int(state.get("/proc/stat:ctxt", -1))
-        if last != -1 and next != -1:
-            switches[when] = next - last
-
+        if last != -1 and next != -1: context_switches[when] = next - last
         last_state = state
 
     WriteChartData(
-        ["switches"],
-        [switches],
+        ["switches"], [context_switches],
         os.path.join(files_dir, "context_switches.csv"))
 
+    total_switches = sum(context_switches.values())
     out.append(CHART % {
         "id": cgi.escape("context_switches"),
         "id_js": json.write("context_switches"),
-        "label_html": CONTEXT_LABEL % {"switches": sum(switches.values())},
+        "label_html": CONTEXT_LABEL % {"switches": total_switches},
         "filename_js": json.write(files_url + "/context_switches.csv"),
         "options_js": json.write({
             "colors": ["blue"],
             "dateWindow": date_window,
             "fillGraph": True,
             "height": 50,
+            "includeZero": True,
         }),
     })
 
@@ -268,8 +322,7 @@ def WriteOutput(history, log_filename, filename):
     #
 
     WriteChartData(
-        ["major"],
-        [total_faults],
+        ["major"], [total_faults],
         os.path.join(files_dir, "total_faults.csv"))
 
     out.append(CHART % {
@@ -287,10 +340,97 @@ def WriteOutput(history, log_filename, filename):
     })
 
     #
-    # YAFFS statistics
+    # Output binder transaactions
     #
 
-    out.append(SPACER)
+    binder_calls = {}
+
+    last_state = {}
+    for when, state in sorted_history:
+        last = int(last_state.get("/proc/binder/stats:BC_TRANSACTION", -1))
+        next = int(state.get("/proc/binder/stats:BC_TRANSACTION", -1))
+        if last != -1 and next != -1: binder_calls[when] = next - last
+        last_state = state
+
+    WriteChartData(
+        ["calls"], [binder_calls],
+        os.path.join(files_dir, "binder_calls.csv"))
+
+    out.append(CHART % {
+        "id": cgi.escape("binder_calls"),
+        "id_js": json.write("binder_calls"),
+        "label_html": BINDER_LABEL % {"calls": sum(binder_calls.values())},
+        "filename_js": json.write(files_url + "/binder_calls.csv"),
+        "options_js": json.write({
+            "colors": ["green"],
+            "dateWindow": date_window,
+            "fillGraph": True,
+            "height": 50,
+            "includeZero": True,
+        })
+    })
+
+    #
+    # Output network interface statistics
+    #
+
+    if out[-1] != SPACER: out.append(SPACER)
+
+    interface_rx = {}
+    interface_tx = {}
+    max_bytes = 0
+
+    last_state = {}
+    for when, state in sorted_history:
+        for key in state:
+            if not key.startswith("/proc/net/dev:"): continue
+
+            last = last_state.get(key, "").split()
+            next = state.get(key, "").split()
+            if not (last and next): continue
+
+            rx = int(next[0]) - int(last[0])
+            tx = int(next[8]) - int(last[8])
+            max_bytes = max(max_bytes, rx, tx)
+
+            net, interface = key.split(":", 1)
+            interface_rx.setdefault(interface, {})[when] = rx
+            interface_tx.setdefault(interface, {})[when] = tx
+
+        last_state = state
+
+    for num, interface in enumerate(sorted(interface_rx.keys())):
+        rx, tx = interface_rx[interface], interface_tx[interface]
+        total_rx, total_tx = sum(rx.values()), sum(tx.values())
+        if not (total_rx or total_tx): continue
+
+        WriteChartData(
+            ["rx", "tx"], [rx, tx],
+            os.path.join(files_dir, "net%d.csv" % num))
+
+        out.append(CHART % {
+            "id": cgi.escape("net%d" % num),
+            "id_js": json.write("net%d" % num),
+            "label_html": NET_LABEL % {
+                "interface": cgi.escape(interface),
+                "rx": total_rx,
+                "tx": total_tx
+            },
+            "filename_js": json.write("%s/net%d.csv" % (files_url, num)),
+            "options_js": json.write({
+                "colors": ["black", "purple"],
+                "dateWindow": date_window,
+                "fillGraph": True,
+                "height": 75,
+                "valueRange": [0, max_bytes * 11 / 10],
+            })
+        })
+
+    #
+    # Output YAFFS statistics
+    #
+
+    if out[-1] != SPACER: out.append(SPACER)
 
     yaffs_vars = ["nBlockErasures", "nPageReads", "nPageWrites"]
     partition_ops = {}
@@ -305,7 +445,7 @@ def WriteOutput(history, log_filename, filename):
             if last == -1 or next == -1: continue
 
             value = next - last
-            yaffs, partition, var = key.split(":")
+            yaffs, partition, var = key.split(":", 2)
             ops = partition_ops.setdefault(partition, {})
             if var in yaffs_vars:
                 ops.setdefault(var, {})[when] = value
@@ -333,6 +473,7 @@ def WriteOutput(history, log_filename, filename):
                 "dateWindow": date_window,
                 "fillGraph": True,
                 "height": 75,
+                "includeZero": True,
             })
         })
 
@@ -347,7 +488,7 @@ def WriteOutput(history, log_filename, filename):
         sys_user = sum([n for n, d in process_sys_user.get(pid, {}).values()])
         if sys_user <= cpu_cutoff: continue
 
-        out.append(SPACER)
+        if out[-1] != SPACER: out.append(SPACER)
 
         WriteChartData(
             ["sys", "sys+user"],
@@ -378,8 +519,7 @@ def WriteOutput(history, log_filename, filename):
         if faults <= faults_cutoff: continue
 
         WriteChartData(
-            ["major"],
-            [process_faults.get(pid, {})],
+            ["major"], [process_faults.get(pid, {})],
             os.path.join(files_dir, "proc%d_faults.csv" % pid))
 
         out.append(CHART % {
@@ -403,13 +543,15 @@ def WriteOutput(history, log_filename, filename):
 def main(argv):
     if len(argv) != 3:
         print >>sys.stderr, "usage: procstatreport.py procstat.log output.html"
-        return
+        return 2
 
     history = {}
     current_state = {}
     scan_time = 0.0
 
     for line in file(argv[1]):
+        if not line.endswith("\n"): continue
+
         parts = line.split(None, 2)
         if len(parts) < 2 or parts[1] not in "+-=":
             print >>sys.stderr, "Invalid input:", line
@@ -430,6 +572,10 @@ def main(argv):
 
         else:
             current_state[name] = "".join(parts[2:]).strip()
+
+    if len(history) < 2:
+        print >>sys.stderr, "error: insufficient history to chart"
+        return 1
 
     WriteOutput(history, argv[1], argv[2])
 

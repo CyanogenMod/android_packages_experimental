@@ -54,6 +54,14 @@ struct data {
     char *value;           // text to be reported when it changes
 };
 
+// Like memcpy, but replaces spaces and unprintables with '_'.
+static void unspace(char *dest, const char *src, int len) {
+    while (len-- > 0) {
+        char ch = *src++;
+        *dest++ = isgraph(ch) ? ch : '_';
+    }
+}
+
 // Set data->name and data->value to malloc'd strings with the
 // filename and contents of the file.  Trims trailing whitespace.
 static void read_data(struct data *data, const char *filename) {
@@ -80,37 +88,52 @@ static void read_data(struct data *data, const char *filename) {
     data->value[len] = '\0';
 }
 
-// Read /proc/stat and write data entries for each line.
+// Read a name/value file and write data entries for each line.
+// The delimiter is used to split each line into name and value.
+// If terminator is non-NULL, processing stops after it appears.
 // Returns the number of entries written (always <= stats_count).
-static int read_proc_stat(struct data *stats, int stats_count) {
-    char buf[4096];
-    int fd = open("/proc/stat", O_RDONLY);
+static int read_lines(
+        const char *filename, char delimiter, const char *terminator,
+        struct data *stats, int stats_count) {
+    char buf[8192];
+    int fd = open(filename, O_RDONLY);
     if (fd < 0) return 0;
 
     int len = read(fd, buf, sizeof(buf) - 1);
     if (len < 0) {
-        perror("/proc/stat");
+        perror(filename);
         close(fd);
         return 0;
     }
     buf[len] = '\0';
     close(fd);
 
+    if (terminator != NULL) {
+        char *end = strstr(buf, terminator);
+        if (end != NULL) *end = '\0';
+    }
+
+    int filename_len = strlen(filename);
     int num = 0;
     char *line;
     for (line = strtok(buf, "\n");
          line != NULL && num < stats_count;
          line = strtok(NULL, "\n")) {
-        char *name_end = strchr(line, ' ');
+        // Line format: <sp>name<delim><sp>value
+
+        while (isspace(*line)) ++line;
+        char *name_end = strchr(line, delimiter);
         if (name_end == NULL) continue;
 
+        // Key format: <filename>:<name>
         struct data *data = &stats[num++];
-        data->name = malloc(11 + (name_end - line) + 1);
-        strcpy(data->name, "/proc/stat:");
-        memcpy(data->name + 11, line, name_end - line);
-        data->name[11 + (name_end - line)] = '\0';
+        data->name = malloc(filename_len + 1 + (name_end - line) + 1);
+        unspace(data->name, filename, filename_len);
+        data->name[filename_len] = ':';
+        unspace(data->name + filename_len + 1, line, name_end - line);
+        data->name[filename_len + 1 + (name_end - line)] = '\0';
 
-        char *value = name_end;
+        char *value = name_end + 1;
         while (isspace(*value)) ++value;
         data->value = strdup(value);
     }
@@ -155,10 +178,10 @@ static int read_proc_yaffs(struct data *stats, int stats_count) {
 
         struct data *data = &stats[num++];
         data->name = malloc(12 + device_len + 1 + (name_end - line) + 1);
-        strcpy(data->name, "/proc/yaffs:");
-        memcpy(data->name + 12, device, device_len);
-        strcpy(data->name + 12 + device_len, ":");
-        memcpy(data->name + 12 + device_len + 1, line, name_end - line);
+        memcpy(data->name, "/proc/yaffs:", 12);
+        unspace(data->name + 12, device, device_len);
+        data->name[12 + device_len] = ':';
+        unspace(data->name + 12 + device_len + 1, line, name_end - line);
         data->name[12 + device_len + 1 + (name_end - line)] = '\0';
 
         char *value = name_end;
@@ -178,7 +201,10 @@ static int compare_data(const void *a, const void *b) {
 
 // Return a malloc'd array of "struct data" read from all over /proc.
 // The array is sorted by name and terminated by a record with name == NULL.
-static struct data *read_stats() {
+static struct data *read_stats(char *names[], int name_count) {
+    static int bad[4096];  // Cache pids known not to match patterns
+    static size_t bad_count = 0;
+
     int pids[4096];
     size_t pid_count = 0;
 
@@ -188,33 +214,78 @@ static struct data *read_stats() {
         exit(1);
     }
 
+    size_t bad_pos = 0;
     char filename[1024];
     struct dirent *proc_entry;
     while ((proc_entry = readdir(proc_dir))) {
         int pid = atoi(proc_entry->d_name);
-        if (pid > 0) {
-            if (pid_count >= sizeof(pids) / sizeof(pids[0])) {
-                fprintf(stderr, "warning: >%d processes\n", pid_count);
-                break;
+        if (pid <= 0) continue;
+
+        if (name_count > 0) {
+            while (bad_pos < bad_count && bad[bad_pos] < pid) ++bad_pos;
+            if (bad_pos < bad_count && bad[bad_pos] == pid) continue;
+
+            char cmdline[4096];
+            sprintf(filename, "/proc/%d/cmdline", pid);
+            int fd = open(filename, O_RDONLY);
+            if (fd < 0) {
+                perror(filename);
+                continue;
             }
+
+            int len = read(fd, cmdline, sizeof(cmdline) - 1);
+            if (len < 0) {
+                perror(filename);
+                close(fd);
+                continue;
+            }
+
+            close(fd);
+            cmdline[len] = '\0';
+            int n;
+            for (n = 0; n < name_count && !strstr(cmdline, names[n]); ++n);
+
+            if (n == name_count) {
+                // Insertion sort -- pids mostly increase so this makes sense
+                if (bad_count < sizeof(bad) / sizeof(bad[0])) {
+                    int pos = bad_count++;
+                    while (pos > 0 && bad[pos - 1] > pid) {
+                        bad[pos] = bad[pos - 1];
+                        --pos;
+                    }
+                    bad[pos] = pid;
+                }
+                continue;
+            }
+        }
+
+        if (pid_count >= sizeof(pids) / sizeof(pids[0])) {
+            fprintf(stderr, "warning: >%d processes\n", pid_count);
+        } else {
             pids[pid_count++] = pid;
         }
     }
     closedir(proc_dir);
 
-    size_t i, stats_count = pid_count * 2 + 200;  // Enough for stat + yaffs
+    size_t i, stats_count = pid_count * 2 + 200;  // 200 for stat, yaffs, etc.
     struct data *stats = malloc((stats_count + 1) * sizeof(struct data));
     struct data *next = stats;
     for (i = 0; i < pid_count; i++) {
+        assert(pids[i] > 0);
         sprintf(filename, "/proc/%d/stat", pids[i]);
         read_data(next++, filename);
-
         sprintf(filename, "/proc/%d/wchan", pids[i]);
         read_data(next++, filename);
     }
 
-    next += read_proc_stat(next, stats + stats_count - next);
+    struct data *end = stats + stats_count;
     next += read_proc_yaffs(next, stats + stats_count - next);
+    next += read_lines("/proc/net/dev", ':', NULL, next, end - next);
+    next += read_lines("/proc/stat", ' ', NULL, next, end - next);
+    next += read_lines("/proc/binder/stats", ':', "\nproc ", next, end - next);
+    next += read_lines(
+            "/sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state",
+            ' ', NULL, next, end - next);
 
     assert(next < stats + stats_count);
     next->name = NULL;
@@ -275,12 +346,17 @@ static void free_stats(struct data *stats) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
+    if (argc < 2) {
         fprintf(stderr,
-                "usage: procstatlog poll_interval > procstat.log\n\n"
+                "usage: procstatlog poll_interval [procname ...] > procstat.log\n\n"
+                "\n"
                 "Scans process status every poll_interval seconds (e.g. 0.1)\n"
                 "and writes data from /proc/stat, /proc/*/stat files, and\n"
                 "other /proc status files every time something changes.\n"
+                "\n"
+                "Scans all processes by default.  Listing some process name\n"
+                "substrings will limit scanning and reduce overhead.\n"
+                "\n"
                 "Data is logged continuously until the program is killed.\n");
         return 2;
     }
@@ -299,7 +375,7 @@ int main(int argc, char *argv[]) {
         gettimeofday(&before, NULL);
         printf("T + %ld.%06ld\n", before.tv_sec, before.tv_usec);
 
-        struct data *new_stats = read_stats();
+        struct data *new_stats = read_stats(argv + 2, argc - 2);
         diff_stats(old_stats, new_stats);
         free_stats(old_stats);
         old_stats = new_stats;
