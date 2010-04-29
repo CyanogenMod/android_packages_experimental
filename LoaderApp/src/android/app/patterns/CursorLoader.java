@@ -107,6 +107,14 @@ public class CursorLoader extends AsyncTaskLoader<Cursor> {
         stopLoading();
     }
 
+    public Uri getUri() {
+        return mUri;
+    }
+
+    public void setUri(Uri uri) {
+        mUri = uri;
+    }
+
     public String[] getProjection() {
         return mProjection;
     }
