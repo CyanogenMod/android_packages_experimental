@@ -57,6 +57,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 
 public class ProviderPerfActivity extends Activity {
 
@@ -85,7 +86,8 @@ public class ProviderPerfActivity extends Activity {
     };
 
 
-    ContentResolver cr;
+    private ContentResolver cr;
+    private int mIterations = 100;
 
     /** Called when the activity is first created. */
     @Override
@@ -95,31 +97,40 @@ public class ProviderPerfActivity extends Activity {
 
         cr = getContentResolver();
 
-        setButtonAction(R.id.lookup_button, new Runnable() {
+        setButtonAction(R.id.file_read_button, new Runnable() {
                 public void run() {
-                    final float avgTime = settingsProviderLoop(100, MODE_READ, 0);
-                    endAsyncOp(R.id.lookup_button, R.id.lookup_text, avgTime);
+                    final float avgTime = fileReadLoop();
+                    endAsyncOp(R.id.file_read_button, R.id.file_read_text, avgTime);
                 }});
 
-        setButtonAction(R.id.bg_read_button, new Runnable() {
+        setButtonAction(R.id.file_write_button, new Runnable() {
                 public void run() {
-                    final float avgTime =
-                        settingsProviderLoop(50, MODE_READ, 100);
-                    endAsyncOp(R.id.bg_read_button, R.id.bg_read_text, avgTime);
+                    final float avgTime = fileWriteLoop();
+                    endAsyncOp(R.id.file_write_button, R.id.file_write_text, avgTime);
                 }});
 
-        setButtonAction(R.id.bg_write_button, new Runnable() {
+        setButtonAction(R.id.settings_read_button, new Runnable() {
                 public void run() {
-                    final float avgTime =
-                        settingsProviderLoop(20, MODE_WRITE, 0);
-                    endAsyncOp(R.id.bg_write_button, R.id.bg_write_text, avgTime);
+                    final float avgTime = settingsProviderLoop(MODE_READ, 0);
+                    endAsyncOp(R.id.settings_read_button, R.id.settings_read_text, avgTime);
                 }});
 
-        setButtonAction(R.id.bg_writedup_button, new Runnable() {
+        setButtonAction(R.id.settings_sleep_button, new Runnable() {
                 public void run() {
-                    final float avgTime =
-                        settingsProviderLoop(20, MODE_WRITE_DUP, 0);
-                    endAsyncOp(R.id.bg_writedup_button, R.id.bg_writedup_text, avgTime);
+                    final float avgTime = settingsProviderLoop(MODE_READ, 100);
+                    endAsyncOp(R.id.settings_sleep_button, R.id.settings_sleep_text, avgTime);
+                }});
+
+        setButtonAction(R.id.settings_write_button, new Runnable() {
+                public void run() {
+                    final float avgTime = settingsProviderLoop(MODE_WRITE, 0);
+                    endAsyncOp(R.id.settings_write_button, R.id.settings_write_text, avgTime);
+                }});
+
+        setButtonAction(R.id.settings_writedup_button, new Runnable() {
+                public void run() {
+                    final float avgTime = settingsProviderLoop(MODE_WRITE_DUP, 0);
+                    endAsyncOp(R.id.settings_writedup_button, R.id.settings_writedup_text, avgTime);
                 }});
 
         setButtonAction(R.id.dummy_lookup_button, new Runnable() {
@@ -194,6 +205,16 @@ public class ProviderPerfActivity extends Activity {
         }
         button.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
+                    TextView tv = (TextView) findViewById(R.id.iterations_edit);
+                    if (tv != null) {
+                        try {
+                            mIterations = Integer.parseInt(tv.getText().toString());
+                        } catch (NumberFormatException e) {
+                            Log.w(TAG, "Invalid iteration count", e);
+                            if (tv != null) tv.setText(Integer.toString(mIterations));
+                        }
+                    }
+
                     button.setEnabled(false);
                     new Thread(r).start();
                 }
@@ -217,14 +238,67 @@ public class ProviderPerfActivity extends Activity {
         tv.setText(text);
     }
 
+    private float fileReadLoop() {
+        RandomAccessFile raf = null;
+        File filename = getFileStreamPath("test.dat");
+        try {
+            long sumNanos = 0;
+            byte[] buf = new byte[512];
+
+            raf = new RandomAccessFile(filename, "rw");
+            raf.write(buf);
+            raf.close();
+            raf = null;
+
+            // The data's almost certainly cached -- it's not clear what we're testing here
+            raf = new RandomAccessFile(filename, "r");
+            for (int i = 0; i < mIterations; i++) {
+                long lastTime = System.nanoTime();
+                raf.seek(0);
+                raf.read(buf);
+                sumNanos += System.nanoTime() - lastTime;
+            }
+
+            return (float) sumNanos / Math.max(1.0f, (float) mIterations) / 1000000.0f;
+        } catch (IOException e) {
+            Log.e(TAG, "File read failed", e);
+            return 0;
+        } finally {
+            try { if (raf != null) raf.close(); } catch (IOException e) {}
+        }
+    }
+
+    private float fileWriteLoop() {
+        RandomAccessFile raf = null;
+        File filename = getFileStreamPath("test.dat");
+        try {
+            long sumNanos = 0;
+            byte[] buf = new byte[512];
+            for (int i = 0; i < mIterations; i++) {
+                for (int j = 0; j < buf.length; j++) buf[j] = (byte) (i + j);
+                long lastTime = System.nanoTime();
+                raf = new RandomAccessFile(filename, "rw");
+                raf.write(buf);
+                raf.close();
+                raf = null;
+                sumNanos += System.nanoTime() - lastTime;
+            }
+
+            return (float) sumNanos / Math.max(1.0f, (float) mIterations) / 1000000.0f;
+        } catch (IOException e) {
+            Log.e(TAG, "File read failed", e);
+            return 0;
+        } finally {
+            try { if (raf != null) raf.close(); } catch (IOException e) {}
+        }
+    }
+
     // Returns average cross-process dummy query time in milliseconds.
     private float noOpProviderLoop(Uri uri) {
         long sumNanos = 0;
         int failures = 0;
         int total = 0;
-        long startTime = System.nanoTime();
-        long endTime = startTime + LOOP_TIME_NANOS;
-        while (System.nanoTime() < endTime) {
+        for (int i = 0; i < mIterations; i++) {
             long duration = doNoOpLookup(uri);
             if (duration < 0) {
                 failures++;
@@ -247,15 +321,13 @@ public class ProviderPerfActivity extends Activity {
         long sumNanos = 0;
         int total = 0;
 
-        long lastTime = System.nanoTime();
-        long endTime = lastTime + LOOP_TIME_NANOS;
         try {
-            while (lastTime < endTime) {
+            for (int i = 0; i < mIterations; i++) {
+                long lastTime = System.nanoTime();
                 Bundle b = cp.call("GET_system", key, null);
                 long nowTime = System.nanoTime();
                 total++;
                 sumNanos += (nowTime - lastTime);
-                lastTime = nowTime;
             }
         } catch (RemoteException e) {
             return -999.0f;
@@ -267,17 +339,16 @@ public class ProviderPerfActivity extends Activity {
         return averageMillis;
     }
 
-    // Returns average cross-process dummy query time in milliseconds.
+    // Returns average time to read a /proc file in milliseconds.
     private float procLoop() {
         long sumNanos = 0;
         int total = 0;
-        long lastTime = System.nanoTime();
-        long endTime = lastTime + LOOP_TIME_NANOS;
         File f = new File("/proc/self/cmdline");
         byte[] buf = new byte[100];
         String value = null;
         try {
-            while (lastTime < endTime) {
+            for (int i = 0; i < mIterations; i++) {
+                long lastTime = System.nanoTime();
                 FileInputStream is = new FileInputStream(f);
                 int readBytes = is.read(buf, 0, 100);
                 is.close();
@@ -335,9 +406,8 @@ public class ProviderPerfActivity extends Activity {
         try {
             long sumNanos = 0;
             int count = 0;
-            long lastTime = System.nanoTime();
-            long endTime = lastTime + LOOP_TIME_NANOS;
-            while (lastTime < endTime) {
+            for (int i = 0; i < mIterations; i++) {
+                long lastTime = System.nanoTime();
                 if (amtEncoding == 0) {
                     mServiceStub.pingVoid();
                 } else {
@@ -345,7 +415,6 @@ public class ProviderPerfActivity extends Activity {
                 }
                 long curTime = System.nanoTime();
                 long duration = curTime - lastTime;
-                lastTime = curTime;
                 count++;
                 sumNanos += duration;
             }
@@ -369,18 +438,16 @@ public class ProviderPerfActivity extends Activity {
             InputStream is = socket.getInputStream();
             OutputStream os = socket.getOutputStream();
 
-            long nowTime = System.nanoTime();
-            long endTime = nowTime + LOOP_TIME_NANOS;
             int count = 0;
             long sumNanos = 0;
-            while (nowTime < endTime) {
+            for (int i = 0; i < mIterations; i++) {
+                long beforeTime = System.nanoTime();
                 int expectByte = count & 0xff;
                 os.write(expectByte);
                 int gotBackByte = is.read();
 
                 long afterTime = System.nanoTime();
-                sumNanos += (afterTime - nowTime);
-                nowTime = afterTime;
+                sumNanos += (afterTime - beforeTime);
 
                 if (gotBackByte != expectByte) {
                     Log.w(TAG, "Got wrong byte back.  Got: " + gotBackByte
@@ -405,13 +472,11 @@ public class ProviderPerfActivity extends Activity {
     private static final int MODE_WRITE = 1;
     private static final int MODE_WRITE_DUP = 2;
 
-    private float settingsProviderLoop(int iters, int mode, long innerSleep) {
+    private float settingsProviderLoop(int mode, long innerSleep) {
         long sumMillis = 0;
         int total = 0;
-        long startTime = System.nanoTime();
-        long endTime = startTime + LOOP_TIME_NANOS;
-        while (System.nanoTime() < endTime) {
-            long duration = mode == MODE_READ ? doRead(innerSleep) : doWrite(mode);
+        for (int i = 0; i < mIterations; i++) {
+            long duration = mode == MODE_READ ? settingsRead(innerSleep) : settingsWrite(mode);
             if (duration < 0) {
                 return -999.0f;
             }
@@ -425,7 +490,7 @@ public class ProviderPerfActivity extends Activity {
     }
 
     // Returns milliseconds taken, or -1 on failure.
-    private long doRead(long innerSleep) {
+    private long settingsRead(long innerSleep) {
         Cursor c = null;
         try {
             long startTime = SystemClock.uptimeMillis();
@@ -455,7 +520,7 @@ public class ProviderPerfActivity extends Activity {
     }
 
     // Returns milliseconds taken, or -1 on failure.
-    private long doWrite(int mode) {
+    private long settingsWrite(int mode) {
         Cursor c = null;
         long startTime = SystemClock.uptimeMillis();
         // The database will take care of replacing duplicates.
