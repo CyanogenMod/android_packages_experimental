@@ -112,10 +112,19 @@ pages: <nobr>%(nPageReads)d read</nobr>,
 blocks: <nobr>%(nBlockErasures)d erased</nobr>
 """
 
+DISK_LABEL = """
+<span style="font-size: 150%%">disk: %(device)s</span><br>
+sectors: <nobr>%(reads)d read</nobr>, <nobr>%(writes)d written</nobr>
+"""
+
+DISK_TIME_LABEL = """
+msec: <nobr>%(msec)d waiting</nobr>
+"""
+
 NET_LABEL = """
 <span style="font-size: 150%%">net: %(interface)s</span><br>
 bytes: <nobr>%(tx)d tx</nobr>,
-<nobr>%(rx)d rx</nobr><br>
+<nobr>%(rx)d rx</nobr>
 """
 
 PAGE_END = """
@@ -478,11 +487,94 @@ def WriteOutput(history, log_filename, filename):
         })
 
     #
+    # Output non-YAFFS statistics
+    #
+
+    disk_reads = {}
+    disk_writes = {}
+    disk_msec = {}
+    total_io = max_io = max_msec = 0
+
+    last_state = {}
+    for when, state in sorted_history:
+        for key in state:
+            if not key.startswith("/proc/diskstats:"): continue
+
+            last = last_state.get(key, "").split()
+            next = state.get(key, "").split()
+            if not (last and next): continue
+
+            reads = int(next[2]) - int(last[2])
+            writes = int(next[6]) - int(last[6])
+            msec = int(next[10]) - int(last[10])
+            total_io += reads + writes
+            max_io = max(max_io, reads, writes)
+            max_msec = max(max_msec, msec)
+
+            diskstats, device = key.split(":", 1)
+            disk_reads.setdefault(device, {})[when] = reads
+            disk_writes.setdefault(device, {})[when] = writes
+            disk_msec.setdefault(device, {})[when] = msec
+
+        last_state = state
+
+    io_cutoff = total_io / 100
+    for num, device in enumerate(sorted(disk_reads.keys())):
+        if [d for d in disk_reads.keys()
+            if d.startswith(device) and d != device]: continue
+
+        reads, writes = disk_reads[device], disk_writes[device]
+        total_reads, total_writes = sum(reads.values()), sum(writes.values())
+        if total_reads + total_writes <= io_cutoff: continue
+
+        WriteChartData(
+            ["reads", "writes"], [reads, writes],
+            os.path.join(files_dir, "disk%d.csv" % num))
+
+        out.append(CHART % {
+            "id": cgi.escape("disk%d" % num),
+            "id_js": json.write("disk%d" % num),
+            "label_html": DISK_LABEL % {
+                "device": cgi.escape(device),
+                "reads": total_reads,
+                "writes": total_writes,
+            },
+            "filename_js": json.write("%s/disk%d.csv" % (files_url, num)),
+            "options_js": json.write({
+                "colors": ["gray", "teal"],
+                "dateWindow": date_window,
+                "fillGraph": True,
+                "height": 75,
+                "valueRange": [0, max_io * 11 / 10],
+            }),
+        })
+
+        msec = disk_msec[device]
+
+        WriteChartData(
+            ["msec"], [msec],
+            os.path.join(files_dir, "disk%d_time.csv" % num))
+
+        out.append(CHART % {
+            "id": cgi.escape("disk%d_time" % num),
+            "id_js": json.write("disk%d_time" % num),
+            "label_html": DISK_TIME_LABEL % {"msec": sum(msec.values())},
+            "filename_js": json.write("%s/disk%d_time.csv" % (files_url, num)),
+            "options_js": json.write({
+                "colors": ["blue"],
+                "dateWindow": date_window,
+                "fillGraph": True,
+                "height": 50,
+                "valueRange": [0, max_msec * 11 / 10],
+            }),
+        })
+
+    #
     # Output per-process CPU and page faults collected earlier
     #
 
-    cpu_cutoff = (total_sys + total_user) / 1000
-    faults_cutoff = sum(total_faults.values()) / 200
+    cpu_cutoff = (total_sys + total_user) / 200
+    faults_cutoff = sum(total_faults.values()) / 100
     for start, pid in sorted([(s, p) for p, s in process_start.iteritems()]):
         sys = sum([n for n, d in process_sys.get(pid, {}).values()])
         sys_user = sum([n for n, d in process_sys_user.get(pid, {}).values()])

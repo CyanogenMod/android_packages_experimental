@@ -25,6 +25,20 @@
   </TableRow>
 
   <TableRow>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Profile filename:"
+        />
+
+    <EditText android:id="@+id/trace_edit"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        />
+  </TableRow>
+
+  <TableRow>
     <LinearLayout android:layout_height="wrap_content"
                   android:layout_width="wrap_content"
                   android:orientation="vertical">
@@ -254,6 +268,38 @@
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
          android:text="cp.Call() no exist" />
+    </LinearLayout>
+  </TableRow>
+
+  <TableRow>
+    <LinearLayout android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:orientation="vertical">
+      <TextView  
+         android:id="@+id/obtain_text"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Obtain parcel:" />
+      <Button
+         android:id="@+id/obtain_button"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Parcel.obtain()" />
+    </LinearLayout>
+
+    <LinearLayout android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:orientation="vertical">
+      <TextView  
+         android:id="@+id/recycle_text"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Recycle parcel:" />
+      <Button
+         android:id="@+id/recycle_button"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Parcel.recycle()" />
     </LinearLayout>
   </TableRow>
 </TableLayout>
