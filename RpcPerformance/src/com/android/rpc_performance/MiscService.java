@@ -19,6 +19,7 @@ package com.android.rpc_performance;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Debug;
 import android.os.IBinder;
 import android.util.Log;
 import android.net.LocalServerSocket;
@@ -93,10 +94,16 @@ public class MiscService extends Service {
     }
 
     private final IService.Stub mBinder = new IService.Stub() {
-            public String pingString(String v) {
-                return "some string";
-            }
-            public void pingVoid() {
-            }
-        };
+        public String pingString(String v) {
+            return v;
+        }
+        public void pingVoid() {
+        }
+        public void startTracing(String name) {
+            Debug.startMethodTracing(name);
+        }
+        public void stopTracing() {
+            Debug.stopMethodTracing();
+        }
+    };
 }

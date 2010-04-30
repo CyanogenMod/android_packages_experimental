@@ -19,4 +19,7 @@ package com.android.rpc_performance;
 interface IService {
     String pingString(String v);
     void pingVoid();
+
+    void startTracing(String name);
+    void stopTracing();
 }
