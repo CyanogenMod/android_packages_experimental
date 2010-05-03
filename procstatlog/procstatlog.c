@@ -44,10 +44,15 @@
 //
 // Files read:
 //
-// /proc/*/stat  - for all running processes
-// /proc/*/wchan - for all running processes
-// /proc/stat    - one per line, e.g. "/proc/stat:intr"
-// /proc/yaffs   - one per line, e.g. "/proc/yaffs:userdata:nBlockErasures"
+// /proc/*/stat       - for all running/selected processes
+// /proc/*/wchan      - for all running/selected processes
+// /proc/binder/stats - per line: "/proc/binder/stats:BC_REPLY"
+// /proc/diskstats    - per device: "/proc/diskstats:mmcblk0"
+// /proc/net/dev      - per interface: "/proc/net/dev:rmnet0"
+// /proc/stat         - per line: "/proc/stat:intr"
+// /proc/yaffs        - per device/line: "/proc/yaffs:userdata:nBlockErasures"
+// /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state
+//                    - per line: "/sys/.../time_in_state:245000"
 
 struct data {
     char *name;            // filename, plus ":var" for many-valued files
@@ -89,11 +94,14 @@ static void read_data(struct data *data, const char *filename) {
 }
 
 // Read a name/value file and write data entries for each line.
-// The delimiter is used to split each line into name and value.
-// If terminator is non-NULL, processing stops after it appears.
 // Returns the number of entries written (always <= stats_count).
+//
+// delimiter: used to split each line into name and value
+// terminator: if non-NULL, processing stops after this string
+// skip_words: skip this many words at the start of each line
 static int read_lines(
-        const char *filename, char delimiter, const char *terminator,
+        const char *filename,
+        char delimiter, const char *terminator, int skip_words,
         struct data *stats, int stats_count) {
     char buf[8192];
     int fd = open(filename, O_RDONLY);
@@ -121,7 +129,13 @@ static int read_lines(
          line = strtok(NULL, "\n")) {
         // Line format: <sp>name<delim><sp>value
 
+        int i;
         while (isspace(*line)) ++line;
+        for (i = 0; i < skip_words; ++i) {
+            while (isgraph(*line)) ++line;
+            while (isspace(*line)) ++line;
+        }
+
         char *name_end = strchr(line, delimiter);
         if (name_end == NULL) continue;
 
@@ -280,12 +294,13 @@ static struct data *read_stats(char *names[], int name_count) {
 
     struct data *end = stats + stats_count;
     next += read_proc_yaffs(next, stats + stats_count - next);
-    next += read_lines("/proc/net/dev", ':', NULL, next, end - next);
-    next += read_lines("/proc/stat", ' ', NULL, next, end - next);
-    next += read_lines("/proc/binder/stats", ':', "\nproc ", next, end - next);
+    next += read_lines("/proc/net/dev", ':', NULL, 0, next, end - next);
+    next += read_lines("/proc/stat", ' ', NULL, 0, next, end - next);
+    next += read_lines("/proc/binder/stats", ':', "\nproc ", 0, next, end - next);
+    next += read_lines("/proc/diskstats", ' ', NULL, 2, next, end - next);
     next += read_lines(
             "/sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state",
-            ' ', NULL, next, end - next);
+            ' ', NULL, 0, next, end - next);
 
     assert(next < stats + stats_count);
     next->name = NULL;
