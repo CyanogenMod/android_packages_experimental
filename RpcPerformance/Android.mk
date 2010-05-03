@@ -13,14 +13,17 @@
 # limitations under the License.
 
 LOCAL_PATH:= $(call my-dir)
+
 include $(CLEAR_VARS)
-
-# The "tests" tag will prevent need for localized strings:
-LOCAL_MODULE_TAGS := tests
-
+LOCAL_MODULE_TAGS := tests   # Allows non-localized strings
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_SRC_FILES += src/com/android/rpc_performance/IService.aidl
-
 LOCAL_PACKAGE_NAME := RpcPerformance
-
 include $(BUILD_PACKAGE)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := rpcperftest
+LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
+LOCAL_SHARED_LIBRARIES := libbinder
+LOCAL_SRC_FILES := rpcperftest.cpp
+include $(BUILD_EXECUTABLE)
