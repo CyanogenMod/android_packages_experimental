@@ -39,8 +39,10 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Parcel;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.telephony.TelephonyManager;
@@ -88,6 +90,7 @@ public class ProviderPerfActivity extends Activity {
 
     private ContentResolver cr;
     private int mIterations = 100;
+    private String mTraceName = null;
 
     /** Called when the activity is first created. */
     @Override
@@ -154,13 +157,13 @@ public class ProviderPerfActivity extends Activity {
 
         setButtonAction(R.id.service_button, new Runnable() {
                 public void run() {
-                    final float avgTime = serviceLoop(0);
+                    final float avgTime = serviceLoop(null);
                     endAsyncOp(R.id.service_button, R.id.service_text, avgTime);
                 }});
 
         setButtonAction(R.id.service2_button, new Runnable() {
                 public void run() {
-                    final float avgTime = serviceLoop(1);
+                    final float avgTime = serviceLoop("xyzzy");
                     endAsyncOp(R.id.service2_button, R.id.service2_text, avgTime);
                 }});
 
@@ -181,6 +184,18 @@ public class ProviderPerfActivity extends Activity {
                     final float avgTime = callLoop("XXXXXXXX");  // non-existent
                     endAsyncOp(R.id.call2_button, R.id.call2_text, avgTime);
                 }});
+
+        setButtonAction(R.id.obtain_button, new Runnable() {
+                public void run() {
+                    final float avgTime = parcelLoop(true);
+                    endAsyncOp(R.id.obtain_button, R.id.obtain_text, avgTime);
+                }});
+
+        setButtonAction(R.id.recycle_button, new Runnable() {
+                public void run() {
+                    final float avgTime = parcelLoop(false);
+                    endAsyncOp(R.id.recycle_button, R.id.recycle_text, avgTime);
+                }});
     }
 
     @Override public void onResume() {
@@ -199,35 +214,39 @@ public class ProviderPerfActivity extends Activity {
 
     private void setButtonAction(int button_id, final Runnable r) {
         final Button button = (Button) findViewById(button_id);
-        if (button == null) {
-            Log.w(TAG, "Bogus button ID: " + button_id);
-            return;
-        }
         button.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    TextView tv = (TextView) findViewById(R.id.iterations_edit);
-                    if (tv != null) {
-                        try {
-                            mIterations = Integer.parseInt(tv.getText().toString());
-                        } catch (NumberFormatException e) {
-                            Log.w(TAG, "Invalid iteration count", e);
-                            if (tv != null) tv.setText(Integer.toString(mIterations));
-                        }
-                    }
+            public void onClick(View v) {
+                button.requestFocus();
+                button.setEnabled(false);
 
-                    button.setEnabled(false);
-                    new Thread(r).start();
+                TextView tvIter = (TextView) findViewById(R.id.iterations_edit);
+                try {
+                    mIterations = Integer.parseInt(tvIter.getText().toString());
+                } catch (NumberFormatException e) {
+                    Log.w(TAG, "Invalid iteration count", e);
+                    if (tvIter != null) tvIter.setText(Integer.toString(mIterations));
                 }
-            });
+
+                TextView tvTrace = (TextView) findViewById(R.id.trace_edit);
+                String name = tvTrace.getText().toString();
+                if (name != null && name.length() > 0) {
+                    mTraceName = name;
+                    Debug.startMethodTracing(name);
+                }
+
+                new Thread(r).start();
+            }
+        });
     }
 
     private void endAsyncOp(final int button_id, final int text_id, final float avgTime) {
         mHandler.post(new Runnable() {
-                public void run() {
-                    Button button = (Button) findViewById(button_id);
-                    button.setEnabled(true);
-                    setTextTime(text_id, avgTime);
-                }});
+            public void run() {
+                Debug.stopMethodTracing();
+                findViewById(button_id).setEnabled(true);
+                setTextTime(text_id, avgTime);
+            }
+        });
     }
 
     private void setTextTime(int id, float avgTime) {
@@ -397,33 +416,33 @@ public class ProviderPerfActivity extends Activity {
     }
 
     // Returns average cross-process dummy query time in milliseconds.
-    private float serviceLoop(int amtEncoding) {
+    private float serviceLoop(String value) {
         if (mServiceStub == null) {
             Log.v(TAG, "No service stub.");
             return -999;
         }
+
         String dummy = null;
         try {
+            if (mTraceName != null) mServiceStub.startTracing(mTraceName + ".service");
+
             long sumNanos = 0;
-            int count = 0;
             for (int i = 0; i < mIterations; i++) {
                 long lastTime = System.nanoTime();
-                if (amtEncoding == 0) {
+                if (value == null) {
                     mServiceStub.pingVoid();
                 } else {
-                    dummy = mServiceStub.pingString(dummy);
+                    value = mServiceStub.pingString(value);
                 }
-                long curTime = System.nanoTime();
-                long duration = curTime - lastTime;
-                count++;
-                sumNanos += duration;
+                sumNanos += System.nanoTime() - lastTime;
             }
-            float averageMillis = (float) sumNanos / (float) (count != 0 ? count : 1) / 1000000.0f;
-            Log.v(TAG, "service loop: total: " + count + "; avg_ms=" + averageMillis);
-            return averageMillis;
+
+            if (mTraceName != null) mServiceStub.stopTracing();
+
+            return (float) sumNanos / Math.max(1.0f, (float) mIterations) / 1000000.0f;
         } catch (RemoteException e) {
-            Log.e(TAG, "error in service loop: " + e);
-            return -999.0f;
+            Log.e(TAG, "Binder call failed", e);
+            return -999;
         }
     }
 
@@ -465,6 +484,27 @@ public class ProviderPerfActivity extends Activity {
                 try { socket.close(); } catch (IOException e) {}
             }
         }
+    }
+
+    // Returns average operation time in milliseconds.
+    // obtain: true = measure obtain(), false = measure recycle()
+    private float parcelLoop(boolean obtain) {
+        long sumNanos = 0;
+        for (int i = 0; i < mIterations; i++) {
+            if (obtain) {
+                long lastTime = System.nanoTime();
+                Parcel p = Parcel.obtain();
+                sumNanos += System.nanoTime() - lastTime;
+                p.recycle();
+            } else {
+                Parcel p = Parcel.obtain();
+                long lastTime = System.nanoTime();
+                p.recycle();
+                sumNanos += System.nanoTime() - lastTime;
+            }
+        }
+
+        return (float) sumNanos / Math.max(1.0f, (float) mIterations) / 1000000.0f;
     }
 
     // Returns average milliseconds.
