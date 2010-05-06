@@ -44,6 +44,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -165,6 +166,18 @@ public class ProviderPerfActivity extends Activity {
                 public void run() {
                     final float avgTime = serviceLoop("xyzzy");
                     endAsyncOp(R.id.service2_button, R.id.service2_text, avgTime);
+                }});
+
+        setButtonAction(R.id.ping_media_button, new Runnable() {
+                public void run() {
+                    final float avgTime = pingServiceLoop("media.player");
+                    endAsyncOp(R.id.ping_media_button, R.id.ping_media_text, avgTime);
+                }});
+
+        setButtonAction(R.id.ping_activity_button, new Runnable() {
+                public void run() {
+                    final float avgTime = pingServiceLoop("activity");
+                    endAsyncOp(R.id.ping_activity_button, R.id.ping_activity_text, avgTime);
                 }});
 
         setButtonAction(R.id.proc_button, new Runnable() {
@@ -444,6 +457,27 @@ public class ProviderPerfActivity extends Activity {
             Log.e(TAG, "Binder call failed", e);
             return -999;
         }
+    }
+
+    // Returns average cross-process binder ping time in milliseconds.
+    private float pingServiceLoop(String service) {
+        IBinder binder = ServiceManager.getService(service);
+        if (binder == null) {
+            Log.e(TAG, "Service missing: " + service);
+            return -1.0f;
+        }
+
+        long sumNanos = 0;
+        for (int i = 0; i < mIterations; i++) {
+            long lastTime = System.nanoTime();
+            if (!binder.pingBinder()) {
+                Log.e(TAG, "Error pinging service: " + service);
+                return -1.0f;
+            }
+            sumNanos += System.nanoTime() - lastTime;
+        }
+
+        return (float) sumNanos / Math.max(1.0f, (float) mIterations) / 1000000.0f;
     }
 
     // Returns average milliseconds.
