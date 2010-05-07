@@ -244,6 +244,38 @@
                   android:layout_width="wrap_content"
                   android:orientation="vertical">
       <TextView  
+         android:id="@+id/ping_media_text"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Ping media player service:" />
+      <Button
+         android:id="@+id/ping_media_button"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Ping media" />
+    </LinearLayout>
+
+    <LinearLayout android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:orientation="vertical">
+      <TextView  
+         android:id="@+id/ping_activity_text"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Ping activity service:" />
+      <Button
+         android:id="@+id/ping_activity_button"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Ping activity" />
+    </LinearLayout>
+  </TableRow>
+
+  <TableRow>
+    <LinearLayout android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:orientation="vertical">
+      <TextView  
          android:id="@+id/call_text"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
