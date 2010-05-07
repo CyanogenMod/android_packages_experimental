@@ -14,18 +14,32 @@
  * limitations under the License.
  */
 
+#include <binder/IInterface.h>
 #include <binder/IServiceManager.h>
+#include <binder/IPCThreadState.h>
+#include <utils/Log.h>
 
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 using namespace android;
 
+static const int WARMUP = 100;
 static const int COUNT = 10000;
 
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "usage: rpcperftest servicename\n");
+class ITestService : public IInterface {
+public:
+    DECLARE_META_INTERFACE(TestService);
+};
+
+typedef BpInterface<ITestService> BpTestService;
+
+IMPLEMENT_META_INTERFACE(TestService, "TestService");
+
+int main(int argc, const char *argv[]) {
+    if (argc != 2 || argv[1][0] == '-') {
+        fprintf(stderr, "usage: rpcperftest service-to-test | :service-to-serve\n");
         return 2;
     }
 
@@ -35,10 +49,32 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    if (argv[1][0] == ':') {
+        String16 name(argv[1] + 1);
+        status_t status = sm->addService(name, new BnInterface<ITestService>());
+        if (status != OK) {
+            fprintf(stderr, "error: can't register service: %s\n", argv[1] + 1);
+            return 1;
+        }
+
+        ProcessState::self()->startThreadPool();
+        IPCThreadState::self()->joinThreadPool();
+        fprintf(stderr, "error: can't run service\n");
+        return 1;
+    }
+
     sp<IBinder> service = sm->checkService(String16(argv[1]));
     if (service == NULL) {
         fprintf(stderr, "error: can't find service: %s\n", argv[1]);
         return 1;
+    }
+
+    for (int i = 0; i < WARMUP; i++) {
+        status_t status = service->pingBinder();
+        if (status != OK) {
+            fprintf(stderr, "error: can't ping: %s [%d]\n", argv[1], status);
+            return 1;
+        }
     }
 
     struct timespec before, after;
@@ -46,7 +82,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < COUNT; i++) {
         status_t status = service->pingBinder();
         if (status != OK) {
-            fprintf(stderr, "error: can't ping service manager [%d]\n", status);
+            fprintf(stderr, "error: can't ping: %s [%d]\n", argv[1], status);
             return 1;
         }
     }
