@@ -36,20 +36,19 @@
         phat:titleBarType="normal"
     />
 
-    <LinearLayout
+    <LinearLayout android:id="@+id/paneHost"
         android:layout_width="match_parent"
         android:layout_height="0dip"
         android:layout_weight="1"
         android:orientation="horizontal"
     >
-        <FrameLayout android:id="@+id/groups"
+        <FrameLayout android:id="@+id/smallPane"
             android:layout_width="0dip"
             android:layout_weight="1"
             android:layout_height="match_parent"
-            android:background="#222"
         />
 
-        <FrameLayout android:id="@android:id/list"
+        <FrameLayout android:id="@+id/largePane"
             android:layout_width="0dip"
             android:layout_weight="2"
             android:layout_height="match_parent"

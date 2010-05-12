@@ -117,9 +117,13 @@ public class ContactsListFragment extends LoaderManagingFragment<Cursor>
             startLoading(LOADER_LIST, null);
         }
     }
-    
+
     public void setController(Controller controller) {
         mController = controller;
+    }
+
+    public int getMode() {
+        return mMode;
     }
 
     /**
