@@ -20,12 +20,19 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.os.Handler;
 
+/**
+ * An abstract class that performs asynchronous loading of data. While Loaders are active
+ * they should monitor the source of their data and deliver new results when the contents
+ * change. 
+ *
+ * @param <D> The result returned when the load is complete
+ */
 public abstract class Loader<D> {
-    private int mId;
-    private OnLoadCompleteListener<D> mListener;
-    private Context mContext;
+    int mId;
+    OnLoadCompleteListener<D> mListener;
+    Context mContext;
 
-    protected final class ForceLoadContentObserver extends ContentObserver {
+    public final class ForceLoadContentObserver extends ContentObserver {
         public ForceLoadContentObserver() {
             super(new Handler());
         }
@@ -52,17 +59,6 @@ public abstract class Loader<D> {
     }
 
     /**
-     * Sends the result of the load to the register listener.
-     *
-     * @param data the result of the load
-     */
-    protected void deliverResult(D data) {
-        if (mListener != null) {
-            mListener.onLoadComplete(this, data);
-        }
-    }
-
-    /**
      * Stores away the application context associated with context. Since Loaders can be used
      * across multiple activities it's dangerous to store the context directly.
      *
@@ -70,6 +66,19 @@ public abstract class Loader<D> {
      */
     public Loader(Context context) {
         mContext = context.getApplicationContext();
+    }
+
+    /**
+     * Sends the result of the load to the registered listener. Should only be called by subclasses.
+     *
+     * Must be called from the UI thread.
+     *
+     * @param data the result of the load
+     */
+    public void deliverResult(D data) {
+        if (mListener != null) {
+            mListener.onLoadComplete(this, data);
+        }
     }
 
     /**
@@ -138,7 +147,7 @@ public abstract class Loader<D> {
     public abstract void stopLoading();
 
     /**
-     * Destroys the loader and frees it's resources, making it unusable.
+     * Destroys the loader and frees its resources, making it unusable.
      *
      * Must be called from the UI thread
      */

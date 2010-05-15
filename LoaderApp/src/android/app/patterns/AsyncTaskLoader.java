@@ -39,7 +39,7 @@ public abstract class AsyncTaskLoader<D> extends Loader<D> {
         }
     }
 
-    private LoadTask mTask;
+    LoadTask mTask;
 
     public AsyncTaskLoader(Context context) {
         super(context);
@@ -59,7 +59,7 @@ public abstract class AsyncTaskLoader<D> extends Loader<D> {
      * Attempt to cancel the current load task. See {@link AsyncTask#cancel(boolean)}
      * for more info.
      *
-     * @return <tt>false</tt> if the task could not be cancelled,
+     * @return <tt>false</tt> if the task could not be canceled,
      *         typically because it has already completed normally, or
      *         because {@link #startLoading()} hasn't been called, and
      *         <tt>true</tt> otherwise
@@ -73,22 +73,15 @@ public abstract class AsyncTaskLoader<D> extends Loader<D> {
     
     void dispatchOnLoadComplete(D data) {
         mTask = null;
-        onLoadComplete(data);
+        deliverResult(data);
     }
 
     /**
-     * Called on a worker thread to perform the actual load. Implementions should not deliver the
-     * results directly, but should return them from this this method and deliver them from
+     * Called on a worker thread to perform the actual load. Implementations should not deliver the
+     * results directly, but should return them from this method and deliver them from
      * {@link #onPostExecute()}
      *
      * @return the result of the load
      */
-    protected abstract D loadInBackground();
-
-    /**
-     * Called on the UI thread with the result of the load.
-     *
-     * @param data the result of the load
-     */
-    protected abstract void onLoadComplete(D data);
+    public abstract D loadInBackground();
 }

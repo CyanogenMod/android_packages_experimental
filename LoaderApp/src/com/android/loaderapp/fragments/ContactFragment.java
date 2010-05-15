@@ -98,7 +98,7 @@ public class ContactFragment extends LoaderManagingFragment<ContactData>
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedState) {
         View view = inflater.inflate(R.layout.contact_details, container, false);
 
         mInflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);

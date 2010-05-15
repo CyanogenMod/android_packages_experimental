@@ -134,21 +134,12 @@ public abstract class LoaderManagingFragment<D> extends Fragment
             loader.unregisterListener(this);
 
             // The loader isn't getting passed along to the next instance so ask it to stop loading
-// TODO: uncomment once isChangingConfig method is available
-//            if (!getActivity().isChangingConfigurations()) {
+            if (!getActivity().isChangingConfigurations()) {
                 loader.stopLoading();
-//            }
+            }
         }
 
         mStarted = false;
-    }
-
-    @Override
-    public Object onRetainNonConfigurationInstance() {
-        // Pass the loader along to the next guy
-        Object result = mLoaders;
-        mLoaders = null;
-        return result;
     }
 
     @Override
