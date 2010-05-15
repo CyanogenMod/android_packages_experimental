@@ -5,7 +5,8 @@ import com.android.loaderapp.util.DataStatus;
 import com.google.android.collect.Lists;
 import com.google.android.collect.Maps;
 
-import android.app.patterns.Loader;
+import android.app.patterns.AsyncTaskLoader;
+import android.app.patterns.Loader.ForceLoadContentObserver;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -27,7 +28,7 @@ import java.util.HashMap;
 /**
  * Loads a single Contact and all it constituent RawContacts.
  */
-public class ContactLoader extends Loader<ContactLoader.ContactData> {
+public class ContactLoader extends AsyncTaskLoader<ContactLoader.ContactData> {
     Uri mLookupUri;
     ContactData mContact;
     ForceLoadContentObserver mObserver;
@@ -54,101 +55,98 @@ public class ContactLoader extends Loader<ContactLoader.ContactData> {
         final int _ID = 0;
     }
 
-    final class LoadContactTask extends AsyncTask<Void, Void, ContactData> {
+    @Override
+    public ContactData loadInBackground() {
+        ContentResolver resolver = getContext().getContentResolver();
+        ContactData result = new ContactData();
 
-        @Override
-        protected ContactData doInBackground(Void... args) {
-            ContentResolver resolver = getContext().getContentResolver();
-            ContactData result = new ContactData();
-
-            // Undo the lookup URI
-            Uri contactUri = null;
+        // Undo the lookup URI
+        Uri contactUri = null;
+        if (mLookupUri != null) {
+            mLookupUri = Contacts.getLookupUri(resolver, mLookupUri);
             if (mLookupUri != null) {
-                mLookupUri = Contacts.getLookupUri(resolver, mLookupUri);
-                if (mLookupUri != null) {
-                    contactUri = Contacts.lookupContact(resolver, mLookupUri);
-                }
+                contactUri = Contacts.lookupContact(resolver, mLookupUri);
             }
-
-            if (contactUri == null) {
-                return null;
-            }
-            result.uri = contactUri;
-
-            // Read available social rows
-            final Uri dataUri = Uri.withAppendedPath(contactUri, Contacts.Data.CONTENT_DIRECTORY);
-            Cursor cursor = resolver.query(dataUri, StatusQuery.PROJECTION, StatusUpdates.PRESENCE
-                    + " IS NOT NULL OR " + StatusUpdates.STATUS + " IS NOT NULL", null, null);
-
-            if (cursor != null) {
-                try {
-                    HashMap<Long, DataStatus> statuses = Maps.newHashMap();
-                    
-                    // Walk found statuses, creating internal row for each
-                    while (cursor.moveToNext()) {
-                        final DataStatus status = new DataStatus(cursor);
-                        final long dataId = cursor.getLong(StatusQuery._ID);
-                        statuses.put(dataId, status);
-                    }
-                    result.statuses = statuses;
-                } finally {
-                    cursor.close();
-                }
-            }
-
-            // Read out the info about the display name
-            cursor = resolver.query(dataUri, new String[] {
-                    Contacts.NAME_RAW_CONTACT_ID, Contacts.DISPLAY_NAME_SOURCE
-            }, null, null, null);
-            if (cursor != null) {
-                try {
-                    if (cursor.moveToFirst()) {
-                        result.nameRawContactId = cursor.getLong(cursor
-                                .getColumnIndex(Contacts.NAME_RAW_CONTACT_ID));
-                        result.displayNameSource = cursor.getInt(cursor
-                                .getColumnIndex(Contacts.DISPLAY_NAME_SOURCE));
-                    }
-                } finally {
-                    cursor.close();
-                }
-            }
-
-            // Read the constituent raw contacts
-            final long contactId = ContentUris.parseId(contactUri);
-            cursor = resolver.query(RawContactsEntity.CONTENT_URI, null, RawContacts.CONTACT_ID
-                    + "=" + contactId, null, null);
-            if (cursor != null) {
-                ArrayList<Entity> entities = Lists.newArrayList();
-                EntityIterator iterator = RawContacts.newEntityIterator(cursor);
-                try {
-                    while (iterator.hasNext()) {
-                        Entity entity = iterator.next();
-                        entities.add(entity);
-                    }
-                } finally {
-                    iterator.close();
-                }
-                result.entities = entities;
-            }
-
-            return result;
         }
 
-        @Override
-        protected void onPostExecute(ContactData result) {
-            // The creator isn't interested in any furether updates
-            if (mDestroyed) {
-                return;
-            }
+        if (contactUri == null) {
+            return null;
+        }
+        result.uri = contactUri;
 
-            mContact = result;
-            if (result != null) {
-                if (mObserver == null) {
-                    mObserver = new ForceLoadContentObserver();
+        // Read available social rows
+        final Uri dataUri = Uri.withAppendedPath(contactUri, Contacts.Data.CONTENT_DIRECTORY);
+        Cursor cursor = resolver.query(dataUri, StatusQuery.PROJECTION, StatusUpdates.PRESENCE
+                + " IS NOT NULL OR " + StatusUpdates.STATUS + " IS NOT NULL", null, null);
+
+        if (cursor != null) {
+            try {
+                HashMap<Long, DataStatus> statuses = Maps.newHashMap();
+                
+                // Walk found statuses, creating internal row for each
+                while (cursor.moveToNext()) {
+                    final DataStatus status = new DataStatus(cursor);
+                    final long dataId = cursor.getLong(StatusQuery._ID);
+                    statuses.put(dataId, status);
                 }
-                getContext().getContentResolver().registerContentObserver(mLookupUri, true, mObserver);
-                deliverResult(result);
+                result.statuses = statuses;
+            } finally {
+                cursor.close();
             }
+        }
+
+        // Read out the info about the display name
+        cursor = resolver.query(dataUri, new String[] {
+                Contacts.NAME_RAW_CONTACT_ID, Contacts.DISPLAY_NAME_SOURCE
+        }, null, null, null);
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    result.nameRawContactId = cursor.getLong(cursor
+                            .getColumnIndex(Contacts.NAME_RAW_CONTACT_ID));
+                    result.displayNameSource = cursor.getInt(cursor
+                            .getColumnIndex(Contacts.DISPLAY_NAME_SOURCE));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+
+        // Read the constituent raw contacts
+        final long contactId = ContentUris.parseId(contactUri);
+        cursor = resolver.query(RawContactsEntity.CONTENT_URI, null, RawContacts.CONTACT_ID
+                + "=" + contactId, null, null);
+        if (cursor != null) {
+            ArrayList<Entity> entities = Lists.newArrayList();
+            EntityIterator iterator = RawContacts.newEntityIterator(cursor);
+            try {
+                while (iterator.hasNext()) {
+                    Entity entity = iterator.next();
+                    entities.add(entity);
+                }
+            } finally {
+                iterator.close();
+            }
+            result.entities = entities;
+        }
+
+        return result;
+    }
+
+    @Override
+    public void deliverResult(ContactData result) {
+        // The creator isn't interested in any further updates
+        if (mDestroyed) {
+            return;
+        }
+
+        mContact = result;
+        if (result != null) {
+            if (mObserver == null) {
+                mObserver = new ForceLoadContentObserver();
+            }
+            getContext().getContentResolver().registerContentObserver(mLookupUri, true, mObserver);
+            super.deliverResult(result);
         }
     }
 
@@ -164,11 +162,6 @@ public class ContactLoader extends Loader<ContactLoader.ContactData> {
         } else {
             forceLoad();
         }
-    }
-
-    @Override
-    public void forceLoad() {
-        new LoadContactTask().execute((Void[])null);
     }
 
     @Override

@@ -91,7 +91,7 @@ public class ContactsListFragment extends LoaderManagingFragment<Cursor>
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedState) {
         ListView list = (ListView) inflater.inflate(R.layout.contacts_list, container, false);
         list.setOnItemClickListener(this);
         mAdapter = new CursorFactoryListAdapter(getActivity(),

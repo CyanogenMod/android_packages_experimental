@@ -16,10 +16,14 @@
 
 package android.app.patterns;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
+/**
+ * A loader that queries the {@link ContentResolver} and returns a {@link Cursor}.
+ */
 public class CursorLoader extends AsyncTaskLoader<Cursor> {
     Cursor mCursor;
     ForceLoadContentObserver mObserver;
@@ -32,7 +36,7 @@ public class CursorLoader extends AsyncTaskLoader<Cursor> {
 
     /* Runs on a worker thread */
     @Override
-    protected Cursor loadInBackground() {
+    public Cursor loadInBackground() {
         Cursor cursor = getContext().getContentResolver().query(mUri, mProjection, mSelection,
                 mSelectionArgs, mSortOrder);
         // Ensure the cursor window is filled
@@ -45,14 +49,14 @@ public class CursorLoader extends AsyncTaskLoader<Cursor> {
 
     /* Runs on the UI thread */
     @Override
-    protected void onLoadComplete(Cursor cursor) {
+    public void deliverResult(Cursor cursor) {
         if (mStopped) {
             // An async query came in while the loader is stopped
             cursor.close();
             return;
         }
         mCursor = cursor;
-        deliverResult(cursor);
+        super.deliverResult(cursor);
     }
 
     public CursorLoader(Context context, Uri uri, String[] projection, String selection,
