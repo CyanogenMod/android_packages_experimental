@@ -33,14 +33,14 @@ import com.android.loaderapp.util.DataStatus;
 import com.google.android.collect.Lists;
 import com.google.android.collect.Maps;
 
-import android.app.patterns.Loader;
-import android.app.patterns.LoaderManagingFragment;
+import android.app.LoaderManagingFragment;
 import android.content.ActivityNotFoundException;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Entity;
 import android.content.Intent;
+import android.content.Loader;
 import android.content.Entity.NamedContentValues;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;

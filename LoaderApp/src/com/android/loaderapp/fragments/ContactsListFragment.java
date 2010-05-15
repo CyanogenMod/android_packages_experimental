@@ -16,13 +16,13 @@
 
 package com.android.loaderapp.fragments;
 
+import com.android.loaderapp.CursorFactoryListAdapter;
 import com.android.loaderapp.R;
+import com.android.loaderapp.CursorFactoryListAdapter.ResourceViewFactory;
 import com.android.loaderapp.model.ContactsListLoader;
 
-import android.app.patterns.CursorFactoryListAdapter;
-import android.app.patterns.Loader;
-import android.app.patterns.LoaderManagingFragment;
-import android.app.patterns.CursorFactoryListAdapter.ResourceViewFactory;
+import android.app.LoaderManagingFragment;
+import android.content.Loader;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
