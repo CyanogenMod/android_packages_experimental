@@ -14,7 +14,7 @@
  * limitations under the License
  */
 
-package android.app.patterns;
+package com.android.loaderapp;
 
 import com.android.loaderapp.R;
 import com.android.loaderapp.model.ContactsListLoader;

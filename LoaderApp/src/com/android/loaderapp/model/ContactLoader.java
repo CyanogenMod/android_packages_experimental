@@ -5,13 +5,13 @@ import com.android.loaderapp.util.DataStatus;
 import com.google.android.collect.Lists;
 import com.google.android.collect.Maps;
 
-import android.app.patterns.AsyncTaskLoader;
-import android.app.patterns.Loader.ForceLoadContentObserver;
+import android.content.AsyncTaskLoader;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Entity;
 import android.content.EntityIterator;
+import android.content.Loader.ForceLoadContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;

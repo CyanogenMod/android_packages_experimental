@@ -16,8 +16,8 @@
 
 package com.android.loaderapp.model;
 
-import android.app.patterns.CursorLoader;
 import android.content.Context;
+import android.content.CursorLoader;
 import android.provider.ContactsContract.Groups;
 
 /**
