@@ -87,6 +87,60 @@ public class ContactFragment extends LoaderManagingFragment<ContactData>
 
     Uri mUri;
 
+    private static final boolean SHOW_SEPARATORS = false;
+
+    protected Uri mLookupUri;
+    private ViewAdapter mAdapter;
+    private int mNumPhoneNumbers = 0;
+    private Controller mController;
+
+    /**
+     * A list of distinct contact IDs included in the current contact.
+     */
+    private ArrayList<Long> mRawContactIds = new ArrayList<Long>();
+
+    /* package */ ArrayList<ViewEntry> mPhoneEntries = new ArrayList<ViewEntry>();
+    /* package */ ArrayList<ViewEntry> mSmsEntries = new ArrayList<ViewEntry>();
+    /* package */ ArrayList<ViewEntry> mEmailEntries = new ArrayList<ViewEntry>();
+    /* package */ ArrayList<ViewEntry> mPostalEntries = new ArrayList<ViewEntry>();
+    /* package */ ArrayList<ViewEntry> mImEntries = new ArrayList<ViewEntry>();
+    /* package */ ArrayList<ViewEntry> mNicknameEntries = new ArrayList<ViewEntry>();
+    /* package */ ArrayList<ViewEntry> mOrganizationEntries = new ArrayList<ViewEntry>();
+    /* package */ ArrayList<ViewEntry> mGroupEntries = new ArrayList<ViewEntry>();
+    /* package */ ArrayList<ViewEntry> mOtherEntries = new ArrayList<ViewEntry>();
+    /* package */ ArrayList<ArrayList<ViewEntry>> mSections = new ArrayList<ArrayList<ViewEntry>>();
+
+    protected ContactHeaderWidget mContactHeaderWidget;
+
+    protected LayoutInflater mInflater;
+
+    protected int mReadOnlySourcesCnt;
+    protected int mWritableSourcesCnt;
+    protected boolean mAllRestricted;
+
+    protected Uri mPrimaryPhoneUri = null;
+
+    protected ArrayList<Long> mWritableRawContactIds = new ArrayList<Long>();
+
+    private long mNameRawContactId = -1;
+    private int mDisplayNameSource = DisplayNameSources.UNDEFINED;
+
+    private ArrayList<Entity> mEntities = Lists.newArrayList();
+    private HashMap<Long, DataStatus> mStatuses = Maps.newHashMap();
+
+    /**
+     * The view shown if the detail list is empty.
+     * We set this to the list view when first bind the adapter, so that it won't be shown while
+     * we're loading data.
+     */
+    private View mEmptyView;
+
+    private ListView mListView;
+    private boolean mShowSmsLinksForAllPhones;
+
+    public ContactFragment() {
+    }
+
     public ContactFragment(Uri uri, ContactFragment.Controller controller) {
         mUri = uri;
         mController = controller;
@@ -160,6 +214,7 @@ public class ContactFragment extends LoaderManagingFragment<ContactData>
     }
 
     public void loadContact(Uri uri) {
+        mUri = uri;
         Bundle args = new Bundle();
         args.putParcelable(ARG_URI, uri);
         startLoading(LOADER_DETAILS, args);
@@ -229,57 +284,6 @@ public class ContactFragment extends LoaderManagingFragment<ContactData>
             mController.onSecondaryAction((ViewEntry) v.getTag());
         }
     }
-
-    private static final boolean SHOW_SEPARATORS = false;
-
-    protected Uri mLookupUri;
-    private ViewAdapter mAdapter;
-    private int mNumPhoneNumbers = 0;
-    private Controller mController;
-
-    /**
-     * A list of distinct contact IDs included in the current contact.
-     */
-    private ArrayList<Long> mRawContactIds = new ArrayList<Long>();
-
-    /* package */ ArrayList<ViewEntry> mPhoneEntries = new ArrayList<ViewEntry>();
-    /* package */ ArrayList<ViewEntry> mSmsEntries = new ArrayList<ViewEntry>();
-    /* package */ ArrayList<ViewEntry> mEmailEntries = new ArrayList<ViewEntry>();
-    /* package */ ArrayList<ViewEntry> mPostalEntries = new ArrayList<ViewEntry>();
-    /* package */ ArrayList<ViewEntry> mImEntries = new ArrayList<ViewEntry>();
-    /* package */ ArrayList<ViewEntry> mNicknameEntries = new ArrayList<ViewEntry>();
-    /* package */ ArrayList<ViewEntry> mOrganizationEntries = new ArrayList<ViewEntry>();
-    /* package */ ArrayList<ViewEntry> mGroupEntries = new ArrayList<ViewEntry>();
-    /* package */ ArrayList<ViewEntry> mOtherEntries = new ArrayList<ViewEntry>();
-    /* package */ ArrayList<ArrayList<ViewEntry>> mSections = new ArrayList<ArrayList<ViewEntry>>();
-
-    protected ContactHeaderWidget mContactHeaderWidget;
-
-    protected LayoutInflater mInflater;
-
-    protected int mReadOnlySourcesCnt;
-    protected int mWritableSourcesCnt;
-    protected boolean mAllRestricted;
-
-    protected Uri mPrimaryPhoneUri = null;
-
-    protected ArrayList<Long> mWritableRawContactIds = new ArrayList<Long>();
-
-    private long mNameRawContactId = -1;
-    private int mDisplayNameSource = DisplayNameSources.UNDEFINED;
-
-    private ArrayList<Entity> mEntities = Lists.newArrayList();
-    private HashMap<Long, DataStatus> mStatuses = Maps.newHashMap();
-
-    /**
-     * The view shown if the detail list is empty.
-     * We set this to the list view when first bind the adapter, so that it won't be shown while
-     * we're loading data.
-     */
-    private View mEmptyView;
-
-    private ListView mListView;
-    private boolean mShowSmsLinksForAllPhones;
 
     private void bindData() {
 
