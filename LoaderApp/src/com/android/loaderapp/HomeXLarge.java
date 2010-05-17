@@ -17,11 +17,9 @@
 package com.android.loaderapp;
 
 import com.android.loaderapp.fragments.ContactFragment;
-import com.android.loaderapp.fragments.ContactFragment;
 import com.android.loaderapp.fragments.ContactsListFragment;
-import com.android.ui.phat.PhatTitleBar;
-import com.android.ui.phat.PhatTitleBar.OnActionListener;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
@@ -29,8 +27,11 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.view.Menu;
+import android.view.MenuItem;
 
-public class HomeXLarge extends Activity implements ContactsListFragment.Controller, OnActionListener {
+public class HomeXLarge extends Activity implements ContactsListFragment.Controller,
+        ActionBar.Callback {
     private static final int ACTION_ID_SEARCH = 0;
     private static final int ACTION_ID_ADD = 1;
 
@@ -51,13 +52,7 @@ public class HomeXLarge extends Activity implements ContactsListFragment.Control
         transaction.add(mDetails, R.id.contact_details);
         transaction.commit();
 
-        final PhatTitleBar titleBar = (PhatTitleBar) findViewById(R.id.title_bar);
-        final Resources resources = getResources();
-
-        titleBar.addAction(ACTION_ID_SEARCH, resources.getDrawable(android.R.drawable.ic_menu_search),
-                "Search", this);
-        titleBar.addAction(ACTION_ID_ADD, resources.getDrawable(android.R.drawable.ic_menu_add),
-                "Add", this);
+        getActionBar().setCallback(this);
 
         Intent intent = getIntent();
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
@@ -80,5 +75,46 @@ public class HomeXLarge extends Activity implements ContactsListFragment.Control
     public void onContactSelected(Uri contactUri) {
         // The user clicked on an item in the left side pane, start loading the data for it
         mDetails.loadContact(contactUri);
+    }
+
+    public boolean onCreateActionMenu(Menu menu) {
+        Resources resources = getResources();
+        menu.add(0, ACTION_ID_SEARCH, 0, R.string.menu_search)
+                .setIcon(resources.getDrawable(android.R.drawable.ic_menu_search));
+        menu.add(0, ACTION_ID_ADD, 1, R.string.menu_newContact)
+                .setIcon(resources.getDrawable(android.R.drawable.ic_menu_add));
+
+        return true;
+    }
+
+    public boolean onUpdateActionMenu(Menu menu) {
+        return false;
+    }
+
+    public boolean onActionItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case ACTION_ID_SEARCH: {
+                startSearch(null, false, null, true);
+                return true;
+            }
+
+            case ACTION_ID_ADD: {
+                startActivity(new Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean onCreateContextMode(int modeId, Menu menu) {
+        return false;
+    }
+
+    public boolean onPrepareContextMode(int modeId, Menu menu) {
+        return false;
+    }
+
+    public boolean onContextItemSelected(int modeId, MenuItem item) {
+        return false;
     }
 }

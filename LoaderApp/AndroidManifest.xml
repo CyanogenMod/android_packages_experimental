@@ -91,12 +91,12 @@
 
         <activity android:name="HomeXLarge"
             android:label="@string/app_name_xlarge"
-            android:theme="@style/TallTitleBarTheme"
+            android:theme="@android:style/Theme.WithActionBar"
         />
 
         <activity android:name="HomeGroupsXLarge"
             android:label="@string/app_name_xlarge_groups"
-            android:theme="@style/TallTitleBarTheme"
+            android:theme="@android:style/Theme.WithActionBar"
         />
 
         <activity android:name="HomeNormal"
