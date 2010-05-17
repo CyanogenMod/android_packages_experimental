@@ -17,10 +17,8 @@
 package com.android.loaderapp;
 
 import com.android.loaderapp.fragments.ContactFragment;
-import com.android.loaderapp.fragments.ContactFragment;
 
 import android.app.Activity;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
 
 public class DetailsNormal extends Activity {
@@ -28,11 +26,10 @@ public class DetailsNormal extends Activity {
     public void onCreate(Bundle savedState) {
         super.onCreate(savedState);
 
-        ContactFragment frag = new ContactFragment(getIntent().getData(),
-                new ContactFragment.DefaultController(this));
+        setContentView(R.layout.details_normal);
 
-        FragmentTransaction transaction = openFragmentTransaction();
-        transaction.add(frag, android.R.id.content);
-        transaction.commit();
+        ContactFragment frag = (ContactFragment) findFragmentById(R.id.details);
+        frag.setController(new ContactFragment.DefaultController(this));
+        frag.loadContact(getIntent().getData());
     }
 }
