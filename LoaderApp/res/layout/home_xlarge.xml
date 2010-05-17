@@ -25,17 +25,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
 >
-    <com.android.ui.phat.PhatTitleBar android:id="@+id/title_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/phat_title_bar_background"
-
-        phat:colorFilter="#ff84b140"
-        phat:icon="@drawable/ic_launcher_contacts"
-        phat:title="@string/app_name_xlarge"
-        phat:titleBarType="normal"
-    />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dip"

@@ -19,9 +19,8 @@ package com.android.loaderapp;
 import com.android.loaderapp.fragments.ContactFragment;
 import com.android.loaderapp.fragments.ContactsListFragment;
 import com.android.loaderapp.fragments.GroupsListFragment;
-import com.android.ui.phat.PhatTitleBar;
-import com.android.ui.phat.PhatTitleBar.OnActionListener;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
@@ -29,10 +28,12 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class HomeGroupsXLarge extends Activity implements OnActionListener,
+public class HomeGroupsXLarge extends Activity implements ActionBar.Callback,
         ContactsListFragment.Controller, GroupsListFragment.Controller {
     private static final int ACTION_ID_SEARCH = 0;
     private static final int ACTION_ID_ADD = 1;
@@ -61,27 +62,7 @@ public class HomeGroupsXLarge extends Activity implements OnActionListener,
         xact.commit();
         mMode = MODE_GROUPS;
 
-        final PhatTitleBar titleBar = (PhatTitleBar) findViewById(R.id.title_bar);
-        final Resources resources = getResources();
-
-        titleBar.addAction(ACTION_ID_SEARCH,
-                resources.getDrawable(android.R.drawable.ic_menu_search), "Search", this);
-        titleBar.addAction(ACTION_ID_ADD,
-                resources.getDrawable(android.R.drawable.ic_menu_add), "Add", this);
-    }
-
-    public void onAction(int id) {
-        switch (id) {
-            case ACTION_ID_SEARCH: {
-                startSearch(null, false, null, true);
-                break;
-            }
-
-            case ACTION_ID_ADD: {
-                startActivity(new Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI));
-                break;
-            }
-        }
+        getActionBar().setCallback(this);
     }
 
     private ContactsListFragment getContactsList() {
@@ -169,5 +150,46 @@ public class HomeGroupsXLarge extends Activity implements OnActionListener,
                 mMode = MODE_GROUPS;
             }
         }
+    }
+
+    public boolean onCreateActionMenu(Menu menu) {
+        Resources resources = getResources();
+        menu.add(0, ACTION_ID_SEARCH, 0, R.string.menu_search)
+                .setIcon(resources.getDrawable(android.R.drawable.ic_menu_search));
+        menu.add(0, ACTION_ID_ADD, 1, R.string.menu_newContact)
+                .setIcon(resources.getDrawable(android.R.drawable.ic_menu_add));
+
+        return true;
+    }
+
+    public boolean onUpdateActionMenu(Menu menu) {
+        return false;
+    }
+
+    public boolean onActionItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case ACTION_ID_SEARCH: {
+                startSearch(null, false, null, true);
+                return true;
+            }
+
+            case ACTION_ID_ADD: {
+                startActivity(new Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean onCreateContextMode(int modeId, Menu menu) {
+        return false;
+    }
+
+    public boolean onPrepareContextMode(int modeId, Menu menu) {
+        return false;
+    }
+
+    public boolean onContextItemSelected(int modeId, MenuItem item) {
+        return false;
     }
 }
