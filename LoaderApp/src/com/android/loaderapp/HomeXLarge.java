@@ -48,8 +48,8 @@ public class HomeXLarge extends Activity implements ContactsListFragment.Control
         mList.setController(this);
         mDetails = new ContactFragment(null, new ContactFragment.DefaultController(this));
         FragmentTransaction transaction = openFragmentTransaction();
-        transaction.add(mList, R.id.contacts_list);
-        transaction.add(mDetails, R.id.contact_details);
+        transaction.add(R.id.contacts_list, mList);
+        transaction.add(R.id.contact_details, mDetails);
         transaction.commit();
 
         getActionBar().setCallback(this);
