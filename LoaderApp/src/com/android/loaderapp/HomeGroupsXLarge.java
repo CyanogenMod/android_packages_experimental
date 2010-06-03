@@ -57,8 +57,8 @@ public class HomeGroupsXLarge extends Activity implements ActionBar.Callback,
         contactsList.setController(this);
  
         FragmentTransaction xact = openFragmentTransaction();
-        xact.add(groupsList, R.id.smallPane);
-        xact.add(contactsList, R.id.largePane);
+        xact.add(R.id.smallPane, groupsList);
+        xact.add(R.id.largePane, contactsList);
         xact.commit();
         mMode = MODE_GROUPS;
 
@@ -101,11 +101,11 @@ public class HomeGroupsXLarge extends Activity implements ActionBar.Callback,
             // commit is actually async, so add in details at largePane, which will be correct
             // after swapPanes() does its thing.
             xact.remove(findFragmentById(R.id.smallPane));
-            xact.add(details, R.id.largePane);
+            xact.add(R.id.largePane, details);
             xact.commit();
             swapPanes(); // swap the list to the small pane
         } else {
-            xact.replace(details, R.id.largePane);
+            xact.replace(R.id.largePane, details);
             xact.commit();
         }
     }
