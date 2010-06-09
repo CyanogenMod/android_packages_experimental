@@ -152,6 +152,7 @@ public class HomeGroupsXLarge extends Activity implements ActionBar.Callback,
         }
     }
 
+    /** Implements ActionBar.Callback */
     public boolean onCreateActionMenu(Menu menu) {
         Resources resources = getResources();
         menu.add(0, ACTION_ID_SEARCH, 0, R.string.menu_search)
@@ -162,11 +163,13 @@ public class HomeGroupsXLarge extends Activity implements ActionBar.Callback,
         return true;
     }
 
+    /** Implements ActionBar.Callback */
     public boolean onUpdateActionMenu(Menu menu) {
         return false;
     }
 
-    public boolean onActionItemSelected(MenuItem item) {
+    /** Implements ActionBar.Callback */
+    public boolean onActionItemClicked(MenuItem item) {
         switch (item.getItemId()) {
             case ACTION_ID_SEARCH: {
                 startSearch(null, false, null, true);
@@ -181,15 +184,23 @@ public class HomeGroupsXLarge extends Activity implements ActionBar.Callback,
         return false;
     }
 
+    /** Implements ActionBar.Callback */
+    public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+        return false;
+    }
+
+    /** Implements ActionBar.Callback */
     public boolean onCreateContextMode(int modeId, Menu menu) {
         return false;
     }
 
+    /** Implements ActionBar.Callback */
     public boolean onPrepareContextMode(int modeId, Menu menu) {
         return false;
     }
 
-    public boolean onContextItemSelected(int modeId, MenuItem item) {
+    /** Implements ActionBar.Callback */
+    public boolean onContextItemClicked(int modeId, MenuItem item) {
         return false;
     }
 }
