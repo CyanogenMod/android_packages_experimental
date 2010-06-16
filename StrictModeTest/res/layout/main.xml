@@ -75,6 +75,34 @@
          android:text="sqlite read on UI thread"
          />
 
+      <Button
+         android:id="@+id/dns_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="DNS lookup on main thread"
+         />
+
+      <Button
+         android:id="@+id/http_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="(Default) HTTP on main thread"
+         />
+
+      <Button
+         android:id="@+id/http2_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="HttpURLConnection on main thread"
+         />
+
+      <Button
+         android:id="@+id/http3_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="HttpURLConnection (to raw IP)"
+         />
+
   </LinearLayout>
 
 </ScrollView>
