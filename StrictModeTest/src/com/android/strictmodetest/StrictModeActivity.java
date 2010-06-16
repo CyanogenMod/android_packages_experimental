@@ -55,12 +55,19 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.net.InetAddress;
+import java.net.URL;
 
 public class StrictModeActivity extends Activity {
 
@@ -94,6 +101,71 @@ public class StrictModeActivity extends Activity {
         writeButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     db.execSQL("CREATE TABLE IF NOT EXISTS FOO (a INT)");
+                }
+            });
+
+        final Button dnsButton = (Button) findViewById(R.id.dns_button);
+        dnsButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Log.d(TAG, "Doing DNS lookup for www.l.google.com... "
+                          + "(may be cached by InetAddress)");
+                    try {
+                        InetAddress[] addrs = InetAddress.getAllByName("www.l.google.com");
+                        for (int i = 0; i < addrs.length; ++i) {
+                            Log.d(TAG, "got: " + addrs[i]);
+                        }
+                    } catch (java.net.UnknownHostException e) {
+                        Log.d(TAG, "DNS error: " + e);
+                    }
+                }
+            });
+
+        final Button httpButton = (Button) findViewById(R.id.http_button);
+        httpButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    try {
+                        // Note: not using AndroidHttpClient, as that comes with its
+                        // own pre-StrictMode network-on-Looper thread check.  The
+                        // intent of this test is that we test the network stack's
+                        // instrumentation for StrictMode instead.
+                        DefaultHttpClient httpClient = new DefaultHttpClient();
+                        HttpResponse res = httpClient.execute(
+                            new HttpGet("http://www.android.com/favicon.ico"));
+                        Log.d(TAG, "Fetched http response: " + res);
+                    } catch (IOException e) {
+                        Log.d(TAG, "HTTP fetch error: " + e);
+                    }
+                }
+            });
+
+        final Button http2Button = (Button) findViewById(R.id.http2_button);
+        http2Button.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    try {
+                        // Usually this ends up tripping in DNS resolution,
+                        // so see http3Button below, which connects directly to an IP
+                        InputStream is = new URL("http://www.android.com/")
+                                .openConnection()
+                                .getInputStream();
+                        Log.d(TAG, "Got input stream: " + is);
+                    } catch (IOException e) {
+                        Log.d(TAG, "HTTP fetch error: " + e);
+                    }
+                }
+            });
+
+        final Button http3Button = (Button) findViewById(R.id.http3_button);
+        http3Button.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    try {
+                        // One of Google's web IPs, as of 2010-06-16....
+                        InputStream is = new URL("http://74.125.19.14/")
+                                .openConnection()
+                                .getInputStream();
+                        Log.d(TAG, "Got input stream: " + is);
+                    } catch (IOException e) {
+                        Log.d(TAG, "HTTP fetch error: " + e);
+                    }
                 }
             });
 
