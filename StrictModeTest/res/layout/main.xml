@@ -103,6 +103,27 @@
          android:text="HttpURLConnection (to raw IP)"
          />
 
+      <Button
+         android:id="@+id/binder_local_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="Binder call (local) to write disk"
+         />
+
+      <Button
+         android:id="@+id/binder_remote_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="Binder call (remote) to write disk"
+         />
+
+      <Button
+         android:id="@+id/binder_check_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="Check binder/service policies"
+         />
+
   </LinearLayout>
 
 </ScrollView>
