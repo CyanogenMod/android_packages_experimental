@@ -17,6 +17,7 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := tests   # Allows non-localized strings
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
+LOCAL_SRC_FILES += src/com/android/strictmodetest/IService.aidl
 LOCAL_PACKAGE_NAME := StrictModeTest
 include $(BUILD_PACKAGE)
 

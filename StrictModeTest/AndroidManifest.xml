@@ -21,6 +21,15 @@
       </intent-filter>
     </activity>
 
+    <service android:name=".RemoteService"
+             android:label="Remote Strict Service"
+             android:exported="true"
+             android:process=":strictservice" />
+
+    <service android:name=".LocalService"
+             android:label="Remote Strict Service"
+             android:exported="true" />
+
   </application>
 
 </manifest>
