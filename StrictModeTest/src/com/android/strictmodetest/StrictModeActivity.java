@@ -76,6 +76,21 @@ public class StrictModeActivity extends Activity {
 
     private ContentResolver cr;
 
+    private final static class SimpleConnection implements ServiceConnection {
+        public IService stub = null;
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            stub = IService.Stub.asInterface(service);
+            Log.v(TAG, "Service connected: " + name);
+        }
+        public void onServiceDisconnected(ComponentName name) {
+            stub = null;
+            Log.v(TAG, "Service disconnected: " + name);
+        }
+    }
+
+    private final SimpleConnection mLocalServiceConn = new SimpleConnection();
+    private final SimpleConnection mRemoteServiceConn = new SimpleConnection();
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -169,6 +184,46 @@ public class StrictModeActivity extends Activity {
                 }
             });
 
+        final Button binderLocalButton = (Button) findViewById(R.id.binder_local_button);
+        binderLocalButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    try {
+                        boolean value = mLocalServiceConn.stub.doDiskWrite(123 /* dummy */);
+                        Log.d(TAG, "local writeToDisk returned: " + value);
+                    } catch (RemoteException e) {
+                        Log.d(TAG, "local binderButton error: " + e);
+                    }
+                }
+            });
+
+        final Button binderRemoteButton = (Button) findViewById(R.id.binder_remote_button);
+        binderRemoteButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    try {
+                        boolean value = mRemoteServiceConn.stub.doDiskWrite(123 /* dummy */);
+                        Log.d(TAG, "remote writeToDisk returned: " + value);
+                    } catch (RemoteException e) {
+                        Log.d(TAG, "remote binderButton error: " + e);
+                    }
+                }
+            });
+
+        final Button binderCheckButton = (Button) findViewById(R.id.binder_check_button);
+        binderCheckButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    int policy;
+                    try {
+                        policy = mLocalServiceConn.stub.getThreadPolicy();
+                        Log.d(TAG, "local service policy: " + policy);
+                        policy = mRemoteServiceConn.stub.getThreadPolicy();
+                        Log.d(TAG, "remote service policy: " + policy);
+                    } catch (RemoteException e) {
+                        Log.d(TAG, "binderCheckButton error: " + e);
+                    }
+                }
+            });
+
+
         final CheckBox checkNoWrite = (CheckBox) findViewById(R.id.policy_no_write);
         final CheckBox checkNoRead = (CheckBox) findViewById(R.id.policy_no_reads);
         final CheckBox checkNoNetwork = (CheckBox) findViewById(R.id.policy_no_network);
@@ -240,5 +295,19 @@ public class StrictModeActivity extends Activity {
         }
         long duration = SystemClock.uptimeMillis() - startTime;
         return duration;
+    }
+
+    @Override public void onResume() {
+        super.onResume();
+        bindService(new Intent(this, LocalService.class),
+                    mLocalServiceConn, Context.BIND_AUTO_CREATE);
+        bindService(new Intent(this, RemoteService.class),
+                    mRemoteServiceConn, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override public void onPause() {
+        super.onPause();
+        unbindService(mLocalServiceConn);
+        unbindService(mRemoteServiceConn);
     }
 }
