@@ -16,7 +16,7 @@
 
 package com.android.loaderapp.fragments;
 
-import com.android.internal.widget.ContactHeaderWidget;
+import com.android.loaderapp.ContactHeaderWidget;
 import com.android.loaderapp.R;
 import com.android.loaderapp.model.Collapser;
 import com.android.loaderapp.model.ContactLoader;
@@ -158,7 +158,6 @@ public class ContactFragment extends LoaderManagingFragment<ContactData>
         mInflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         mContactHeaderWidget = (ContactHeaderWidget) view.findViewById(R.id.contact_header_widget);
-        mContactHeaderWidget.showStar(true);
         mContactHeaderWidget.setExcludeMimes(new String[] { Contacts.CONTENT_ITEM_TYPE });
 
         mListView = (ListView) view.findViewById(android.R.id.list);
