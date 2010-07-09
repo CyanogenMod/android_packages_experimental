@@ -42,12 +42,26 @@ public class ServiceBase extends Service {
         return mBinder;
     }
 
+    private static class IAmHereException extends Exception {
+        public IAmHereException() {
+            fillInStackTrace();
+        }
+    }
+
     protected final IService.Stub mBinder = new IService.Stub() {
         public int getThreadPolicy() {
             return BlockGuard.getThreadPolicy().getPolicyMask();
         }
 
         public boolean doDiskWrite(int dummyValue) {
+            int policy = BlockGuard.getThreadPolicy().getPolicyMask();
+            Log.d(TAG, "Doing a diskWrite; policy is: " + policy, new IAmHereException());
+            // Fake disk usage...
+            BlockGuard.getThreadPolicy().onWriteToDisk();
+            try {
+                // Fake disk delay...
+                Thread.sleep(100);
+            } catch (InterruptedException e) {}
             return true;
         }
     };
