@@ -21,17 +21,17 @@ LOCAL_SRC_FILES += src/com/android/rpc_performance/IService.aidl
 LOCAL_PACKAGE_NAME := RpcPerformance
 include $(BUILD_PACKAGE)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := rpcperftest
-LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
-LOCAL_SHARED_LIBRARIES := libbinder
-LOCAL_SRC_FILES := rpcperftest.cpp
-include $(BUILD_EXECUTABLE)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := rpcperftest
+#LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
+#LOCAL_SHARED_LIBRARIES := libbinder
+#LOCAL_SRC_FILES := rpcperftest.cpp
+#include $(BUILD_EXECUTABLE)
 
-include $(CLEAR_VARS)
-LOCAL_FORCE_STATIC_EXECUTABLE := true
-LOCAL_MODULE := rpcperftest_static
-LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
-LOCAL_STATIC_LIBRARIES := libbinder libutils libcutils libstdc++ libc
-LOCAL_SRC_FILES := rpcperftest.cpp
-include $(BUILD_EXECUTABLE)
+#include $(CLEAR_VARS)
+#LOCAL_FORCE_STATIC_EXECUTABLE := true
+#LOCAL_MODULE := rpcperftest_static
+#LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
+#LOCAL_STATIC_LIBRARIES := libbinder libutils libcutils libstdc++ libc
+#LOCAL_SRC_FILES := rpcperftest.cpp
+#include $(BUILD_EXECUTABLE)
