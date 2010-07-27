@@ -334,6 +334,40 @@
          android:text="Parcel.recycle()" />
     </LinearLayout>
   </TableRow>
+
+  <TableRow>
+    <LinearLayout android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:orientation="vertical">
+      <TextView  
+         android:id="@+id/strictmode_text"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="StrictMode.set:" />
+      <Button
+         android:id="@+id/strictmode_button"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="StrictMode (both)" />
+    </LinearLayout>
+
+    <LinearLayout android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:orientation="vertical">
+      <TextView  
+         android:id="@+id/binderstrict_text"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Binder.setStrictMode:" />
+      <Button
+         android:id="@+id/binderstrict_button"
+         android:layout_width="fill_parent" 
+         android:layout_height="wrap_content" 
+         android:text="Binder strictMode (JNI)" />
+    </LinearLayout>
+
+  </TableRow>
+
 </TableLayout>
 
 </ScrollView>
