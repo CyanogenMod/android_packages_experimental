@@ -62,6 +62,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -223,6 +224,28 @@ public class StrictModeActivity extends Activity {
                 }
             });
 
+        final Button serviceDumpButton = (Button) findViewById(R.id.service_dump);
+        serviceDumpButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Log.d(TAG, "About to do a service dump...");
+                    File file = new File("/sdcard/strictmode-service-dump.txt");
+                    FileOutputStream output = null;
+                    final int oldPolicy = StrictMode.getThreadBlockingPolicy();
+                    try {
+                        StrictMode.setThreadBlockingPolicy(0);
+                        output = new FileOutputStream(file);
+                        StrictMode.setThreadBlockingPolicy(oldPolicy);
+                        boolean dumped = Debug.dumpService("cpuinfo",
+                                                           output.getFD(), new String[0]);
+                        Log.d(TAG, "Dumped = " + dumped);
+                    } catch (IOException e) {
+                        Log.e(TAG, "Can't dump service", e);
+                    } finally {
+                        StrictMode.setThreadBlockingPolicy(oldPolicy);
+                    }
+                    Log.d(TAG, "Did service dump.");
+                }
+            });
 
         final CheckBox checkNoWrite = (CheckBox) findViewById(R.id.policy_no_write);
         final CheckBox checkNoRead = (CheckBox) findViewById(R.id.policy_no_reads);
