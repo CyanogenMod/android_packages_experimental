@@ -38,6 +38,7 @@ import android.database.SQLException;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Debug;
 import android.os.Handler;
@@ -46,6 +47,7 @@ import android.os.Parcel;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
+import android.os.StrictMode;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.AndroidException;
@@ -208,6 +210,18 @@ public class ProviderPerfActivity extends Activity {
                 public void run() {
                     final float avgTime = parcelLoop(false);
                     endAsyncOp(R.id.recycle_button, R.id.recycle_text, avgTime);
+                }});
+
+        setButtonAction(R.id.strictmode_button, new Runnable() {
+                public void run() {
+                    final float avgTime = strictModeLoop(true);
+                    endAsyncOp(R.id.strictmode_button, R.id.strictmode_text, avgTime);
+                }});
+
+        setButtonAction(R.id.binderstrict_button, new Runnable() {
+                public void run() {
+                    final float avgTime = strictModeLoop(false);
+                    endAsyncOp(R.id.binderstrict_button, R.id.binderstrict_text, avgTime);
                 }});
     }
 
@@ -538,6 +552,29 @@ public class ProviderPerfActivity extends Activity {
             }
         }
 
+        return (float) sumNanos / Math.max(1.0f, (float) mIterations) / 1000000.0f;
+    }
+
+    private float strictModeLoop(boolean full) {
+        int oldPolicy = StrictMode.getThreadBlockingPolicy();
+        long sumNanos = 0;
+        for (int i = 0; i < mIterations; i++) {
+            int policy = ((i & 1) == 1) ? 1 : 2;
+            if (full) {
+                long lastTime = System.nanoTime();
+                StrictMode.setThreadBlockingPolicy(policy);
+                sumNanos += System.nanoTime() - lastTime;
+            } else {
+                long lastTime = System.nanoTime();
+                Binder.setThreadStrictModePolicy(policy);
+                sumNanos += System.nanoTime() - lastTime;
+            }
+        }
+        if (full) {
+            StrictMode.setThreadBlockingPolicy(oldPolicy);
+        } else {
+            Binder.setThreadStrictModePolicy(oldPolicy);
+        }
         return (float) sumNanos / Math.max(1.0f, (float) mIterations) / 1000000.0f;
     }
 
