@@ -55,7 +55,10 @@ public class ServiceBase extends Service {
             return BlockGuard.getThreadPolicy().getPolicyMask();
         }
 
-        public boolean doDiskWrite(int dummyValue) {
+        public boolean doDiskWrite(int afterCalls) {
+            if (afterCalls > 0) {
+                return doDiskWrite(afterCalls - 1);
+            }
             int policy = BlockGuard.getThreadPolicy().getPolicyMask();
             Log.d(TAG, "Doing a diskWrite; policy is: " + policy, new IAmHereException());
             // Fake disk usage...
