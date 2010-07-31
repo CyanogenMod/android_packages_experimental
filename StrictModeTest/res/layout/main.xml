@@ -131,6 +131,20 @@
          android:text="Check binder/service policies"
          />
 
+      <Button
+         android:id="@+id/linger_close_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="Linger close()"
+         />
+
+      <Button
+         android:id="@+id/nonlinger_close_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="Non-linger close()"
+         />
+
   </LinearLayout>
 
 </ScrollView>

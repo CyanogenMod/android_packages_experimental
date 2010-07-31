@@ -68,6 +68,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.URL;
 
 public class StrictModeActivity extends Activity {
@@ -201,8 +202,10 @@ public class StrictModeActivity extends Activity {
         binderRemoteButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     try {
-                        boolean value = mRemoteServiceConn.stub.doDiskWrite(123 /* dummy */);
-                        Log.d(TAG, "remote writeToDisk returned: " + value);
+                        boolean value = mRemoteServiceConn.stub.doDiskWrite(1);
+                        Log.d(TAG, "remote writeToDisk #1 returned: " + value);
+                        value = mRemoteServiceConn.stub.doDiskWrite(2);
+                        Log.d(TAG, "remote writeToDisk #2 returned: " + value);
                     } catch (RemoteException e) {
                         Log.d(TAG, "remote binderButton error: " + e);
                     }
@@ -247,6 +250,21 @@ public class StrictModeActivity extends Activity {
                 }
             });
 
+        final Button lingerCloseButton = (Button) findViewById(R.id.linger_close_button);
+        lingerCloseButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    closeWithLinger(true);
+                }
+            });
+
+        final Button nonlingerCloseButton = (Button) findViewById(R.id.nonlinger_close_button);
+        nonlingerCloseButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    closeWithLinger(false);
+                }
+            });
+
+
         final CheckBox checkNoWrite = (CheckBox) findViewById(R.id.policy_no_write);
         final CheckBox checkNoRead = (CheckBox) findViewById(R.id.policy_no_reads);
         final CheckBox checkNoNetwork = (CheckBox) findViewById(R.id.policy_no_network);
@@ -276,6 +294,17 @@ public class StrictModeActivity extends Activity {
         checkPenaltyDialog.setOnClickListener(changePolicy);
         checkPenaltyDeath.setOnClickListener(changePolicy);
         checkPenaltyDropBox.setOnClickListener(changePolicy);
+    }
+
+    private void closeWithLinger(boolean linger) {
+        Log.d(TAG, "Socket linger test; linger=" + linger);
+        try {
+            Socket socket = new Socket();
+            socket.setSoLinger(linger, 5);
+            socket.close();
+        } catch (IOException e) {
+            Log.e(TAG, "Error with linger close", e);
+        }
     }
 
     private void fileReadLoop() {
