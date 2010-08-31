@@ -19,5 +19,8 @@ package com.android.strictmodetest;
 interface IService {
     int getThreadPolicy();
     boolean doDiskWrite(int dummyValue);
+
+    // Test that one-way calls don't fire.
+    oneway void doDiskOneWay();
 }
 
