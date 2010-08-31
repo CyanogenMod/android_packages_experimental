@@ -118,6 +118,13 @@
          />
 
       <Button
+         android:id="@+id/binder_oneway_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="Binder 1-way to write disk"
+         />
+
+      <Button
          android:id="@+id/service_dump"
          android:layout_width="fill_parent"
          android:layout_height="wrap_content"

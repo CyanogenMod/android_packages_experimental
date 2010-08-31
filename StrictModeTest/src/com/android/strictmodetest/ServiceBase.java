@@ -55,6 +55,13 @@ public class ServiceBase extends Service {
             return BlockGuard.getThreadPolicy().getPolicyMask();
         }
 
+        public void doDiskOneWay() {
+            int policy = BlockGuard.getThreadPolicy().getPolicyMask();
+            Log.d(TAG, "Doing a one-way disk write; policy is: " + policy);
+            // Fake disk usage...
+            BlockGuard.getThreadPolicy().onWriteToDisk();
+        }
+
         public boolean doDiskWrite(int afterCalls) {
             if (afterCalls > 0) {
                 return doDiskWrite(afterCalls - 1);

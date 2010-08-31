@@ -212,6 +212,18 @@ public class StrictModeActivity extends Activity {
                 }
             });
 
+        final Button binderOneWayButton = (Button) findViewById(R.id.binder_oneway_button);
+        binderOneWayButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    try {
+                        Log.d(TAG, "doing oneway disk write over Binder.");
+                        mRemoteServiceConn.stub.doDiskOneWay();
+                    } catch (RemoteException e) {
+                        Log.d(TAG, "remote binderButton error: " + e);
+                    }
+                }
+            });
+
         final Button binderCheckButton = (Button) findViewById(R.id.binder_check_button);
         binderCheckButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
@@ -233,18 +245,18 @@ public class StrictModeActivity extends Activity {
                     Log.d(TAG, "About to do a service dump...");
                     File file = new File("/sdcard/strictmode-service-dump.txt");
                     FileOutputStream output = null;
-                    final int oldPolicy = StrictMode.getThreadBlockingPolicy();
+                    final int oldPolicy = StrictMode.getThreadPolicy();
                     try {
-                        StrictMode.setThreadBlockingPolicy(0);
+                        StrictMode.setThreadPolicy(0);
                         output = new FileOutputStream(file);
-                        StrictMode.setThreadBlockingPolicy(oldPolicy);
+                        StrictMode.setThreadPolicy(oldPolicy);
                         boolean dumped = Debug.dumpService("cpuinfo",
                                                            output.getFD(), new String[0]);
                         Log.d(TAG, "Dumped = " + dumped);
                     } catch (IOException e) {
                         Log.e(TAG, "Can't dump service", e);
                     } finally {
-                        StrictMode.setThreadBlockingPolicy(oldPolicy);
+                        StrictMode.setThreadPolicy(oldPolicy);
                     }
                     Log.d(TAG, "Did service dump.");
                 }
@@ -284,7 +296,7 @@ public class StrictModeActivity extends Activity {
                     if (checkPenaltyDeath.isChecked()) newPolicy |= StrictMode.PENALTY_DEATH;
                     if (checkPenaltyDropBox.isChecked()) newPolicy |= StrictMode.PENALTY_DROPBOX;
                     Log.v(TAG, "Changing policy to: " + newPolicy);
-                    StrictMode.setThreadBlockingPolicy(newPolicy);
+                    StrictMode.setThreadPolicy(newPolicy);
                 }
             };
         checkNoWrite.setOnClickListener(changePolicy);
