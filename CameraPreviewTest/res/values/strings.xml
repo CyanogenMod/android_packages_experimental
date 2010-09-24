@@ -29,8 +29,10 @@
     <string name="fps30">30 fps</string>
     <string name="go">Start Test</string>
     <string name="status">status goes here...</string>
-
-    <!-- This is a complex string containing style runs. -->
-    <string name="main_label">Hello <u>th<ignore>e</ignore>re</u>, <i>you</i> <b>Activity</b>!</string>
+    <string name="rotation">setDisplayOrientation</string>
+    <string name="rotate0">0</string>
+    <string name="rotate90">90</string>
+    <string name="rotate180">180</string>
+    <string name="rotate270">270</string>
 </resources>
 

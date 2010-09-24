@@ -30,6 +30,8 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class provides a basic demonstration of how to write an Android
@@ -101,6 +103,25 @@ public class VideoChatTestActivity extends Activity {
             boolean testVGA = ((CheckBox)findViewById(R.id.vgacheckbox)).isChecked();
             boolean test15fps = ((CheckBox)findViewById(R.id.fps15checkbox)).isChecked();
             boolean test30fps = ((CheckBox)findViewById(R.id.fps30checkbox)).isChecked();
+            boolean testRotate0 = ((CheckBox)findViewById(R.id.rotate0checkbox)).isChecked();
+            boolean testRotate90 = ((CheckBox)findViewById(R.id.rotate90checkbox)).isChecked();
+            boolean testRotate180 = ((CheckBox)findViewById(R.id.rotate180checkbox)).isChecked();
+            boolean testRotate270 = ((CheckBox)findViewById(R.id.rotate270checkbox)).isChecked();
+
+            ArrayList<Integer> setDisplayOrentationAngles = new ArrayList<Integer>();
+
+            if (testRotate0) {
+                setDisplayOrentationAngles.add(0);
+            }
+            if (testRotate90) {
+                setDisplayOrentationAngles.add(90);
+            }
+            if (testRotate180) {
+                setDisplayOrentationAngles.add(180);
+            }
+            if (testRotate270) {
+                setDisplayOrentationAngles.add(270);
+            }
 
             final int widths[] = new int[] { 320, 640 };
             final int heights[] = new int[] { 240, 480};
@@ -135,7 +156,8 @@ public class VideoChatTestActivity extends Activity {
 
                         TestCamera(whichCamera,
                                 widths[whichResolution], heights[whichResolution],
-                                framerates[whichFramerate]);
+                                framerates[whichFramerate],
+                                setDisplayOrentationAngles);
                     }
                 }
             }
@@ -166,7 +188,19 @@ public class VideoChatTestActivity extends Activity {
             }
 
         }
-        protected void TestCamera(int whichCamera, int width, int height, int frameRate) {
+
+        private void setupCallback(Camera camera, FrameCatcher catcher, int bufferSize) {
+            camera.setPreviewCallbackWithBuffer(null);
+            camera.setPreviewCallbackWithBuffer(catcher);
+            for (int i = 0; i < NUM_CAMERA_PREVIEW_BUFFERS; i++) {
+                byte [] cameraBuffer = new byte[bufferSize];
+                camera.addCallbackBuffer(cameraBuffer);
+            }
+        }
+        protected void TestCamera(int whichCamera,
+                int width, int height,
+                int frameRate,
+                List<Integer> setDisplayOrentationAngles) {
             String baseStatus = "Camera id " + whichCamera + " " + 
                 width + "x" + height + " " +
                 frameRate + "fps";
@@ -229,36 +263,56 @@ public class VideoChatTestActivity extends Activity {
 
                 camera.stopPreview();
 
-                for (int i = 0; i < NUM_CAMERA_PREVIEW_BUFFERS; i++) {
-                    byte [] cameraBuffer = new byte[bufferSize];
-                    camera.addCallbackBuffer(cameraBuffer);
-                }
-
                 FrameCatcher catcher = new FrameCatcher(setSize.width, setSize.height);
-                camera.setPreviewCallbackWithBuffer(catcher);
-                camera.startPreview();
 
                 if (succeeded) {
                     publishProgress("Starting " + baseStatus);
                 } else {
                     publishProgress("Starting " + baseStatus + " -- but " + status);
                 }
-                Log.v(TAG, "Starting rendering");
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException exception) {
-                    succeeded = false;
-                    status = exception.toString();
-                    return;
+
+                int numPasses;
+                boolean doSetDisplayOrientation;
+                if (setDisplayOrentationAngles == null || setDisplayOrentationAngles.size() == 0) {
+                    numPasses = 1;
+                    doSetDisplayOrientation = false;
+                } else {
+                    numPasses = setDisplayOrentationAngles.size();
+                    doSetDisplayOrientation = true;
                 }
 
-                camera.setPreviewCallbackWithBuffer(null);
+                for (int i = 0; i < numPasses; i++) {
+                    if (doSetDisplayOrientation) {
+                        int rotation = setDisplayOrentationAngles.get(i);
+                        publishProgress("setDisplayOrientation to " + rotation);
+                        try {
+                            camera.setDisplayOrientation(rotation);
+                        } catch (RuntimeException exception) {
+                            succeeded = false;
+                            status = exception.toString();
+                            return;
+                        }
+                    }
+                    setupCallback(camera, catcher, bufferSize);
+                    camera.startPreview();
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException exception) {
+                        succeeded = false;
+                        status = exception.toString();
+                        return;
+                    }
+                    camera.setPreviewCallbackWithBuffer(null);
+                    camera.stopPreview();
+                }
+
                 if (catcher.mFrames == 0) {
                     succeeded = false;
                     publishProgress("Preview callback received no frames from " + baseStatus);
                 } else {
                     publishProgress("Preview callback got " + catcher.mFrames + " frames (~" +
-                            Math.round(((double)catcher.mFrames)/3.0) + "fps) " + baseStatus);
+                            Math.round(((double)catcher.mFrames)/(5.0 * numPasses)) + "fps) " +
+                            baseStatus);
                 }
                 try {
                     camera.setPreviewDisplay(null);

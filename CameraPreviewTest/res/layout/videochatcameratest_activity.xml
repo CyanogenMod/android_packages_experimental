@@ -35,79 +35,117 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-    <CheckBox android:id="@+id/frontcameracheckbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/front"
-        android:checked="true" />
-
-    <CheckBox android:id="@+id/backcameracheckbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/back"
-        android:checked="true" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-    <CheckBox android:id="@+id/qvgacheckbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/qvga"
-        android:checked="true" />
-
-    <CheckBox android:id="@+id/vgacheckbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/vga"
-        android:checked="true" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-    <CheckBox android:id="@+id/fps15checkbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/fps15"
-        android:checked="true" />
-
-    <CheckBox android:id="@+id/fps30checkbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/fps30"
-        android:checked="true" />
-
-    </LinearLayout>
-
-    <TextView android:id="@+id/status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/status" />
-            
-    <Button android:id="@+id/gobutton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/go" />
-
     <ScrollView android:id="@+id/scrollviewforhistory"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         >
-        <TextView android:id="@+id/statushistory"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            />
+        <LinearLayout
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <CheckBox android:id="@+id/frontcameracheckbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/front"
+                        android:checked="true" />
+
+                    <CheckBox android:id="@+id/backcameracheckbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/back"
+                        android:checked="true" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <CheckBox android:id="@+id/qvgacheckbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/qvga"
+                        android:checked="true" />
+
+                    <CheckBox android:id="@+id/vgacheckbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/vga"
+                        android:checked="true" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <CheckBox android:id="@+id/fps15checkbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/fps15"
+                        android:checked="true" />
+
+                    <CheckBox android:id="@+id/fps30checkbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/fps30"
+                        android:checked="true" />
+
+                </LinearLayout>
+            </LinearLayout>
+            <TextView android:id="@+id/status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/rotation" />
+
+            <LinearLayout
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <CheckBox android:id="@+id/rotate0checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rotate0"
+                    android:checked="false" />
+                <CheckBox android:id="@+id/rotate90checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rotate90"
+                    android:checked="false" />
+                <CheckBox android:id="@+id/rotate180checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rotate180"
+                    android:checked="false" />
+                <CheckBox android:id="@+id/rotate270checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rotate270"
+                    android:checked="false" />
+            </LinearLayout>
+
+            <TextView android:id="@+id/status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/status" />
+
+            <Button android:id="@+id/gobutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/go" />
+
+            <TextView android:id="@+id/statushistory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                />
+
+        </LinearLayout>
     </ScrollView>
             
 
