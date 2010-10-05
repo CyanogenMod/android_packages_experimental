@@ -30,7 +30,6 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.LocalSocket;
@@ -245,9 +244,9 @@ public class StrictModeActivity extends Activity {
                     Log.d(TAG, "About to do a service dump...");
                     File file = new File("/sdcard/strictmode-service-dump.txt");
                     FileOutputStream output = null;
-                    final int oldPolicy = StrictMode.getThreadPolicy();
+                    final StrictMode.ThreadPolicy oldPolicy = StrictMode.getThreadPolicy();
                     try {
-                        StrictMode.setThreadPolicy(0);
+                        StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.LAX);
                         output = new FileOutputStream(file);
                         StrictMode.setThreadPolicy(oldPolicy);
                         boolean dumped = Debug.dumpService("cpuinfo",
@@ -276,6 +275,26 @@ public class StrictModeActivity extends Activity {
                 }
             });
 
+        final Button leakCursorButton = (Button) findViewById(R.id.leak_cursor_button);
+        leakCursorButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    final StrictMode.VmPolicy oldPolicy = StrictMode.getVmPolicy();
+                    try {
+                        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                                               .detectLeakedSqlLiteObjects()
+                                               .penaltyLog()
+                                               .penaltyDropBox()
+                                               .build());
+                        db.execSQL("CREATE TABLE IF NOT EXISTS FOO (a INT)");
+                        Cursor c = db.rawQuery("SELECT * FROM foo", null);
+                        c = null;  // never close it
+                        Runtime.getRuntime().gc();
+                    } finally {
+                        StrictMode.setVmPolicy(oldPolicy);
+                    }
+
+                }
+            });
 
         final CheckBox checkNoWrite = (CheckBox) findViewById(R.id.policy_no_write);
         final CheckBox checkNoRead = (CheckBox) findViewById(R.id.policy_no_reads);
@@ -287,16 +306,17 @@ public class StrictModeActivity extends Activity {
 
         View.OnClickListener changePolicy = new View.OnClickListener() {
                 public void onClick(View v) {
-                    int newPolicy = 0;
-                    if (checkNoWrite.isChecked()) newPolicy |= StrictMode.DISALLOW_DISK_WRITE;
-                    if (checkNoRead.isChecked()) newPolicy |= StrictMode.DISALLOW_DISK_READ;
-                    if (checkNoNetwork.isChecked()) newPolicy |= StrictMode.DISALLOW_NETWORK;
-                    if (checkPenaltyLog.isChecked()) newPolicy |= StrictMode.PENALTY_LOG;
-                    if (checkPenaltyDialog.isChecked()) newPolicy |= StrictMode.PENALTY_DIALOG;
-                    if (checkPenaltyDeath.isChecked()) newPolicy |= StrictMode.PENALTY_DEATH;
-                    if (checkPenaltyDropBox.isChecked()) newPolicy |= StrictMode.PENALTY_DROPBOX;
-                    Log.v(TAG, "Changing policy to: " + newPolicy);
-                    StrictMode.setThreadPolicy(newPolicy);
+                    StrictMode.ThreadPolicy.Builder newPolicy = new StrictMode.ThreadPolicy.Builder();
+                    if (checkNoWrite.isChecked()) newPolicy.detectDiskWrites();
+                    if (checkNoRead.isChecked()) newPolicy.detectDiskReads();
+                    if (checkNoNetwork.isChecked()) newPolicy.detectNetwork();
+                    if (checkPenaltyLog.isChecked()) newPolicy.penaltyLog();
+                    if (checkPenaltyDialog.isChecked()) newPolicy.penaltyDialog();
+                    if (checkPenaltyDeath.isChecked()) newPolicy.penaltyDeath();
+                    if (checkPenaltyDropBox.isChecked()) newPolicy.penaltyDropBox();
+                    StrictMode.ThreadPolicy policy = newPolicy.build();
+                    Log.v(TAG, "Changing policy to: " + policy);
+                    StrictMode.setThreadPolicy(policy);
                 }
             };
         checkNoWrite.setOnClickListener(changePolicy);
