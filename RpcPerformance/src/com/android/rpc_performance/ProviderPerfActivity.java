@@ -556,24 +556,30 @@ public class ProviderPerfActivity extends Activity {
     }
 
     private float strictModeLoop(boolean full) {
-        int oldPolicy = StrictMode.getThreadBlockingPolicy();
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.getThreadPolicy();
+        int oldPolicyMask = StrictMode.getThreadPolicyMask();  // hidden API
         long sumNanos = 0;
+        StrictMode.ThreadPolicy policyA =
+                new StrictMode.ThreadPolicy.Builder().detectDiskReads().build();
+        StrictMode.ThreadPolicy policyB =
+                new StrictMode.ThreadPolicy.Builder().detectDiskWrites().build();
         for (int i = 0; i < mIterations; i++) {
-            int policy = ((i & 1) == 1) ? 1 : 2;
+            StrictMode.ThreadPolicy policy = ((i & 1) == 1) ? policyA : policyB;
+            int policyMask = ((i & 1) == 1) ? 1 : 2;
             if (full) {
                 long lastTime = System.nanoTime();
-                StrictMode.setThreadBlockingPolicy(policy);
+                StrictMode.setThreadPolicy(policy);
                 sumNanos += System.nanoTime() - lastTime;
             } else {
                 long lastTime = System.nanoTime();
-                Binder.setThreadStrictModePolicy(policy);
+                Binder.setThreadStrictModePolicy(policyMask);
                 sumNanos += System.nanoTime() - lastTime;
             }
         }
         if (full) {
-            StrictMode.setThreadBlockingPolicy(oldPolicy);
+            StrictMode.setThreadPolicy(oldPolicy);
         } else {
-            Binder.setThreadStrictModePolicy(oldPolicy);
+            Binder.setThreadStrictModePolicy(oldPolicyMask);
         }
         return (float) sumNanos / Math.max(1.0f, (float) mIterations) / 1000000.0f;
     }

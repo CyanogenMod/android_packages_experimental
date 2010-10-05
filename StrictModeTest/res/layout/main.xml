@@ -152,6 +152,13 @@
          android:text="Non-linger close()"
          />
 
+      <Button
+         android:id="@+id/leak_cursor_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="Leak an SQLiteCursor"
+         />
+
   </LinearLayout>
 
 </ScrollView>
