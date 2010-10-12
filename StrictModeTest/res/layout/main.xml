@@ -69,6 +69,13 @@
          />
 
       <Button
+         android:id="@+id/write_loop_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="fake write (in a loop)"
+         />
+
+      <Button
          android:id="@+id/read_button"
          android:layout_width="fill_parent" 
          android:layout_height="wrap_content" 
