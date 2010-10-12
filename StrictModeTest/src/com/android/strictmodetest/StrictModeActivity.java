@@ -54,6 +54,8 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
+import dalvik.system.BlockGuard;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.HttpGet;
@@ -117,6 +119,21 @@ public class StrictModeActivity extends Activity {
         writeButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     db.execSQL("CREATE TABLE IF NOT EXISTS FOO (a INT)");
+                }
+            });
+
+        final Button writeLoopButton = (Button) findViewById(R.id.write_loop_button);
+        writeLoopButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    long startTime = SystemClock.uptimeMillis();
+                    int iters = 1000;
+                    BlockGuard.Policy policy = BlockGuard.getThreadPolicy();
+                    for (int i = 0; i < iters; ++i) {
+                        policy.onWriteToDisk();
+                    }
+                    long endTime = SystemClock.uptimeMillis();
+                    Log.d(TAG, "Time for " + iters + ": " + (endTime - startTime) + ", avg=" +
+                          (endTime - startTime) / (double) iters);
                 }
             });
 
