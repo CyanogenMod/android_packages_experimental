@@ -95,18 +95,19 @@ public class VideoChatTestActivity extends Activity {
 
         @Override
         protected Void doInBackground(Void... params) {
-            mTextStatus = (TextView)findViewById(R.id.status);
-            mTextStatusHistory = (TextView)findViewById(R.id.statushistory);
-            boolean testFrontCamera = ((CheckBox)findViewById(R.id.frontcameracheckbox)).isChecked();
-            boolean testBackCamera = ((CheckBox)findViewById(R.id.backcameracheckbox)).isChecked();
-            boolean testQVGA = ((CheckBox)findViewById(R.id.qvgacheckbox)).isChecked();
-            boolean testVGA = ((CheckBox)findViewById(R.id.vgacheckbox)).isChecked();
-            boolean test15fps = ((CheckBox)findViewById(R.id.fps15checkbox)).isChecked();
-            boolean test30fps = ((CheckBox)findViewById(R.id.fps30checkbox)).isChecked();
-            boolean testRotate0 = ((CheckBox)findViewById(R.id.rotate0checkbox)).isChecked();
-            boolean testRotate90 = ((CheckBox)findViewById(R.id.rotate90checkbox)).isChecked();
-            boolean testRotate180 = ((CheckBox)findViewById(R.id.rotate180checkbox)).isChecked();
-            boolean testRotate270 = ((CheckBox)findViewById(R.id.rotate270checkbox)).isChecked();
+            mTextStatus = (TextView) findViewById(R.id.status);
+            mTextStatusHistory = (TextView) findViewById(R.id.statushistory);
+            boolean testFrontCamera =
+                    ((CheckBox) findViewById(R.id.frontcameracheckbox)).isChecked();
+            boolean testBackCamera = ((CheckBox) findViewById(R.id.backcameracheckbox)).isChecked();
+            boolean testQVGA = ((CheckBox) findViewById(R.id.qvgacheckbox)).isChecked();
+            boolean testVGA = ((CheckBox) findViewById(R.id.vgacheckbox)).isChecked();
+            boolean test15fps = ((CheckBox) findViewById(R.id.fps15checkbox)).isChecked();
+            boolean test30fps = ((CheckBox) findViewById(R.id.fps30checkbox)).isChecked();
+            boolean testRotate0 = ((CheckBox) findViewById(R.id.rotate0checkbox)).isChecked();
+            boolean testRotate90 = ((CheckBox) findViewById(R.id.rotate90checkbox)).isChecked();
+            boolean testRotate180 = ((CheckBox) findViewById(R.id.rotate180checkbox)).isChecked();
+            boolean testRotate270 = ((CheckBox) findViewById(R.id.rotate270checkbox)).isChecked();
 
             ArrayList<Integer> setDisplayOrentationAngles = new ArrayList<Integer>();
 
@@ -123,44 +124,45 @@ public class VideoChatTestActivity extends Activity {
                 setDisplayOrentationAngles.add(270);
             }
 
-            final int widths[] = new int[] { 320, 640 };
-            final int heights[] = new int[] { 240, 480};
+            final int widths[] = new int[] {320, 640};
+            final int heights[] = new int[] {240, 480};
 
-            final int framerates[] = new int[] { 15, 30 };
+            final int framerates[] = new int[] {15, 30};
 
-            for (int whichCamera = 0; whichCamera < 2; whichCamera++) {
-                if (whichCamera == 0 && !testBackCamera) {
-                    continue;
-                }
-
-
-                if (whichCamera == 1 && !testFrontCamera) {
-                    continue;
-                }
-
-                for (int whichResolution = 0; whichResolution < 2; whichResolution++) {
-                    if (whichResolution == 0 && !testQVGA) {
-                        continue;
-                    }
-                    if (whichResolution == 1 && !testVGA) {
+            do {
+                for (int whichCamera = 0; whichCamera < 2; whichCamera++) {
+                    if (whichCamera == 0 && !testBackCamera) {
                         continue;
                     }
 
-                    for (int whichFramerate = 0; whichFramerate < 2; whichFramerate++) {
-                        if (whichFramerate == 0 && !test15fps) {
+
+                    if (whichCamera == 1 && !testFrontCamera) {
+                        continue;
+                    }
+
+                    for (int whichResolution = 0; whichResolution < 2; whichResolution++) {
+                        if (whichResolution == 0 && !testQVGA) {
                             continue;
                         }
-                        if (whichFramerate == 1 && !test30fps) {
+                        if (whichResolution == 1 && !testVGA) {
                             continue;
                         }
 
-                        TestCamera(whichCamera,
-                                widths[whichResolution], heights[whichResolution],
-                                framerates[whichFramerate],
-                                setDisplayOrentationAngles);
+                        for (int whichFramerate = 0; whichFramerate < 2; whichFramerate++) {
+                            if (whichFramerate == 0 && !test15fps) {
+                                continue;
+                            }
+                            if (whichFramerate == 1 && !test30fps) {
+                                continue;
+                            }
+
+                            TestCamera(whichCamera, widths[whichResolution],
+                                    heights[whichResolution], framerates[whichFramerate],
+                                    setDisplayOrentationAngles);
+                        }
                     }
                 }
-            }
+            } while (((CheckBox) findViewById(R.id.repeatcheckbox)).isChecked());
             // start tests
 
             return null;

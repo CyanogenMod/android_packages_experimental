@@ -130,6 +130,12 @@
                     android:checked="false" />
             </LinearLayout>
 
+            <CheckBox android:id="@+id/repeatcheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/forever"
+                android:checked="false" />
+
             <TextView android:id="@+id/status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

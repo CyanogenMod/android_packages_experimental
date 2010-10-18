@@ -34,5 +34,6 @@
     <string name="rotate90">90</string>
     <string name="rotate180">180</string>
     <string name="rotate270">270</string>
+    <string name="forever">Repeat forever</string>
 </resources>
 
