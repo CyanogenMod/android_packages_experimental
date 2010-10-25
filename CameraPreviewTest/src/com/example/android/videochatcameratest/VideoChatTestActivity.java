@@ -217,8 +217,6 @@ public class VideoChatTestActivity extends Activity {
             camera = Camera.open(whichCamera);
             publishProgress("Opened " + baseStatus);
             try {
-                camera.startPreview();
-                camera.stopPreview();
                 try {
                     camera.setPreviewDisplay(previewView.mHolder);
                 } catch (IOException exception) {
