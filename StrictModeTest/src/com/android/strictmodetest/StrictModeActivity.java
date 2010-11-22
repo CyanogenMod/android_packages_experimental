@@ -24,6 +24,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.IContentProvider;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -94,6 +95,8 @@ public class StrictModeActivity extends Activity {
     private final SimpleConnection mLocalServiceConn = new SimpleConnection();
     private final SimpleConnection mRemoteServiceConn = new SimpleConnection();
 
+    private SQLiteDatabase mDb;
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -101,16 +104,21 @@ public class StrictModeActivity extends Activity {
         setContentView(R.layout.main);
 
         cr = getContentResolver();
-        final SQLiteDatabase db = openOrCreateDatabase("foo.db", MODE_PRIVATE, null);
+        mDb = openOrCreateDatabase("foo.db", MODE_PRIVATE, null);
 
         final Button readButton = (Button) findViewById(R.id.read_button);
         readButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    Cursor c = null;
+                    SharedPreferences prefs = getSharedPreferences("foo", 0);
                     try {
-                        c = db.rawQuery("SELECT * FROM foo", null);
-                    } finally {
-                        if (c != null) c.close();
+                        Cursor c = null;
+                        try {
+                            c = mDb.rawQuery("SELECT * FROM foo", null);
+                        } finally {
+                            if (c != null) c.close();
+                        }
+                    } catch (android.database.sqlite.SQLiteException e) {
+                        Log.e(TAG, "SQLiteException: " + e);
                     }
                 }
             });
@@ -118,7 +126,9 @@ public class StrictModeActivity extends Activity {
         final Button writeButton = (Button) findViewById(R.id.write_button);
         writeButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    db.execSQL("CREATE TABLE IF NOT EXISTS FOO (a INT)");
+                    mDb.execSQL("CREATE TABLE IF NOT EXISTS FOO (a INT)");
+                    SharedPreferences prefs = getSharedPreferences("foo", 0);
+                    prefs.edit().putLong("time", System.currentTimeMillis()).commit();
                 }
             });
 
@@ -149,6 +159,17 @@ public class StrictModeActivity extends Activity {
                         }
                     } catch (java.net.UnknownHostException e) {
                         Log.d(TAG, "DNS error: " + e);
+                    }
+
+                    // Now try a random hostname to evade libcore's
+                    // DNS caching.
+                    try {
+                        String random = "" + Math.random();
+                        random = random.substring(random.indexOf(".") + 1);
+                        String domain = random + ".livejournal.com";
+                        InetAddress addr = InetAddress.getByName(domain);
+                        Log.d(TAG, "for random domain " + domain + ": " + addr);
+                    } catch (java.net.UnknownHostException e) {
                     }
                 }
             });
@@ -302,8 +323,8 @@ public class StrictModeActivity extends Activity {
                                                .penaltyLog()
                                                .penaltyDropBox()
                                                .build());
-                        db.execSQL("CREATE TABLE IF NOT EXISTS FOO (a INT)");
-                        Cursor c = db.rawQuery("SELECT * FROM foo", null);
+                        mDb.execSQL("CREATE TABLE IF NOT EXISTS FOO (a INT)");
+                        Cursor c = mDb.rawQuery("SELECT * FROM foo", null);
                         c = null;  // never close it
                         Runtime.getRuntime().gc();
                     } finally {
@@ -320,6 +341,7 @@ public class StrictModeActivity extends Activity {
         final CheckBox checkPenaltyDialog = (CheckBox) findViewById(R.id.policy_penalty_dialog);
         final CheckBox checkPenaltyDeath = (CheckBox) findViewById(R.id.policy_penalty_death);
         final CheckBox checkPenaltyDropBox = (CheckBox) findViewById(R.id.policy_penalty_dropbox);
+        final CheckBox checkPenaltyNetworkDeath = (CheckBox) findViewById(R.id.policy_penalty_network_death);
 
         View.OnClickListener changePolicy = new View.OnClickListener() {
                 public void onClick(View v) {
@@ -331,6 +353,7 @@ public class StrictModeActivity extends Activity {
                     if (checkPenaltyDialog.isChecked()) newPolicy.penaltyDialog();
                     if (checkPenaltyDeath.isChecked()) newPolicy.penaltyDeath();
                     if (checkPenaltyDropBox.isChecked()) newPolicy.penaltyDropBox();
+                    if (checkPenaltyNetworkDeath.isChecked()) newPolicy.penaltyDeathOnNetwork();
                     StrictMode.ThreadPolicy policy = newPolicy.build();
                     Log.v(TAG, "Changing policy to: " + policy);
                     StrictMode.setThreadPolicy(policy);
@@ -343,6 +366,14 @@ public class StrictModeActivity extends Activity {
         checkPenaltyDialog.setOnClickListener(changePolicy);
         checkPenaltyDeath.setOnClickListener(changePolicy);
         checkPenaltyDropBox.setOnClickListener(changePolicy);
+        checkPenaltyNetworkDeath.setOnClickListener(changePolicy);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mDb.close();
+        mDb = null;
     }
 
     private void closeWithLinger(boolean linger) {

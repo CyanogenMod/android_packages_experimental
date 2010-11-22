@@ -11,7 +11,8 @@
 
   <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="7" />
 
-  <application android:label="Strict Mode Tester">
+  <application android:label="Strict Mode Tester"
+               android:debuggable="true">
 
     <activity android:name="StrictModeActivity"
               android:label="Strict Mode Tester">
