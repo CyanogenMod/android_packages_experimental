@@ -32,10 +32,22 @@
          android:text="Detect network" />
 
       <CheckBox
+         android:id="@+id/policy_custom"
+         android:layout_height="wrap_content"
+         android:layout_width="fill_parent"
+         android:text="Detect custom events" />
+
+      <CheckBox
          android:id="@+id/policy_penalty_log"
          android:layout_height="wrap_content"
          android:layout_width="fill_parent"
          android:text="Penalty: Log?" />
+
+      <CheckBox
+         android:id="@+id/policy_penalty_flash"
+         android:layout_height="wrap_content"
+         android:layout_width="fill_parent"
+         android:text="Penalty: Flash?" />
 
       <CheckBox
          android:id="@+id/policy_penalty_dialog"
@@ -170,6 +182,13 @@
          android:layout_width="fill_parent"
          android:layout_height="wrap_content"
          android:text="Leak an SQLiteCursor"
+         />
+
+      <Button
+         android:id="@+id/custom_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="Custom slow call"
          />
 
   </LinearLayout>
