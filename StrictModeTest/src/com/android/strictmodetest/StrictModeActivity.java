@@ -334,13 +334,22 @@ public class StrictModeActivity extends Activity {
                 }
             });
 
+        final Button customButton = (Button) findViewById(R.id.custom_button);
+        customButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    StrictMode.noteSlowCall("my example call");
+                }
+            });
+
         final CheckBox checkNoWrite = (CheckBox) findViewById(R.id.policy_no_write);
         final CheckBox checkNoRead = (CheckBox) findViewById(R.id.policy_no_reads);
         final CheckBox checkNoNetwork = (CheckBox) findViewById(R.id.policy_no_network);
+        final CheckBox checkCustom = (CheckBox) findViewById(R.id.policy_custom);
         final CheckBox checkPenaltyLog = (CheckBox) findViewById(R.id.policy_penalty_log);
         final CheckBox checkPenaltyDialog = (CheckBox) findViewById(R.id.policy_penalty_dialog);
         final CheckBox checkPenaltyDeath = (CheckBox) findViewById(R.id.policy_penalty_death);
         final CheckBox checkPenaltyDropBox = (CheckBox) findViewById(R.id.policy_penalty_dropbox);
+        final CheckBox checkPenaltyFlash = (CheckBox) findViewById(R.id.policy_penalty_flash);
         final CheckBox checkPenaltyNetworkDeath = (CheckBox) findViewById(R.id.policy_penalty_network_death);
 
         View.OnClickListener changePolicy = new View.OnClickListener() {
@@ -349,10 +358,12 @@ public class StrictModeActivity extends Activity {
                     if (checkNoWrite.isChecked()) newPolicy.detectDiskWrites();
                     if (checkNoRead.isChecked()) newPolicy.detectDiskReads();
                     if (checkNoNetwork.isChecked()) newPolicy.detectNetwork();
+                    if (checkCustom.isChecked()) newPolicy.detectCustomSlowCalls();
                     if (checkPenaltyLog.isChecked()) newPolicy.penaltyLog();
                     if (checkPenaltyDialog.isChecked()) newPolicy.penaltyDialog();
                     if (checkPenaltyDeath.isChecked()) newPolicy.penaltyDeath();
                     if (checkPenaltyDropBox.isChecked()) newPolicy.penaltyDropBox();
+                    if (checkPenaltyFlash.isChecked()) newPolicy.penaltyFlashScreen();
                     if (checkPenaltyNetworkDeath.isChecked()) newPolicy.penaltyDeathOnNetwork();
                     StrictMode.ThreadPolicy policy = newPolicy.build();
                     Log.v(TAG, "Changing policy to: " + policy);
@@ -362,10 +373,12 @@ public class StrictModeActivity extends Activity {
         checkNoWrite.setOnClickListener(changePolicy);
         checkNoRead.setOnClickListener(changePolicy);
         checkNoNetwork.setOnClickListener(changePolicy);
+        checkCustom.setOnClickListener(changePolicy);
         checkPenaltyLog.setOnClickListener(changePolicy);
         checkPenaltyDialog.setOnClickListener(changePolicy);
         checkPenaltyDeath.setOnClickListener(changePolicy);
         checkPenaltyDropBox.setOnClickListener(changePolicy);
+        checkPenaltyFlash.setOnClickListener(changePolicy);
         checkPenaltyNetworkDeath.setOnClickListener(changePolicy);
     }
 
