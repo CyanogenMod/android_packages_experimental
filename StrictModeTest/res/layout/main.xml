@@ -191,6 +191,13 @@
          android:text="Custom slow call"
          />
 
+      <Button
+         android:id="@+id/gc_instance_button"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:text="Class instances test"
+         />
+
   </LinearLayout>
 
 </ScrollView>

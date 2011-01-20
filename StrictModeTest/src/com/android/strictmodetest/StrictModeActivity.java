@@ -72,6 +72,7 @@ import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class StrictModeActivity extends Activity {
 
@@ -341,6 +342,23 @@ public class StrictModeActivity extends Activity {
                 }
             });
 
+        final Button gcInstanceButton = (Button) findViewById(R.id.gc_instance_button);
+        gcInstanceButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    ArrayList<DummyObject> list = new ArrayList<DummyObject>();
+                    list.add(new DummyObject());
+                    list.add(new DummyObject());
+
+                    StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
+                                           .setClassInstanceLimit(DummyObject.class, 1)
+                                           .penaltyLog()
+                                           .penaltyDropBox()
+                                           .build());
+                    StrictMode.conditionallyCheckInstanceCounts();
+                    list.clear();
+                }
+            });
+
         final CheckBox checkNoWrite = (CheckBox) findViewById(R.id.policy_no_write);
         final CheckBox checkNoRead = (CheckBox) findViewById(R.id.policy_no_reads);
         final CheckBox checkNoNetwork = (CheckBox) findViewById(R.id.policy_no_network);
@@ -454,5 +472,9 @@ public class StrictModeActivity extends Activity {
         super.onPause();
         unbindService(mLocalServiceConn);
         unbindService(mRemoteServiceConn);
+    }
+
+    private static class DummyObject {
+        int foo;
     }
 }
