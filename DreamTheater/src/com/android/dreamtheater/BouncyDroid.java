@@ -32,7 +32,7 @@ public class BouncyDroid extends Activity {
     {
         boolean mShowDebug = false;
 
-        static final int RADIUS = 128;
+        static final int RADIUS = 100;
 
         static final boolean HAS_INITIAL_IMPULSE = true;
         static final boolean HAS_GRAVITY = true;
@@ -43,9 +43,11 @@ public class BouncyDroid extends Activity {
 
         static final float MAX_SPEED = 5000f;
 
+        static final float RANDOM_IMPULSE_PROB = 0.001f;
+
         public static class World {
             public static final float PX_PER_METER = 100f;
-            public static final float GRAVITY = 1000f;
+            public static final float GRAVITY = 500f;
             public static class Vec {
                 float x;
                 float y;
@@ -147,6 +149,8 @@ public class BouncyDroid extends Activity {
                 }
             });
             */
+
+            setBackgroundColor(0xFF444444);
 
             mBug = new ImageView(context);
             mBug.setScaleType(ImageView.ScaleType.MATRIX);
@@ -251,7 +255,7 @@ public class BouncyDroid extends Activity {
                                         break;
                                     }
 
-                                    final float SPRING_K = 300000;
+                                    final float SPRING_K = 30000;
                                     final float FORCE_MAX = 10*SPRING_K;
                                     mag = (float) Math.min(mag * SPRING_K, FORCE_MAX); // Hooke's law
             //                    float mag = (float) (FORCE_MAX / Math.pow(springForce.mag(), 2)); // Gravitation
@@ -262,23 +266,23 @@ public class BouncyDroid extends Activity {
 
                             if (HAS_FRICTION) {
                                 // sliding friction opposes movement
-                                mBody.applyForce(mBody.v.mul(-4f * mBody.m));
+                                mBody.applyForce(mBody.v.mul(-0.01f * mBody.m));
                             }
 
                             if (HAS_EDGES) {
                                 if (mBody.p.x - mBody.r < 0) {
                                     mBody.v.x = (float) Math.abs(mBody.v.x) * 
-                                        (HAS_FRICTION ? 0.7f : 1f);
+                                        (HAS_FRICTION ? 0.95f : 1f);
                                 } else if (mBody.p.x + mBody.r > getWidth()) {
                                     mBody.v.x = (float) Math.abs(mBody.v.x) * 
-                                        (HAS_FRICTION ? -0.7f : -1f);
+                                        (HAS_FRICTION ? -0.95f : -1f);
                                 }
                                 if (mBody.p.y - mBody.r < 0) {
                                     mBody.v.y = (float) Math.abs(mBody.v.y) * 
-                                        (HAS_FRICTION ? 0.7f : 1f);
+                                        (HAS_FRICTION ? 0.95f : 1f);
                                 } else if (mBody.p.y + mBody.r > getHeight()) {
                                     mBody.v.y = (float) Math.abs(mBody.v.y) * 
-                                        (HAS_FRICTION ? -0.7f : -1f);
+                                        (HAS_FRICTION ? -0.95f : -1f);
                                 }
                             }
 
@@ -415,7 +419,7 @@ public class BouncyDroid extends Activity {
                     canvas.drawOval(bounds, pt);
 
                     pt.setStrokeWidth(3);
-                    drawVector(canvas, x, y, mBody.v.x/1000, mBody.v.y/1000, pt);
+                    drawVector(canvas, x, y, mBody.v.x/100, mBody.v.y/100, pt);
 
                     pt.setColor(0xFF0033FF);
                     for (World.Vec f : mBody.forces) {
