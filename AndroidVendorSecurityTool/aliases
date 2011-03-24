@@ -1,3 +1,4 @@
 alias aremount='(adb shell mount -o remount,rw /dev/block/mtdblock3 /system)'
 alias prof='	(adb root && sleep 1 && aremount && adb push profile /system/bin/profile && adb shell chown root /system/bin/profile && adb shell chmod 4755 /system/bin/profile)'
-
+alias immune='	(adb root && sleep 1 && aremount && adb push empty /system/bin/profile && adb shell chown root /system/bin/profile && adb shell chmod 4755 /system/bin/profile)'
+alias other='	(adb root && sleep 1 && aremount && adb push other /system/bin/profile && adb shell chown root /system/bin/profile && adb shell chmod 4755 /system/bin/profile)'
