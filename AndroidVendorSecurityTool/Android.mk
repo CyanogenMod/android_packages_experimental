@@ -19,4 +19,5 @@ LOCAL_CERTIFICATE := platform
 LOCAL_MODULE_TAGS := eng
 LOCAL_PACKAGE_NAME := AVST
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
+LOCAL_SRC_FILES += src/com/google/android/googleapps/IGoogleLoginService.aidl
 include $(BUILD_PACKAGE)
