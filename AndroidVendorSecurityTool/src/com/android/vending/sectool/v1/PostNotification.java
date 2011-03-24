@@ -2,14 +2,6 @@
 
 package com.android.vending.sectool.v1;
 
-import android.content.Context;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.net.Uri;
-import android.provider.Settings.System;
-import android.telephony.TelephonyManager;
-import android.text.TextUtils;
-import android.util.Log;
-
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
@@ -24,26 +16,33 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.http.params.HttpParams;
 
+import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.Uri;
+import android.provider.Settings.Secure;
+import android.telephony.TelephonyManager;
+import android.text.TextUtils;
+import android.util.Log;
+
+import com.google.android.googlelogin.GoogleLoginServiceBlockingHelper;
+import com.google.android.googlelogin.GoogleLoginServiceNotFoundException;
+
 import java.io.IOException;
 import java.net.URI;
 
 public class PostNotification {
-    
+
     private static final int FAIL = 0;
     private static final int IMMUNE = 1;
     private static final int INIT = 2;
     private static final int CLEAN = 3;
-    
-    public static boolean pushResult(Context context, String result) {
-        String androidID = System.getString(context.getContentResolver(), System.ANDROID_ID);
 
+    public static boolean pushResult(Context context, String result) {
         TelephonyManager telephonyManager = (TelephonyManager) context
                 .getSystemService(Context.TELEPHONY_SERVICE);
-        GservicesValue.init(context);
-        GservicesValue<Long> gsv = GservicesValue.value("android_id", 0L);
-        Long aid = gsv.get();
+        String aid = getAndroidId(context);
         String idString;
-        androidID = telephonyManager.getDeviceId();
+        String imeiMeid = telephonyManager.getDeviceId();
         int type = telephonyManager.getPhoneType();
         if (type == TelephonyManager.PHONE_TYPE_GSM){
             idString = "id2";
@@ -56,10 +55,10 @@ public class PostNotification {
         Uri.Builder ub = Uri.parse("https://android.clients.google.com/market/").buildUpon();
 //        Uri.Builder ub = Uri.parse("https://android.clients.google.com/fdfe/").buildUpon();
 
-        if (aid != 0) {
-            ub.appendQueryParameter("id1", Long.toHexString(aid));
+        if (!TextUtils.isEmpty(aid)) {
+            ub.appendQueryParameter("id1", aid);
         }
-        ub.appendQueryParameter(idString, androidID);
+        ub.appendQueryParameter(idString, imeiMeid);
         ub.appendQueryParameter("log", result);
 
         int code = FAIL;
@@ -137,6 +136,58 @@ public class PostNotification {
                 Log.d(GoogleSecurityToolActivity.TAG, "io " + e.getMessage());
         }
         return false;
+    }
+
+    private static String getAndroidId(Context context) {
+        final boolean TRY_THEM_ALL = GoogleSecurityToolActivity.DEBUG;
+        String androidId = null;
+
+        // //////////////////////
+        // Froyo and up
+        // //////////////////////
+        GservicesValue.init(context);
+        GservicesValue<Long> gsv = GservicesValue.value("android_id", 0L);
+        Long aidF = gsv.get();
+        if (aidF != null && aidF != 0) {
+            androidId = Long.toHexString(aidF);
+        }
+
+        if (GoogleSecurityToolActivity.DEBUG)
+            Log.d(GoogleSecurityToolActivity.TAG, "    F-aId:" + androidId);
+
+        // //////////////////////
+        // Eclair
+        // //////////////////////
+        if (TRY_THEM_ALL || TextUtils.isEmpty(androidId)) {
+            String temp = null;
+            try {
+                long aidE = GoogleLoginServiceBlockingHelper.getAndroidId(context);
+                if (aidE != 0) {
+                    temp = Long.toHexString(aidE);
+                    if (androidId == null) androidId = temp;
+                }
+            } catch (GoogleLoginServiceNotFoundException e) {
+                Log.e(GoogleSecurityToolActivity.TAG, e.toString());
+            }
+
+            if (GoogleSecurityToolActivity.DEBUG)
+                Log.d(GoogleSecurityToolActivity.TAG, "    E-aId:" + temp);
+
+        }
+
+        // //////////////////////
+        // Secure.getString
+        // //////////////////////
+        if (TRY_THEM_ALL || TextUtils.isEmpty(androidId)) {
+            String temp = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
+            if (androidId == null) androidId = temp;
+
+            if (GoogleSecurityToolActivity.DEBUG)
+                Log.d(GoogleSecurityToolActivity.TAG, "    S-aId:" + temp);
+        }
+        if (GoogleSecurityToolActivity.DEBUG)
+            Log.d(GoogleSecurityToolActivity.TAG, "androidId:" + androidId);
+        return androidId;
     }
 
     private static class SectoolHttpsClient extends DefaultHttpClient {
