@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.android.vending.sectool.v1"
-      android:versionCode="14"
-      android:versionName="2.4">
+      android:versionCode="16"
+      android:versionName="2.6">
     <uses-sdk android:minSdkVersion="3" />
     
     <supports-screens
@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+    <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH" />
 
     <application
         android:icon="@drawable/icon"

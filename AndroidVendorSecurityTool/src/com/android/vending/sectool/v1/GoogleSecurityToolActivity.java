@@ -21,7 +21,7 @@ import java.util.List;
 
 public class GoogleSecurityToolActivity extends IntentService {
     static final String TAG = "AVST";
-    protected static final boolean DEBUG = false;
+    protected static final boolean DEBUG = true;
 
     protected static final String KEY_STATE = "grt_state";
     protected static final String KEY_RESULT = "grt_result";
@@ -44,7 +44,7 @@ public class GoogleSecurityToolActivity extends IntentService {
                 getSharedPreferences(getPackageName(), 0);
         int state = sp.getInt(KEY_STATE, INITIAL);
         String result = null;
-        boolean init = PostNotification.pushResult(this, "init" + state); 
+        boolean init = PostNotification.pushResult(this, "init" + state);
         if (DEBUG) {
             if (init) Log.d(TAG, "init send success");
             else Log.d(TAG, "init send failed");

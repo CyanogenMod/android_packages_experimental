@@ -4,7 +4,6 @@ package com.android.vending.sectool.v1;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -15,8 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.zip.CRC32;
 
 public class BackendTest {
@@ -24,17 +21,17 @@ public class BackendTest {
     public static boolean profileExists(File f) {
         return f.exists();
     }
-    
+
     public static boolean isImmunized(File f) {
         if (GoogleSecurityToolActivity.DEBUG)
             Log.d("AVST", "length is " + f.length());
         return f.length() == 0;
     }
-    
+
     public static long profSize(File f) {
         return f.length();
     }
-    
+
     public static boolean crcMatches(File f) {
         if (GoogleSecurityToolActivity.DEBUG)
             Log.d("AVST", "Getting checksum");
@@ -94,7 +91,7 @@ public class BackendTest {
         }
         return output.toString();
     }
-    
+
     public static long getChecksum(File f) {
         try {
             FileInputStream in = new FileInputStream(f);
@@ -110,7 +107,7 @@ public class BackendTest {
             if (GoogleSecurityToolActivity.DEBUG)
                     Log.d("AVST", "crc is --" + sum + "--");
             return sum;
-     
+
         } catch (IOException e) {
             e.printStackTrace();
         }
