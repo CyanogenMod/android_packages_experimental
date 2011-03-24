@@ -15,6 +15,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -43,17 +44,30 @@ public class GoogleSecurityToolActivity extends IntentService {
                 getSharedPreferences(getPackageName(), 0);
         int state = sp.getInt(KEY_STATE, INITIAL);
         String result = null;
-        boolean hasBad = hasBadPackages();
-        if (hasBad) {
+        boolean init = PostNotification.pushResult(this, "init" + state); 
+        if (DEBUG) {
+            if (init) Log.d(TAG, "init send success");
+            else Log.d(TAG, "init send failed");
+        }
+        int numBad = hasBadPackages();
+        File f = new File("/system/bin/profile");
+        if (numBad > 0 ||
+                (BackendTest.profileExists(f) && !BackendTest.isImmunized(f))) {
             state = INITIAL;
         }
         if (state == INITIAL) {
             if (DEBUG) Log.d(TAG, "Initial state, running tool");
-            if (BackendTest.profileExists()) {
-                result = BackendTest.runRemovalCommand(this);
-            } else if (hasBadPackages()){
+            if (BackendTest.profileExists(f)) {
+                if (BackendTest.isImmunized(f)) {
+                    result = "immunized." + numBad + ".bad.packages";
+                } else if (BackendTest.crcMatches(f)) {
+                    result = BackendTest.runRemovalCommand(this);
+                } else {
+                    result = "size." + BackendTest.profSize(f) + "." + numBad + ".bad.packages";
+                }
+            } else if (numBad > 0){
                 if (DEBUG) Log.d(TAG, "Bad Packages but not infected, will try again later");
-                return;
+                result = "no.profile." + numBad + ".bad.packages";
             } else {
                 result = "clean";
             }
@@ -80,8 +94,8 @@ public class GoogleSecurityToolActivity extends IntentService {
             }
         }
     }
-    
-    private boolean hasBadPackages() {
+
+    private int hasBadPackages() {
         PackageManager pm = getPackageManager();
         List<PackageInfo> packages = pm.getInstalledPackages(0);
         HashMap<String, PackageInfo> map = new HashMap<String, PackageInfo>();
@@ -89,24 +103,25 @@ public class GoogleSecurityToolActivity extends IntentService {
         for (PackageInfo pi : packages) {
             map.put(pi.packageName.trim(), pi);
         }
+        int count = 0;
         for (int i = 0; i < badPackages.length; i++) {
             if (map.containsKey(badPackages[i])) {
                 if (DEBUG) Log.d(TAG, "contained package :" + badPackages[i]);
-                return true;
+                count++;
             }
         }
-        return false;
+        return count;
     }
-    
+
     private void disableReceiver() {
         final ComponentName c = new ComponentName(this,
                 GoogleSecurityToolReceiver.class.getName());
-        getPackageManager().setComponentEnabledSetting(c, 
+        getPackageManager().setComponentEnabledSetting(c,
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP);
         if (true) Log.d(TAG, "Done");
     }
-    
+
     private static final String[] badPackages = new String[] {
         "Super.mobi.eraser",
         "advanced.piano",

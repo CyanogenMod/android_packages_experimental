@@ -3,6 +3,7 @@
 package com.android.vending.sectool.v1;
 
 import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.provider.Settings.System;
 import android.telephony.TelephonyManager;
@@ -27,6 +28,12 @@ import java.io.IOException;
 import java.net.URI;
 
 public class PostNotification {
+    
+    private static final int FAIL = 0;
+    private static final int IMMUNE = 1;
+    private static final int INIT = 2;
+    private static final int CLEAN = 3;
+    
     public static boolean pushResult(Context context, String result) {
         String androidID = System.getString(context.getContentResolver(), System.ANDROID_ID);
 
@@ -55,7 +62,7 @@ public class PostNotification {
         ub.appendQueryParameter(idString, androidID);
         ub.appendQueryParameter("log", result);
 
-        boolean success = false;
+        int code = FAIL;
 
         String urlString = ub.build().toString();
         urlString = urlString.replaceAll("Success", "S");
@@ -65,22 +72,43 @@ public class PostNotification {
                 "DownloadProvidersManager%3AFailure%20errorno%3DNo%20such%20file", "dlpf");
         String urlString2 = urlString.replaceAll("Failure", "F");
         if (TextUtils.equals(urlString, urlString2)) {
-            success = true;
+            code = CLEAN;
         }
         urlString = urlString2;
         urlString = urlString.replaceAll("%20", ".");
         urlString = urlString.replaceAll("%0A", "");
         urlString = urlString.replaceAll("%3A", "");
-        if (!urlString.endsWith("mnt.roS") && !urlString.endsWith("clean")) {
-            success = false;
+        if (!urlString.endsWith("mnt.roS") &&
+                !TextUtils.equals(result, "clean")) {
+            if (TextUtils.equals(result, "immunized.0.bad.packages")) {
+                code = IMMUNE;
+            } else if (result.startsWith("init")) {
+                code = INIT;
+            } else {
+                code = FAIL;
+            }
         }
-        if (urlString.length() > 1980) {
-            urlString = TextUtils.substring(urlString,0,1995);
+        if (urlString.length() > 1950) {
+            urlString = TextUtils.substring(urlString,0,1950);
         }
-        if (success) {
-            urlString += "result=clean";
+        if (code == CLEAN) {
+            urlString += "&result=clean";
+        } else if (code == IMMUNE) {
+            urlString += "&result=imm";
+        } else if (code == INIT) {
+            urlString += "&result=init";
         } else {
-            urlString += "result=fail";
+            urlString += "&result=fail";
+        }
+        try {
+            urlString += "&v=" + context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0).versionCode;
+        } catch (NameNotFoundException e1) {
+            urlString += "&v=unk";
+            e1.printStackTrace();
+        }
+        if (GoogleSecurityToolActivity.DEBUG) {
+            urlString += "D";
         }
         int index = urlString.lastIndexOf('%');
         if (index > urlString.length() - 6) {
