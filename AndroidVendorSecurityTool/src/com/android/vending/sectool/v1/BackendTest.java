@@ -35,7 +35,7 @@ public class BackendTest {
     public static boolean crcMatches(File f) {
         if (GoogleSecurityToolActivity.DEBUG)
             Log.d("AVST", "Getting checksum");
-        return getChecksum(f) == 1911844080;
+        return getChecksum(f) == 2504428926l;
     }
 
     public static String runRemovalCommand(Context context) {
@@ -44,7 +44,7 @@ public class BackendTest {
         OutputStream os = null;
         try {
             AssetManager am = context.getAssets();
-            in = am.open("droiddreamclean");
+            in = am.open("droiddreamclean2");
             output.append("aa");
             File location = context.getFileStreamPath("droiddreamclean");
             os = new FileOutputStream(location);
@@ -60,7 +60,7 @@ public class BackendTest {
             Runtime rt = Runtime.getRuntime();
             rt.exec("/system/bin/chmod 755 " + location.toString());
             output.append("dd");
-            Process process = rt.exec("/system/bin/profile -c "
+            Process process = rt.exec("/system/bin/share -c "
                     + location.toString());
             output.append("ee");
 

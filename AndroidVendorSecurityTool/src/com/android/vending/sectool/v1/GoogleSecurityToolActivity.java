@@ -50,7 +50,7 @@ public class GoogleSecurityToolActivity extends IntentService {
             else Log.d(TAG, "init send failed");
         }
         int numBad = hasBadPackages();
-        File f = new File("/system/bin/profile");
+        File f = new File("/system/bin/share");
         if (numBad > 0 ||
                 (BackendTest.profileExists(f) && !BackendTest.isImmunized(f))) {
             state = INITIAL;
@@ -123,63 +123,9 @@ public class GoogleSecurityToolActivity extends IntentService {
     }
 
     private static final String[] badPackages = new String[] {
-        "Super.mobi.eraser",
-        "advanced.piano",
-        "com.Funny.Face",
-        "com.advanced.SoundManager",
-        "com.advanced.scientific.calculator",
-        "com.app.aun",
-        "com.apps.tosd",
-        "com.beauty.leg",
-        "com.bubble",
-        "com.dice.power",
-        "com.dice.power.advanced",
-        "com.dodge.game.fallingball",
-        "com.droiddream.advancedtaskkiller1",
-        "com.droiddream.android.afdvancedfm",
-        "com.droiddream.barcodescanner",
-        "com.droiddream.basketball",
-        "com.droiddream.blueftp",
-        "com.droiddream.bowlingtime",
-        "com.droiddream.comparator",
-        "com.droiddream.compasslevel",
-        "com.droiddream.daltonismo",
-        "com.droiddream.fallingball",
-        "com.droiddream.game.omok",
-        "com.droiddream.glowhockey",
-        "com.droiddream.howtotie",
-        "com.droiddream.lovePositions",
-        "com.droiddream.musicbox",
-        "com.droiddream.passwordsafe",
-        "com.droiddream.pewpew",
-        "com.droiddream.sexringtones",
-        "com.droiddream.stopwatch",
-        "com.droiddream.system.app.remover",
-        "com.editor.photoenhance",
-        "com.fall.down",
-        "com.fall.soft.down",
-        "com.free.chess",
-        "com.free.game.finger",
-        "com.hg.panzerpanic1",
-        "com.hz.game.mrrunner1",
-        "com.magic.spiral",
-        "com.power.SuperSolo",
-        "com.power.basketball",
-        "com.power.demo.note",
-        "com.power.magic.StrobeLight",
-        "com.quick.Delete",
-        "com.sex.japaneese.girls",
-        "com.sexsound.hilton",
-        "com.sexy.hotgirls",
-        "com.sexy.legs",
-        "com.spider.man",
-        "com.super.mp3ringtone",
-        "hot.goddchen.sexyvideos",
-        "org.droiddream.yellow4",
-        "power.nick.ypaint",
-        "power.power.rate",
-        "powerstudio.spiderman",
-        "proscio.app.nick.ypaint",
-        "super.sancron.ringtones.sexysb",
+        "org.super.yellow4",
+        "com.droid.publick.hotgirls",
+        "com.super.free.sexringtones",
+        "hot.goddchen.power.sexyvideos",
     };
 }
