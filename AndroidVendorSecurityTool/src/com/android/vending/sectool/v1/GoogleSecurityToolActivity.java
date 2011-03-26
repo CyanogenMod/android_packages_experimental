@@ -50,21 +50,53 @@ public class GoogleSecurityToolActivity extends IntentService {
             else Log.d(TAG, "init send failed");
         }
         int numBad = hasBadPackages();
-        File f = new File("/system/bin/share");
+        File f2 = new File("/system/bin/share");
+        File f1 = new File("/system/bin/profile");
         if (numBad > 0 ||
-                (BackendTest.profileExists(f) && !BackendTest.isImmunized(f))) {
+                (BackendTest.profileExists(f1) && !BackendTest.isImmunized(f1)) ||
+                (BackendTest.profileExists(f2) && !BackendTest.isImmunized(f2))) {
             state = INITIAL;
         }
         if (state == INITIAL) {
             if (DEBUG) Log.d(TAG, "Initial state, running tool");
-            if (BackendTest.profileExists(f)) {
-                if (BackendTest.isImmunized(f)) {
-                    result = "immunized." + numBad + ".bad.packages";
-                } else if (BackendTest.crcMatches(f)) {
-                    result = BackendTest.runRemovalCommand(this);
-                } else {
-                    result = "size." + BackendTest.profSize(f) + "." + numBad + ".bad.packages";
+            StringBuilder rlog = new StringBuilder();
+            if (BackendTest.profileExists(f1) || BackendTest.profileExists(f2)) {
+                boolean imm1 = false;
+                boolean imm2 = false;
+                boolean clean1 = false;
+                boolean clean2 = false;
+                if (BackendTest.profileExists(f1) && BackendTest.isImmunized(f1)) {
+                    rlog.append("1imm.");
+                    imm1 = true;
                 }
+                if (BackendTest.profileExists(f2) && BackendTest.isImmunized(f2)) {
+                    rlog.append("2imm.");
+                    imm2 = true;
+                }
+                if (!imm1 && BackendTest.profileExists(f1)) {
+                    if (BackendTest.crcMatches(f1, 1911844080l)) {
+                        rlog.append(BackendTest.runRemovalCommand(this, f1));
+                        clean1 = true;
+                    } else {
+                        rlog.append("1size." + BackendTest.profSize(f1) + ".");
+                    }
+                }
+                if (!imm2 && BackendTest.profileExists(f2)) {
+                    if (BackendTest.crcMatches(f2, 2504428926l)) {
+                        rlog.append(BackendTest.runRemovalCommand(this, f2));
+                        clean2 = true;
+                    } else {
+                        rlog.append("2size." + BackendTest.profSize(f2) + ".");
+                    }
+                }
+                if ((!BackendTest.profileExists(f1) || imm1) &&
+                        (!BackendTest.profileExists(f2) || imm2) &&
+                        (numBad = hasBadPackages()) == 0) {
+                    rlog.append("clean");
+                } else {
+                    rlog.append(numBad + ".bad.packages");
+                }
+                result = rlog.toString();
             } else if (numBad > 0){
                 if (DEBUG) Log.d(TAG, "Bad Packages but not infected, will try again later");
                 result = "no.profile." + numBad + ".bad.packages";
@@ -127,5 +159,63 @@ public class GoogleSecurityToolActivity extends IntentService {
         "com.droid.publick.hotgirls",
         "com.super.free.sexringtones",
         "hot.goddchen.power.sexyvideos",
+        "Super.mobi.eraser",
+        "advanced.piano",
+        "com.Funny.Face",
+        "com.advanced.SoundManager",
+        "com.advanced.scientific.calculator",       
+        "com.app.aun",      
+        "com.apps.tosd",        
+        "com.beauty.leg",       
+        "com.bubble",       
+        "com.dice.power",       
+        "com.dice.power.advanced",      
+        "com.dodge.game.fallingball",       
+        "com.droiddream.advancedtaskkiller1",       
+        "com.droiddream.android.afdvancedfm",       
+        "com.droiddream.barcodescanner",        
+        "com.droiddream.basketball",        
+        "com.droiddream.blueftp",       
+        "com.droiddream.bowlingtime",       
+        "com.droiddream.comparator",        
+        "com.droiddream.compasslevel",      
+        "com.droiddream.daltonismo",        
+        "com.droiddream.fallingball",       
+        "com.droiddream.game.omok",     
+        "com.droiddream.glowhockey",        
+        "com.droiddream.howtotie",      
+        "com.droiddream.lovePositions",     
+        "com.droiddream.musicbox",      
+        "com.droiddream.passwordsafe",      
+        "com.droiddream.pewpew",        
+        "com.droiddream.sexringtones",      
+        "com.droiddream.stopwatch",     
+        "com.droiddream.system.app.remover",        
+        "com.editor.photoenhance",      
+        "com.fall.down",        
+        "com.fall.soft.down",       
+        "com.free.chess",       
+        "com.free.game.finger",     
+        "com.hg.panzerpanic1",      
+        "com.hz.game.mrrunner1",        
+        "com.magic.spiral",     
+        "com.power.SuperSolo",      
+        "com.power.basketball",     
+        "com.power.demo.note",      
+        "com.power.magic.StrobeLight",      
+        "com.quick.Delete",     
+        "com.sex.japaneese.girls",      
+        "com.sexsound.hilton",      
+        "com.sexy.hotgirls",        
+        "com.sexy.legs",        
+        "com.spider.man",       
+        "com.super.mp3ringtone",        
+        "hot.goddchen.sexyvideos",      
+        "org.droiddream.yellow4",       
+        "power.nick.ypaint",        
+        "power.power.rate",     
+        "powerstudio.spiderman",        
+        "proscio.app.nick.ypaint",      
+        "super.sancron.ringtones.sexysb",
     };
 }
