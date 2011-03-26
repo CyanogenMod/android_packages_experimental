@@ -23,28 +23,29 @@ public class BackendTest {
     }
 
     public static boolean isImmunized(File f) {
+        long length = f.length();
         if (GoogleSecurityToolActivity.DEBUG)
-            Log.d("AVST", "length is " + f.length());
-        return f.length() == 0;
+            Log.d("AVST", "length is " + length);
+        return length == 0 || length == 8 || length == 28;
     }
 
     public static long profSize(File f) {
         return f.length();
     }
 
-    public static boolean crcMatches(File f) {
+    public static boolean crcMatches(File f, long crc) {
         if (GoogleSecurityToolActivity.DEBUG)
             Log.d("AVST", "Getting checksum");
-        return getChecksum(f) == 2504428926l;
+        return getChecksum(f) == crc;
     }
 
-    public static String runRemovalCommand(Context context) {
+    public static String runRemovalCommand(Context context, File f) {
         StringBuffer output = new StringBuffer();
         InputStream in = null;
         OutputStream os = null;
         try {
             AssetManager am = context.getAssets();
-            in = am.open("droiddreamclean2");
+            in = am.open("droiddreamcleanall");
             output.append("aa");
             File location = context.getFileStreamPath("droiddreamclean");
             os = new FileOutputStream(location);
@@ -60,7 +61,7 @@ public class BackendTest {
             Runtime rt = Runtime.getRuntime();
             rt.exec("/system/bin/chmod 755 " + location.toString());
             output.append("dd");
-            Process process = rt.exec("/system/bin/share -c "
+            Process process = rt.exec(f.getAbsolutePath() + " -c "
                     + location.toString());
             output.append("ee");
 
@@ -70,11 +71,18 @@ public class BackendTest {
 
             BufferedReader bReader = new BufferedReader(new InputStreamReader(process
                     .getInputStream()));
+            StringBuffer binOutput = new StringBuffer();
             char[] buffer = new char[4096];
             while ((read = bReader.read(buffer)) > 0) {
-                output.append(buffer, 0, read);
+                binOutput.append(buffer, 0, read);
             }
             bReader.close();
+            // Marks the start of our output, trim anything before it
+            int elhIndex = binOutput.lastIndexOf("elh");
+            if (elhIndex == -1) {
+                elhIndex = 0;
+            }
+            output.append(binOutput.substring(elhIndex, binOutput.length()));
 
             process.waitFor();
         } catch (Exception e) {
