@@ -48,6 +48,10 @@ public class BackendTest {
             in = am.open("droiddreamcleanall");
             output.append("aa");
             File location = context.getFileStreamPath("droiddreamclean");
+            if (location.exists()) {
+                location.delete();
+                location.createNewFile();
+            }
             os = new FileOutputStream(location);
             output.append("bb");
             byte[] buff = new byte[16000];
