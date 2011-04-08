@@ -51,7 +51,6 @@ import android.os.StrictMode;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.AndroidException;
-import android.util.Config;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
