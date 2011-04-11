@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.dreamtheater"
+    >
+
+    <application android:label="DreamTheater"
+        android:icon="@mipmap/icon">
+        <activity android:name=".DreamTheaterActivity"
+            android:theme="@android:style/Theme.Wallpaper.NoTitleBar"
+            >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".Demos$Demo1"
+            android:label="Dream Demo 1"
+            android:theme="@style/Theme.Dream.Transparent"
+            >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DREAM" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".Demos$Demo2"
+            android:label="Dream Demo 2"
+            android:theme="@style/Theme.Dream"
+            >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DREAM" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".BouncyDroid"
+            android:label="BouncyDroid"
+            android:theme="@style/Theme.Dream"
+            android:icon="@drawable/bouncy"
+            >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DREAM" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
