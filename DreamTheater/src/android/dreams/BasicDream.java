@@ -26,12 +26,6 @@ public class BasicDream extends Activity {
         public void onDraw(Canvas c) {
             BasicDream.this.onDraw(c);
         }
-
-        @Override
-        public boolean onTouchEvent(MotionEvent evt) {
-            BasicDream.this.finish();
-            return true;
-        }
     }
 
     @Override
@@ -41,6 +35,10 @@ public class BasicDream extends Activity {
     }
 
     public void onDraw(Canvas c) {
+    }
+
+    public void onUserInteraction() {
+        finish();
     }
 }
 
