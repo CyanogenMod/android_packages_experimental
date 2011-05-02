@@ -26,7 +26,8 @@
         android:orientation="horizontal">
 
         <com.example.android.videochatcameratest.CameraPreviewView android:id="@+id/previewrender"
-            android:layout_width="320px" android:layout_height="240px" />
+            android:layout_width="320px" android:layout_height="240px"
+             />
 
 <!--
         <com.example.android.videochatcameratest.RenderView android:id="@+id/render"
@@ -78,7 +79,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/vga"
-                        android:checked="true" />
+                        android:checked="false" />
 
                 </LinearLayout>
 
@@ -96,7 +97,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/fps30"
-                        android:checked="true" />
+                        android:checked="false" />
 
                 </LinearLayout>
             </LinearLayout>

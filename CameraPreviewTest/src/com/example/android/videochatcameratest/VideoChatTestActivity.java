@@ -30,6 +30,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.lang.UnsupportedOperationException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class VideoChatTestActivity extends Activity {
     static final private int NUM_CAMERA_PREVIEW_BUFFERS = 2;
 
     static final private String TAG = "VideoChatTest";
-
+    TextView mTextStatusHistory;
     public VideoChatTestActivity() {
     }
 
@@ -58,18 +59,47 @@ public class VideoChatTestActivity extends Activity {
         ((Button) findViewById(R.id.gobutton)).setOnClickListener(mGoListener);
 
         ((TextView)findViewById(R.id.statushistory)).setVerticalScrollBarEnabled(true);
+        mTextStatusHistory = (TextView) findViewById(R.id.statushistory);
 
-//        // Find the text editor view inside the layout, because we
-//        // want to do various programmatic things with it.
-//        mEditor = (EditText) findViewById(R.id.editor);
-//
-//        // Hook up button presses to the appropriate event handler.
-//        ((Button) findViewById(R.id.back)).setOnClickListener(mBackListener);
-//        ((Button) findViewById(R.id.clear)).setOnClickListener(mClearListener);
-//
-//        mEditor.setText(getText(R.string.main_label));
+        for (int i = 0; i < Camera.getNumberOfCameras(); i++) {
+            dumpCameraCaps(i);
+        }
     }
 
+    private void logMessage(String message) {
+        Log.v(TAG, message);
+        mTextStatusHistory.append(message + "\r\n");
+    }
+
+    public int getCameraOrientation(int id) {
+        Camera.CameraInfo info =
+            new Camera.CameraInfo();
+        Camera.getCameraInfo(id, info);
+        return info.orientation;
+    }
+
+    private void dumpCameraCaps(int id) {
+        Camera cam = Camera.open(id);
+        Camera.Parameters params = cam.getParameters();
+        List<Integer> formats = params.getSupportedPreviewFormats();
+        List<int[]> frameRates = params.getSupportedPreviewFpsRange();
+        List<Camera.Size> sizes = params.getSupportedPreviewSizes();
+        logMessage("Camera " + id);
+        logMessage("Orientation " + getCameraOrientation(id));
+        logMessage("Sizes");
+        for (Size size : sizes) {
+            logMessage(size.width + "x" + size.height);
+        }
+        logMessage("frameRates");
+        for (int[] rates : frameRates) {
+            logMessage(rates[0] + "-" + rates[1]);
+        }
+        logMessage("formats");
+        for (Integer format : formats) {
+            logMessage(format.toString());
+        }
+        cam.release();
+    }
     /**
      * Called when the activity is about to start interacting with the user.
      */
@@ -179,12 +209,16 @@ public class VideoChatTestActivity extends Activity {
         
         private class FrameCatcher implements Camera.PreviewCallback {
             public int mFrames = 0;
-
+            private final int mExpectedSize;
             public FrameCatcher(int width, int height) {
+                mExpectedSize = width * height * 3 / 2;
             }
             
             @Override
             public void onPreviewFrame(byte[] data, Camera camera) {
+                if (mExpectedSize != data.length) {
+                    throw new UnsupportedOperationException("bad size, got " + data.length + " expected " + mExpectedSize);
+                }
                 mFrames++;
                 camera.addCallbackBuffer(data);
             }
@@ -229,7 +263,7 @@ public class VideoChatTestActivity extends Activity {
                 camera.setPreviewCallbackWithBuffer(null);
                 Camera.Parameters parameters = camera.getParameters();
 
-                publishProgress("Changing preview parameters " + baseStatus);
+                publishProgress("Changing preview parameters " + width + "x" + height + baseStatus);
 
                 parameters.setPreviewSize(width, height);
                 parameters.setPreviewFormat(ImageFormat.NV21);
@@ -257,10 +291,22 @@ public class VideoChatTestActivity extends Activity {
 
                 publishProgress("Initializing callback buffers " + baseStatus);
                 int imageFormat = parameters.getPreviewFormat();
+                if (imageFormat != ImageFormat.NV21) {
+                    status = "Bad reported image format, wanted NV21 (" + ImageFormat.NV21 +
+                            ") got " + imageFormat;
+                    succeeded = false;
+                    throw new UnsupportedOperationException(status);
+                }
                 int bufferSize;
                 bufferSize = setSize.width * setSize.height
                                 * ImageFormat.getBitsPerPixel(imageFormat) / 8;
-
+                int sizeWeShouldHave = (width * height * 3 / 2);
+                if (bufferSize != sizeWeShouldHave) {
+                    status = "Bad calculate size. Should have been " + (width * height * 3 / 2) +
+                            " but got " + imageFormat;
+                    succeeded = false;
+                    throw new UnsupportedOperationException(status);
+                }
                 camera.stopPreview();
 
                 FrameCatcher catcher = new FrameCatcher(setSize.width, setSize.height);
