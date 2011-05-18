@@ -23,6 +23,7 @@ import android.hardware.Camera.Size;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Surface;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -61,6 +62,7 @@ public class VideoChatTestActivity extends Activity {
         ((TextView)findViewById(R.id.statushistory)).setVerticalScrollBarEnabled(true);
         mTextStatusHistory = (TextView) findViewById(R.id.statushistory);
 
+        logMessage("Display Orientation " + getDisplayOrientation());
         for (int i = 0; i < Camera.getNumberOfCameras(); i++) {
             dumpCameraCaps(i);
         }
@@ -108,23 +110,46 @@ public class VideoChatTestActivity extends Activity {
         super.onResume();
     }
 
+    private int getDisplayOrientation() {
+        int rotation = getWindowManager().getDefaultDisplay().getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
+        }
+        return degrees;
+    }
+
     /**
      * A call-back for when the user presses the back button.
      */
     OnClickListener mGoListener = new OnClickListener() {
-        
+        @Override
         public void onClick(View v) {
-            new CameraTestRunner().execute();
+            int degrees = getDisplayOrientation();
+            new CameraTestRunner().execute(new Integer[] { degrees });
         }
     };
     
-    private class CameraTestRunner extends AsyncTask<Void, String, Void> {
+    private class CameraTestRunner extends AsyncTask<Integer, String, Void> {
 
         TextView mTextStatus;
         TextView mTextStatusHistory;
+        private int mDisplayOrientation;
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(Integer... params) {
+            mDisplayOrientation = params[0];
             mTextStatus = (TextView) findViewById(R.id.status);
             mTextStatusHistory = (TextView) findViewById(R.id.statushistory);
             boolean testFrontCamera =
@@ -138,6 +163,7 @@ public class VideoChatTestActivity extends Activity {
             boolean testRotate90 = ((CheckBox) findViewById(R.id.rotate90checkbox)).isChecked();
             boolean testRotate180 = ((CheckBox) findViewById(R.id.rotate180checkbox)).isChecked();
             boolean testRotate270 = ((CheckBox) findViewById(R.id.rotate270checkbox)).isChecked();
+            boolean testRotateAuto = ((CheckBox) findViewById(R.id.rotateautocheckbox)).isChecked();
 
             ArrayList<Integer> setDisplayOrentationAngles = new ArrayList<Integer>();
 
@@ -153,23 +179,39 @@ public class VideoChatTestActivity extends Activity {
             if (testRotate270) {
                 setDisplayOrentationAngles.add(270);
             }
+            if (testRotateAuto) {
+                setDisplayOrentationAngles.add(-1);
+            }
 
             final int widths[] = new int[] {320, 640};
             final int heights[] = new int[] {240, 480};
 
             final int framerates[] = new int[] {15, 30};
 
+            ArrayList<Integer> whichCameras = new ArrayList<Integer>();
+            int numCameras = Camera.getNumberOfCameras();
+            if (testFrontCamera) {
+                for (int i = 0; i < numCameras; i++) {
+                    Camera.CameraInfo info = new Camera.CameraInfo();
+                    Camera.getCameraInfo(i, info);
+                    if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                        whichCameras.add(i);
+                        break;
+                    }
+                }
+            }
+            if (testBackCamera) {
+                for (int i = 0; i < numCameras; i++) {
+                    Camera.CameraInfo info = new Camera.CameraInfo();
+                    Camera.getCameraInfo(i, info);
+                    if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                        whichCameras.add(i);
+                        break;
+                    }
+                }
+            }
             do {
-                for (int whichCamera = 0; whichCamera < 2; whichCamera++) {
-                    if (whichCamera == 0 && !testBackCamera) {
-                        continue;
-                    }
-
-
-                    if (whichCamera == 1 && !testFrontCamera) {
-                        continue;
-                    }
-
+                for (Integer whichCamera : whichCameras) {
                     for (int whichResolution = 0; whichResolution < 2; whichResolution++) {
                         if (whichResolution == 0 && !testQVGA) {
                             continue;
@@ -233,6 +275,23 @@ public class VideoChatTestActivity extends Activity {
                 camera.addCallbackBuffer(cameraBuffer);
             }
         }
+
+        private int getAutoDisplayOrientation(int displayOrientationDegrees,
+                int cameraId, android.hardware.Camera camera) {
+            android.hardware.Camera.CameraInfo info =
+                    new android.hardware.Camera.CameraInfo();
+            android.hardware.Camera.getCameraInfo(cameraId, info);
+
+            int result;
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                result = (info.orientation + displayOrientationDegrees) % 360;
+                result = (360 - result) % 360; // compensate the mirror
+            } else { // back-facing
+                result = (info.orientation - displayOrientationDegrees + 360) % 360;
+            }
+            return result;
+        }
+
         protected void TestCamera(int whichCamera,
                 int width, int height,
                 int frameRate,
@@ -258,7 +317,6 @@ public class VideoChatTestActivity extends Activity {
                     status = exception.toString();
                     return;
                 }
-                camera.startPreview();
 
                 camera.setPreviewCallbackWithBuffer(null);
                 Camera.Parameters parameters = camera.getParameters();
@@ -269,9 +327,7 @@ public class VideoChatTestActivity extends Activity {
                 parameters.setPreviewFormat(ImageFormat.NV21);
 
                 parameters.setPreviewFrameRate(frameRate);
-                camera.stopPreview();
                 camera.setParameters(parameters);
-                camera.startPreview();
 
                 publishProgress("Validating preview parameters " + baseStatus);
 
@@ -307,7 +363,6 @@ public class VideoChatTestActivity extends Activity {
                     succeeded = false;
                     throw new UnsupportedOperationException(status);
                 }
-                camera.stopPreview();
 
                 FrameCatcher catcher = new FrameCatcher(setSize.width, setSize.height);
 
@@ -330,6 +385,10 @@ public class VideoChatTestActivity extends Activity {
                 for (int i = 0; i < numPasses; i++) {
                     if (doSetDisplayOrientation) {
                         int rotation = setDisplayOrentationAngles.get(i);
+                        if (rotation == -1) {
+                            rotation = getAutoDisplayOrientation(mDisplayOrientation,
+                                    whichCamera, camera);
+                        }
                         publishProgress("setDisplayOrientation to " + rotation);
                         try {
                             camera.setDisplayOrientation(rotation);
