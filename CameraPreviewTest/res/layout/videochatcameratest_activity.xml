@@ -129,6 +129,11 @@
                     android:layout_height="wrap_content"
                     android:text="@string/rotate270"
                     android:checked="false" />
+                <CheckBox android:id="@+id/rotateautocheckbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rotateauto"
+                    android:checked="true" />
             </LinearLayout>
 
             <CheckBox android:id="@+id/repeatcheckbox"
