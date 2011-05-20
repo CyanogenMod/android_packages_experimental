@@ -5,7 +5,6 @@ import android.animation.TimeAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.dreams.BasicDream;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
