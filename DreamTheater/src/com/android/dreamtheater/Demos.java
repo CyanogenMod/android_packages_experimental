@@ -2,12 +2,13 @@ package com.android.dreamtheater;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.dreams.BasicDream;
 import android.graphics.Canvas;
 
 import android.widget.ViewFlipper;
 import android.widget.ImageView;
 import android.view.View;
+
+import android.support.v13.dreams.BasicDream;
 
 public class Demos {
     public static class Demo1 extends BasicDream {
