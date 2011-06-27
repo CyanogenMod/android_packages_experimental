@@ -24,10 +24,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -43,9 +45,14 @@ import java.util.List;
 public class VideoChatTestActivity extends Activity {
 
     static final private int NUM_CAMERA_PREVIEW_BUFFERS = 2;
-
+    static final boolean sRunningOnHoneycomb;
     static final private String TAG = "VideoChatTest";
     TextView mTextStatusHistory;
+    static {
+        sRunningOnHoneycomb =
+                android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB;
+    }
+
     public VideoChatTestActivity() {
     }
 
@@ -56,6 +63,14 @@ public class VideoChatTestActivity extends Activity {
 
         // Inflate our UI from its XML layout description.
         setContentView(R.layout.videochatcameratest_activity);
+
+        FrameLayout fl = (FrameLayout)findViewById(R.id.previewFrame);
+
+        if (sRunningOnHoneycomb) {
+            fl.addView(new SurfaceTextureView(this));
+        } else {
+            fl.addView(new CameraPreviewView(this));
+        }
 
         ((Button) findViewById(R.id.gobutton)).setOnClickListener(mGoListener);
 
@@ -305,13 +320,24 @@ public class VideoChatTestActivity extends Activity {
             Log.v(TAG, "Start test -- id " + whichCamera + " " + width + "x" + height +
                     " " + frameRate + "fps");
             Camera camera;
-            CameraPreviewView previewView = (CameraPreviewView)findViewById(R.id.previewrender);
+            FrameLayout previewBlock = (FrameLayout)findViewById(R.id.previewFrame);
+            SurfaceTextureView surfaceTextureView = null;
+            CameraPreviewView previewView = null;
+            if (sRunningOnHoneycomb) {
+                surfaceTextureView = (SurfaceTextureView)previewBlock.getChildAt(0);
+            } else {
+                previewView = (CameraPreviewView)previewBlock.getChildAt(0);
+            }
 
             camera = Camera.open(whichCamera);
             publishProgress("Opened " + baseStatus);
             try {
                 try {
-                    camera.setPreviewDisplay(previewView.mHolder);
+                    if (sRunningOnHoneycomb) {
+                        camera.setPreviewTexture(surfaceTextureView.getSurfaceTexture());
+                    } else {
+                        camera.setPreviewDisplay(previewView.mHolder);
+                    }
                 } catch (IOException exception) {
                     succeeded = false;
                     status = exception.toString();
@@ -398,7 +424,12 @@ public class VideoChatTestActivity extends Activity {
                             return;
                         }
                     }
-                    setupCallback(camera, catcher, bufferSize);
+                    if (sRunningOnHoneycomb) {
+                        surfaceTextureView.resetFrameCounter();
+                        surfaceTextureView.setCameraEnabled(true);
+                    } else {
+                        setupCallback(camera, catcher, bufferSize);
+                    }
                     camera.startPreview();
                     try {
                         Thread.sleep(5000);
@@ -407,16 +438,26 @@ public class VideoChatTestActivity extends Activity {
                         status = exception.toString();
                         return;
                     }
-                    camera.setPreviewCallbackWithBuffer(null);
+                    if (sRunningOnHoneycomb) {
+                        surfaceTextureView.setCameraEnabled(false);
+                    } else {
+                        camera.setPreviewCallbackWithBuffer(null);
+                    }
                     camera.stopPreview();
                 }
 
-                if (catcher.mFrames == 0) {
+                int frames;
+                if (sRunningOnHoneycomb) {
+                    frames = surfaceTextureView.getFrameCounter();
+                } else {
+                    frames = catcher.mFrames;
+                }
+                if (frames == 0) {
                     succeeded = false;
                     publishProgress("Preview callback received no frames from " + baseStatus);
                 } else {
-                    publishProgress("Preview callback got " + catcher.mFrames + " frames (~" +
-                            Math.round(((double)catcher.mFrames)/(5.0 * numPasses)) + "fps) " +
+                    publishProgress("Preview callback got " + frames + " frames (~" +
+                            Math.round(((double)frames)/(5.0 * numPasses)) + "fps) " +
                             baseStatus);
                 }
                 try {
