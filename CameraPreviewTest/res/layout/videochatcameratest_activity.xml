@@ -21,20 +21,9 @@
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <com.example.android.videochatcameratest.CameraPreviewView android:id="@+id/previewrender"
-            android:layout_width="320px" android:layout_height="240px"
-             />
-
-<!--
-        <com.example.android.videochatcameratest.RenderView android:id="@+id/render"
-            android:layout_width="320px" android:layout_height="240px" />
--->
-
-    </LinearLayout>
+    <FrameLayout android:id="@+id/previewFrame"
+        android:layout_width="320px" android:layout_height="240px"
+        android:orientation="horizontal" />
 
     <ScrollView android:id="@+id/scrollviewforhistory"
         android:layout_width="fill_parent"
