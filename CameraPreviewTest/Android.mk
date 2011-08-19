@@ -24,4 +24,6 @@ LOCAL_PACKAGE_NAME := VideoChatCameraTestApp
 
 LOCAL_SDK_VERSION := current
 
+LOCAL_MODULE_TAGS := tests
+
 include $(BUILD_PACKAGE)
