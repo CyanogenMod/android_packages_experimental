@@ -62,13 +62,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/qvga"
-                        android:checked="true" />
+                        android:checked="false" />
 
                     <CheckBox android:id="@+id/vgacheckbox"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/vga"
-                        android:checked="false" />
+                        android:checked="true" />
 
                 </LinearLayout>
 

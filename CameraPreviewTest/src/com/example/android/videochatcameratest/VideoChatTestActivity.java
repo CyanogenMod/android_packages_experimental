@@ -27,6 +27,8 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
@@ -60,6 +62,10 @@ public class VideoChatTestActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Window window = getWindow();
+        window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // Inflate our UI from its XML layout description.
         setContentView(R.layout.videochatcameratest_activity);
@@ -159,14 +165,13 @@ public class VideoChatTestActivity extends Activity {
     private class CameraTestRunner extends AsyncTask<Integer, String, Void> {
 
         TextView mTextStatus;
-        TextView mTextStatusHistory;
         private int mDisplayOrientation;
+        private volatile boolean mClearStatusOnNextUpdate;
 
         @Override
         protected Void doInBackground(Integer... params) {
             mDisplayOrientation = params[0];
             mTextStatus = (TextView) findViewById(R.id.status);
-            mTextStatusHistory = (TextView) findViewById(R.id.statushistory);
             boolean testFrontCamera =
                     ((CheckBox) findViewById(R.id.frontcameracheckbox)).isChecked();
             boolean testBackCamera = ((CheckBox) findViewById(R.id.backcameracheckbox)).isChecked();
@@ -226,6 +231,7 @@ public class VideoChatTestActivity extends Activity {
                 }
             }
             do {
+                mClearStatusOnNextUpdate = true;
                 for (Integer whichCamera : whichCameras) {
                     for (int whichResolution = 0; whichResolution < 2; whichResolution++) {
                         if (whichResolution == 0 && !testQVGA) {
@@ -482,6 +488,10 @@ public class VideoChatTestActivity extends Activity {
         
         @Override
         protected void onProgressUpdate(String... message) {
+            if (mClearStatusOnNextUpdate) {
+                mClearStatusOnNextUpdate = false;
+                mTextStatusHistory.setText("");
+            }
             Log.v(TAG, message[0]);
             mTextStatus.setText(message[0]);
             mTextStatusHistory.append(message[0] + "\r\n");
