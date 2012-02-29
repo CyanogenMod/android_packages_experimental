@@ -1,6 +1,0 @@
-alias aremount='(adb shell mount -o remount,rw /dev/block/mtdblock3 /system)'
-alias immune='	(adb root && sleep 1 && aremount && adb push empty /system/bin/profile && adb shell chown root /system/bin/profile && adb shell chmod 4755 /system/bin/profile)'
-alias other='	(adb root && sleep 1 && aremount && adb push other /system/bin/profile && adb shell chown root /system/bin/profile && adb shell chmod 4755 /system/bin/profile)'
-alias cpuns='	cp ${ANDROID_PRODUCT_OUT}/obj/APPS/AVST_intermediates/package.apk.unsigned'
-alias insavst=' (adb install -r ${ANDROID_PRODUCT_OUT}/system/app/AVST.apk)'
-alias rmavst=' (adb uninstall com.android.vending.sectool.v1)'
