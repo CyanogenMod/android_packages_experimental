@@ -8,14 +8,29 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 public class NotificationShowcaseActivity extends Activity {
+    public static class ToastFeedbackActivity extends Activity {
+       @Override
+       public void onStart() {
+           Intent i = getIntent();
+           if (i.hasExtra("text")) {
+               final String text = i.getStringExtra("text");
+               Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+           }
+           finish();
+       }
+    }
+    
     private static final int NOTIFICATION_ID = 31338;
 
     private static final boolean FIRE_AND_FORGET = true;
@@ -69,6 +84,26 @@ public class NotificationShowcaseActivity extends Activity {
         .setSmallIcon(R.drawable.stat_notify_sms)
         .setPriority(Notification.PRIORITY_MAX)
         .getNotification());
+
+        Intent toastIntent = new Intent(this, ToastFeedbackActivity.class);
+        toastIntent.putExtra("text", "Clicked on Matias");
+        PendingIntent contentIntent = PendingIntent.getActivity(
+                this, 0, toastIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        
+        mNotifications.add(new Notification.Builder(this)
+        .setContentTitle("Incoming call")
+        .setContentText("Matias Duarte")
+        .setLargeIcon(getBitmap(R.drawable.matias_hed))
+        .setSmallIcon(R.drawable.stat_sys_phone_call)
+        .setPriority(Notification.PRIORITY_MAX)
+        .setContentIntent(contentIntent)
+        .addAction(R.drawable.ic_dial_action_call, "Answer", null)
+        .addAction(R.drawable.ic_end_call, "Ignore", null)
+        .setUsesIntruderAlert(true)
+        .setIntruderActionsShowText(true)
+        .setAutoCancel(true)
+        .getNotification());
+
 
         mNotifications.add(new Notification.Builder(this)
         .setContentTitle("J Planning")
