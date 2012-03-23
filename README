@@ -3,6 +3,9 @@ not included with any flavor of the device, the SDK, or any other kind
 of public release, but which might be useful for someone as a test
 harness, development tool, or general fun times.
 
+This directory, and all subdirectories, are public and published as
+part of the Android Open Source Project.
+
 >> Every package under this directory must have a README file <<
 
 Official SDK development samples should NOT go here, they should go in
