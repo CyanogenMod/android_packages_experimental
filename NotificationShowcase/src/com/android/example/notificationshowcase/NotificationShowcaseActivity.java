@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
@@ -59,31 +60,40 @@ public class NotificationShowcaseActivity extends Activity {
         
         mNoMa = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         
-        
-        // these will appear in the shade in reverse post order, so adjust the order here to taste
-        
         // none of them does anything; if you want them to auto-destruct when tapped, add a 
         //   .setAutoCancel(true)
         // if you want to launch an app, you need to do more work, but then again it won't launch the 
         // right thing anyway because these notifications are just dummies. :) 
         
-        mNotifications.add(new Notification.Builder(this)
-            .setContentTitle("Larry Page")
-            .setContentText("hey, free nachos at MoMA!")
-            .setLargeIcon(getBitmap(R.drawable.page_hed))
-            .setSmallIcon(android.R.drawable.stat_notify_chat)
-            .setPriority(Notification.PRIORITY_HIGH)
-            .setNumber(2)
-            .getNotification());
+//        mNotifications.add(new Notification.Builder(this)
+//            .setContentTitle("Larry Page")
+//            .setContentText("hey, free nachos at MoMA!")
+//            .setLargeIcon(getBitmap(R.drawable.page_hed))
+//            .setSmallIcon(android.R.drawable.stat_notify_chat)
+//            .setPriority(Notification.PRIORITY_HIGH)
+//            .setNumber(2)
+//            .getNotification());
 
-        mNotifications.add(new Notification.Builder(this)
-        .setContentTitle("Andy Rubin")
-        .setContentText("Drinks tonight?")
-        .setTicker("Andy Rubin: Drinks tonight?")
-        .setLargeIcon(getBitmap(R.drawable.arubin_hed))
-        .setSmallIcon(R.drawable.stat_notify_sms)
-        .setPriority(Notification.PRIORITY_MAX)
-        .getNotification());
+//        mNotifications.add(new Notification.Builder(this)
+//        .setContentTitle("Andy Rubin")
+//        .setContentText("Drinks tonight?")
+//        .setTicker("Andy Rubin: Drinks tonight?")
+//        .setLargeIcon(getBitmap(R.drawable.arubin_hed))
+//        .setSmallIcon(R.drawable.stat_notify_sms)
+//        .setPriority(Notification.PRIORITY_MAX)
+//        .getNotification());
+
+        String longSmsText = "Hey, looks like I'm getting kicked out of this conference room, so stay in the hangout and I'll rejoin in about 5-10 minutes. If you don't see me, assume I got pulled into another meeting. And now \u2026 I have to find my shoes.";
+        mNotifications.add(new Notification.BigTextStyle(
+                new Notification.Builder(this)
+                    .setContentTitle("Mike Cleron")
+                    .setContentText(longSmsText)
+                    .setTicker("Mike Cleron: " + longSmsText)
+                    .setLargeIcon(getBitmap(R.drawable.bucket))
+                    .setPriority(Notification.PRIORITY_HIGH)
+                    .setSmallIcon(R.drawable.stat_notify_talk_text))
+                .bigText(longSmsText)
+                .build());
 
         Intent toastIntent = new Intent(this, ToastFeedbackActivity.class);
         toastIntent.putExtra("text", "Clicked on Matias");
@@ -111,6 +121,20 @@ public class NotificationShowcaseActivity extends Activity {
         .setSmallIcon(R.drawable.stat_notify_calendar)
         .setContentInfo("7PM")
         .getNotification());
+
+        BitmapDrawable d = (BitmapDrawable) getResources().getDrawable(R.drawable.romainguy_rockaway);
+        mNotifications.add(new Notification.BigPictureStyle(
+                new Notification.Builder(this)
+                    .setContentTitle("Romain Guy")
+                    .setContentText("I was lucky to find a Canon 5D Mk III at a local Bay Area store last "
+                            + "week but I had not been able to try it in the field until tonight. After a "
+                            + "few days of rain the sky finally cleared up. Rockaway Beach did not disappoint "
+                            + "and I was finally able to see what my new camera feels like when shooting "
+                            + "landscapes.")
+                    .setSmallIcon(R.drawable.ic_stat_gplus)
+                    .setLargeIcon(getBitmap(R.drawable.romainguy_hed)))
+                .bigPicture(d.getBitmap())
+                .build());
 
         // Note: this may conflict with real email notifications
         mNotifications.add(new Notification.Builder(this)
