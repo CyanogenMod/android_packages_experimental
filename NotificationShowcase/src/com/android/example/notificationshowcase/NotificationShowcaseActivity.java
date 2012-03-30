@@ -50,6 +50,14 @@ public class NotificationShowcaseActivity extends Activity {
         return b;
     }
     
+    private PendingIntent makeToastIntent(String s) {
+        Intent toastIntent = new Intent(this, ToastFeedbackActivity.class);
+        toastIntent.putExtra("text", s);
+        PendingIntent pi = PendingIntent.getActivity(
+                this, 0, toastIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        return pi;
+    }
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,11 +102,6 @@ public class NotificationShowcaseActivity extends Activity {
                     .setSmallIcon(R.drawable.stat_notify_talk_text))
                 .bigText(longSmsText)
                 .build());
-
-        Intent toastIntent = new Intent(this, ToastFeedbackActivity.class);
-        toastIntent.putExtra("text", "Clicked on Matias");
-        PendingIntent contentIntent = PendingIntent.getActivity(
-                this, 0, toastIntent, PendingIntent.FLAG_CANCEL_CURRENT);
         
         mNotifications.add(new Notification.Builder(this)
         .setContentTitle("Incoming call")
@@ -106,9 +109,9 @@ public class NotificationShowcaseActivity extends Activity {
         .setLargeIcon(getBitmap(R.drawable.matias_hed))
         .setSmallIcon(R.drawable.stat_sys_phone_call)
         .setPriority(Notification.PRIORITY_MAX)
-        .setContentIntent(contentIntent)
-        .addAction(R.drawable.ic_dial_action_call, "Answer", null)
-        .addAction(R.drawable.ic_end_call, "Ignore", null)
+        .setContentIntent(makeToastIntent("Clicked on Matias"))
+        .addAction(R.drawable.ic_dial_action_call, "Answer", makeToastIntent("call answered"))
+        .addAction(R.drawable.ic_end_call, "Ignore", makeToastIntent("call ignored"))
         .setUsesIntruderAlert(true)
         .setIntruderActionsShowText(true)
         .setAutoCancel(true)
@@ -132,7 +135,9 @@ public class NotificationShowcaseActivity extends Activity {
                             + "and I was finally able to see what my new camera feels like when shooting "
                             + "landscapes.")
                     .setSmallIcon(R.drawable.ic_stat_gplus)
-                    .setLargeIcon(getBitmap(R.drawable.romainguy_hed)))
+                    .setLargeIcon(getBitmap(R.drawable.romainguy_hed))
+                    .addAction(R.drawable.add, "Add to Gallery", makeToastIntent("added! (just kidding)"))
+                )
                 .bigPicture(d.getBitmap())
                 .build());
 
