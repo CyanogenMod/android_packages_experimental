@@ -117,6 +117,12 @@ public class NotificationShowcaseActivity extends Activity {
         .setAutoCancel(true)
         .getNotification());
 
+        mNotifications.add(new Notification.Builder(this)
+        .setContentTitle("Stopwatch PRO")
+        .setContentText("Counting up")
+        .setSmallIcon(R.drawable.stat_notify_alarm)
+        .setUsesChronometer(true)
+        .getNotification());
 
         mNotifications.add(new Notification.Builder(this)
         .setContentTitle("J Planning")
