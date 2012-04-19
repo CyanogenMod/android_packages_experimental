@@ -15,26 +15,37 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 public class NotificationShowcaseActivity extends Activity {
-    public static class ToastFeedbackActivity extends Activity {
-       @Override
-       public void onStart() {
-           Intent i = getIntent();
-           if (i.hasExtra("text")) {
-               final String text = i.getStringExtra("text");
-               Toast.makeText(this, text, Toast.LENGTH_LONG).show();
-           }
-           finish();
-       }
-    }
+    private static final String TAG = "NotificationShowcase";
     
     private static final int NOTIFICATION_ID = 31338;
 
     private static final boolean FIRE_AND_FORGET = true;
+    
+    public static class ToastFeedbackActivity extends Activity {
+        @Override
+        public void onCreate(Bundle icicle) {
+            super.onCreate(icicle);
+        }
+        
+        @Override
+        public void onResume() {
+            super.onResume();
+            Intent i = getIntent();
+            Log.v(TAG, "clicked a thing! intent=" + i.toString());
+            if (i.hasExtra("text")) {
+                final String text = i.getStringExtra("text");
+                Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+            }
+            finish();
+        }
+    }
     
     private ArrayList<Notification> mNotifications = new ArrayList<Notification>();
     
@@ -52,10 +63,18 @@ public class NotificationShowcaseActivity extends Activity {
     
     private PendingIntent makeToastIntent(String s) {
         Intent toastIntent = new Intent(this, ToastFeedbackActivity.class);
+        toastIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         toastIntent.putExtra("text", s);
         PendingIntent pi = PendingIntent.getActivity(
-                this, 0, toastIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                this, 58, toastIntent, PendingIntent.FLAG_CANCEL_CURRENT);
         return pi;
+    }
+    
+    private PendingIntent makeEmailIntent(String who) {
+        final Intent intent = new Intent(android.content.Intent.ACTION_SENDTO, Uri.parse("mailto:" + who));
+        return PendingIntent.getActivity(
+                this, 0, intent,
+                PendingIntent.FLAG_CANCEL_CURRENT);
     }
     
     @Override
@@ -99,6 +118,7 @@ public class NotificationShowcaseActivity extends Activity {
                     .setTicker("Mike Cleron: " + longSmsText)
                     .setLargeIcon(getBitmap(R.drawable.bucket))
                     .setPriority(Notification.PRIORITY_HIGH)
+                    .addAction(R.drawable.stat_notify_email, "Email mcleron@test.com", makeEmailIntent("mcleron@test.com"))
                     .setSmallIcon(R.drawable.stat_notify_talk_text))
                 .bigText(longSmsText)
                 .build());
