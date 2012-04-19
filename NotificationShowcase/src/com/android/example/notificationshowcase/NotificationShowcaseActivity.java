@@ -112,8 +112,8 @@ public class NotificationShowcaseActivity extends Activity {
         .setContentIntent(makeToastIntent("Clicked on Matias"))
         .addAction(R.drawable.ic_dial_action_call, "Answer", makeToastIntent("call answered"))
         .addAction(R.drawable.ic_end_call, "Ignore", makeToastIntent("call ignored"))
-        .setUsesIntruderAlert(true)
-        .setIntruderActionsShowText(true)
+        //.setUsesIntruderAlert(true)
+        //.setIntruderActionsShowText(true)
         .setAutoCancel(true)
         .getNotification());
 
