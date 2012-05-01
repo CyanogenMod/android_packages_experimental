@@ -99,7 +99,7 @@ public class NotificationShowcaseActivity extends Activity {
 //            .setSmallIcon(android.R.drawable.stat_notify_chat)
 //            .setPriority(Notification.PRIORITY_HIGH)
 //            .setNumber(2)
-//            .getNotification());
+//            .build());
 
 //        mNotifications.add(new Notification.Builder(this)
 //        .setContentTitle("Andy Rubin")
@@ -108,20 +108,22 @@ public class NotificationShowcaseActivity extends Activity {
 //        .setLargeIcon(getBitmap(R.drawable.arubin_hed))
 //        .setSmallIcon(R.drawable.stat_notify_sms)
 //        .setPriority(Notification.PRIORITY_MAX)
-//        .getNotification());
+//        .build());
 
         String longSmsText = "Hey, looks like I'm getting kicked out of this conference room, so stay in the hangout and I'll rejoin in about 5-10 minutes. If you don't see me, assume I got pulled into another meeting. And now \u2026 I have to find my shoes.";
-        mNotifications.add(new Notification.BigTextStyle(
-                new Notification.Builder(this)
-                    .setContentTitle("Mike Cleron")
-                    .setContentText(longSmsText)
-                    .setTicker("Mike Cleron: " + longSmsText)
-                    .setLargeIcon(getBitmap(R.drawable.bucket))
-                    .setPriority(Notification.PRIORITY_HIGH)
-                    .addAction(R.drawable.stat_notify_email, "Email mcleron@test.com", makeEmailIntent("mcleron@test.com"))
-                    .setSmallIcon(R.drawable.stat_notify_talk_text))
-                .bigText(longSmsText)
-                .build());
+        Notification.BigTextStyle bigTextStyle = new Notification.BigTextStyle();
+        bigTextStyle.bigText(longSmsText);
+        Notification.Builder bigTextNotification = new Notification.Builder(this)
+                .setContentTitle("Mike Cleron")
+                .setContentText(longSmsText)
+                .setTicker("Mike Cleron: " + longSmsText)
+                .setLargeIcon(getBitmap(R.drawable.bucket))
+                .setPriority(Notification.PRIORITY_HIGH)
+                .addAction(R.drawable.stat_notify_email, "Email mcleron@test.com",
+                           makeEmailIntent("mcleron@test.com"))
+                .setSmallIcon(R.drawable.stat_notify_talk_text)
+                .setStyle(bigTextStyle);
+        mNotifications.add(bigTextNotification.build());
         
         mNotifications.add(new Notification.Builder(this)
         .setContentTitle("Incoming call")
@@ -135,21 +137,21 @@ public class NotificationShowcaseActivity extends Activity {
         //.setUsesIntruderAlert(true)
         //.setIntruderActionsShowText(true)
         .setAutoCancel(true)
-        .getNotification());
+        .build());
 
         mNotifications.add(new Notification.Builder(this)
         .setContentTitle("Stopwatch PRO")
         .setContentText("Counting up")
         .setSmallIcon(R.drawable.stat_notify_alarm)
         .setUsesChronometer(true)
-        .getNotification());
+        .build());
 
         mNotifications.add(new Notification.Builder(this)
         .setContentTitle("J Planning")
         .setContentText("The Botcave")
         .setSmallIcon(R.drawable.stat_notify_calendar)
         .setContentInfo("7PM")
-        .getNotification());
+        .build());
 
         BitmapDrawable d = (BitmapDrawable) getResources().getDrawable(R.drawable.romainguy_rockaway);
         mNotifications.add(new Notification.BigPictureStyle(
@@ -172,7 +174,7 @@ public class NotificationShowcaseActivity extends Activity {
         .setContentTitle("24 new messages")
         .setContentText("test.hugo2@gmail.com")
         .setSmallIcon(R.drawable.stat_notify_email)
-        .getNotification());
+        .build());
 
         // No idea what this would really look like since the app is in flux
         mNotifications.add(new Notification.Builder(this)
@@ -180,7 +182,7 @@ public class NotificationShowcaseActivity extends Activity {
         .setContentText("Kanye West has added you to his circles")
         .setSmallIcon(R.drawable.googleplus_icon)
         .setPriority(Notification.PRIORITY_LOW)
-        .getNotification());
+        .build());
         
         mNotifications.add(new Notification.Builder(this)
         .setContentTitle("Twitter")
@@ -188,7 +190,7 @@ public class NotificationShowcaseActivity extends Activity {
         .setSmallIcon(R.drawable.twitter_icon)
         .setNumber(15)
         .setPriority(Notification.PRIORITY_LOW)
-        .getNotification());
+        .build());
 
         if (FIRE_AND_FORGET) {
             doPost(null);
