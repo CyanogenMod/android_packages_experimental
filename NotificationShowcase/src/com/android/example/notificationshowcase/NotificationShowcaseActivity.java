@@ -13,10 +13,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -165,16 +168,30 @@ public class NotificationShowcaseActivity extends Activity {
                     .setSmallIcon(R.drawable.ic_stat_gplus)
                     .setLargeIcon(getBitmap(R.drawable.romainguy_hed))
                     .addAction(R.drawable.add, "Add to Gallery", makeToastIntent("added! (just kidding)"))
+                    .setSubText("talk rocks!")
                 )
                 .bigPicture(d.getBitmap())
                 .build());
 
         // Note: this may conflict with real email notifications
-        mNotifications.add(new Notification.Builder(this)
-        .setContentTitle("24 new messages")
-        .setContentText("test.hugo2@gmail.com")
-        .setSmallIcon(R.drawable.stat_notify_email)
-        .build());
+        StyleSpan bold = new StyleSpan(Typeface.BOLD);
+        SpannableString line1 = new SpannableString("Alice: hey there!");
+        line1.setSpan(bold, 0, 5, 0);
+        SpannableString line2 = new SpannableString("Bob: hi there!");
+        line2.setSpan(bold, 0, 3, 0);
+        SpannableString line3 = new SpannableString("Charlie: Iz IN UR EMAILZ!!");
+        line3.setSpan(bold, 0, 7, 0);
+        mNotifications.add(new Notification.InboxStyle(
+            new Notification.Builder(this)
+                .setContentTitle("24 new messages")
+                .setContentText("You have mail!")
+                .setSubText("test.hugo2@gmail.com")
+                .setSmallIcon(R.drawable.stat_notify_email))
+           .setSummaryText("+21 more")
+           .addLine(line1)
+           .addLine(line2)
+           .addLine(line3)
+           .build());
 
         // No idea what this would really look like since the app is in flux
         mNotifications.add(new Notification.Builder(this)
