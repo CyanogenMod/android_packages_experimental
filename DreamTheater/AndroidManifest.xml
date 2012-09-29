@@ -18,9 +18,8 @@
             android:theme="@style/Theme.Dream.Transparent"
             >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.service.dreams.DreamService" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.DREAM" />
             </intent-filter>
         </activity>
         <activity android:name=".Demos$Demo2"
@@ -29,9 +28,8 @@
             android:hardwareAccelerated="true"
             >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.service.dreams.DreamService" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.DREAM" />
             </intent-filter>
         </activity>
         <activity android:name=".BouncyDroid"
@@ -40,9 +38,8 @@
             android:icon="@drawable/bouncy"
             >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.service.dreams.DreamService" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.DREAM" />
             </intent-filter>
         </activity>
     </application>
