@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="android:Theme.Black" />
+
+    <style name="Theme.Geo.NoTitleBar" parent="@android:style/Theme.NoTitleBar"></style>
+
+    <style name="Theme.Geo.Dialog" parent="@android:style/Theme.Dialog"></style>
+
+</resources>
