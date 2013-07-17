@@ -10,6 +10,7 @@ import android.print.PrintAttributes;
 import android.print.PrintAttributes.Margins;
 import android.print.PrintAttributes.Resolution;
 import android.print.PrintAttributes.Tray;
+import android.print.PrintAttributes.MediaSize;
 import android.print.PrintJobInfo;
 import android.print.PrinterId;
 import android.print.PrinterInfo;
@@ -73,7 +74,7 @@ public class MyPrintService extends PrintService {
             @Override
             protected Void doInBackground(Void... params) {
                 InputStream in = new BufferedInputStream(
-                        new FileInputStream(printJob.getData()));
+                        new FileInputStream(printJob.getDocument().getData()));
                 OutputStream out = null;
                 try {
                     out = new BufferedOutputStream(new FileOutputStream(file));
@@ -138,18 +139,20 @@ public class MyPrintService extends PrintService {
         PrinterInfo printer = new PrinterInfo.Builder(printerId, "Printer 1")
                 .setStatus(PrinterInfo.STATUS_READY)
                 .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
-                .addMediaSize(PrintAttributes.MediaSize.ISO_A2, false)
-                .addMediaSize(PrintAttributes.MediaSize.ISO_A3, false)
-                .addMediaSize(PrintAttributes.MediaSize.ISO_A4, false)
-                .addMediaSize(PrintAttributes.MediaSize.ISO_A5, false)
-                .addMediaSize(PrintAttributes.MediaSize.ISO_A6, false)
-                .addMediaSize(PrintAttributes.MediaSize.NA_LETTER, true)
-                .addResolution(new Resolution("R1", getPackageName(),
-                        R.string.resolution_600x600, 600, 600), true)
-                .addInputTray(new Tray("FirstInputTray", getPackageName(),
-                        R.string.input_tray_first), false)
-                .addOutputTray(new Tray("FirstOutputTray", getPackageName(),
-                        R.string.output_tray_first), false)
+                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                        MediaSize.ISO_A2), true)
+                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                        MediaSize.ISO_A3), false)
+                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                        MediaSize.ISO_A4), false)
+                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                        MediaSize.NA_LETTER), false)
+                .addResolution(new Resolution("R1", getString(
+                        R.string.resolution_600x600), 600, 600), true)
+                .addInputTray(new Tray("FirstInputTray", getString(
+                        R.string.input_tray_first)), false)
+                .addOutputTray(new Tray("FirstOutputTray", getString(
+                        R.string.output_tray_first)), false)
                 .setDuplexModes(PrintAttributes.DUPLEX_MODE_NONE
                         | PrintAttributes.DUPLEX_MODE_LONG_EDGE
                         | PrintAttributes.DUPLEX_MODE_SHORT_EDGE,
@@ -174,20 +177,22 @@ public class MyPrintService extends PrintService {
         PrinterInfo printer = new PrinterInfo.Builder(printerId, "Printer 2")
                 .setStatus(PrinterInfo.STATUS_READY)
                 .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
-                .addMediaSize(PrintAttributes.MediaSize.ISO_A4, true)
-                .addMediaSize(PrintAttributes.MediaSize.ISO_A5, false)
-                .addResolution(new Resolution("R1", getPackageName(),
-                        R.string.resolution_200x200, 200, 200), true)
-                .addResolution(new Resolution("R2", getPackageName(),
-                        R.string.resolution_300x300, 300, 300), false)
-                .addInputTray(new Tray("FirstInputTray", getPackageName(),
-                        R.string.input_tray_first), false)
-                .addInputTray(new Tray("SecondInputTray", getPackageName(),
-                        R.string.input_tray_second), true)
-                .addOutputTray(new Tray("FirstOutputTray", getPackageName(),
-                        R.string.output_tray_first), false)
-                .addOutputTray(new Tray("SecondOutputTray",  getPackageName(),
-                        R.string.output_tray_second), true)
+                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                        MediaSize.ISO_A4), true)
+                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                        MediaSize.ISO_A5), false)
+                .addResolution(new Resolution("R1", getString(
+                        R.string.resolution_200x200), 200, 200), true)
+                .addResolution(new Resolution("R2", getString(
+                        R.string.resolution_300x300), 300, 300), false)
+                .addInputTray(new Tray("FirstInputTray", getString(
+                        R.string.input_tray_first)), false)
+                .addInputTray(new Tray("SecondInputTray", getString(
+                        R.string.input_tray_second)), true)
+                .addOutputTray(new Tray("FirstOutputTray", getString(
+                        R.string.output_tray_first)), false)
+                .addOutputTray(new Tray("SecondOutputTray",  getString(
+                        R.string.output_tray_second)), true)
                 .setDuplexModes(PrintAttributes.DUPLEX_MODE_NONE
                         | PrintAttributes.DUPLEX_MODE_LONG_EDGE
                         | PrintAttributes.DUPLEX_MODE_SHORT_EDGE,

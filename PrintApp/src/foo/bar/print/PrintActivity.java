@@ -23,9 +23,9 @@ import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.CancellationSignal.OnCancelListener;
 import android.print.PageRange;
-import android.print.PrintAdapter;
-import android.print.PrintAdapterInfo;
 import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintDocumentInfo;
 import android.print.PrintJob;
 import android.print.PrintManager;
 import android.print.pdf.PdfDocument.Page;
@@ -34,12 +34,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import libcore.io.IoUtils;
-
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.util.List;
+
+import libcore.io.IoUtils;
 
 /**
  * Simple sample of how to use the print APIs.
@@ -88,30 +88,37 @@ public class PrintActivity extends Activity {
         final View view = findViewById(R.id.content);
 
         PrintJob printJob = printManager.print("Print_View",
-            new PrintAdapter() {
+            new PrintDocumentAdapter() {
                 private PrintedPdfDocument mPdfDocument;
 
                 @Override
-                public void onStarted() {
-                    Log.i(LOG_TAG, "onStarted");
-                    super.onStarted();
+                public void onStart() {
+                    Log.i(LOG_TAG, "onStart");
+                    super.onStart();
                 }
 
                 @Override
-                public boolean onPrintAttributesChanged(PrintAttributes attributes) {
+                public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes,
+                        CancellationSignal cancellationSignal, LayoutResultCallback callback) {
                     Log.i(LOG_TAG, "onPrintAttributesChanged");
-                    mPdfDocument = new PrintedPdfDocument(PrintActivity.this, attributes);
+
+                    mPdfDocument = new PrintedPdfDocument(PrintActivity.this, newAttributes);
                     Page page = mPdfDocument.startPage();
                     view.draw(page.getCanvas());
                     mPdfDocument.finishPage(page);
-                    return true;
+
+                    PrintDocumentInfo info = new PrintDocumentInfo.Builder()
+                        .setPageCount(1)
+                        .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
+                        .create();
+                    callback.onLayoutFinished(info, false);
                 }
 
                 @Override
-                public void onPrint(final List<PageRange> pages,
+                public void onWrite(final List<PageRange> pages,
                         final FileDescriptor destination,
                         final CancellationSignal canclleationSignal,
-                        final PrintProgressListener progressListener) {
+                        final WriteResultCallback callback) {
                     Log.i(LOG_TAG, "onPrint");
                     final AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
                         @Override
@@ -127,12 +134,12 @@ public class PrintActivity extends Activity {
 
                         @Override
                         protected void onPostExecute(Void result) {
-                            progressListener.onWriteFinished(pages);
+                            callback.onWriteFinished(pages);
                         }
 
                         @Override
                         protected void onCancelled(Void result) {
-                            progressListener.onWriteFailed("Cancelled");
+                            callback.onWriteFailed("Cancelled");
                         }
                     };
  
@@ -147,15 +154,9 @@ public class PrintActivity extends Activity {
                 }
 
                 @Override
-                public void onFinished() {
-                    Log.i(LOG_TAG, "onFinished");
-                    super.onFinished();
-                }
-
-                @Override
-                public PrintAdapterInfo getInfo() {
-                    Log.i(LOG_TAG, "getInfo");
-                    return new PrintAdapterInfo.Builder().setPageCount(1).create();
+                public void onFinish() {
+                    Log.i(LOG_TAG, "onFinish");
+                    super.onFinish();
                 }
         }, new PrintAttributes.Builder().create());
 
