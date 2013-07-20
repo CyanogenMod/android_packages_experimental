@@ -44,6 +44,7 @@ public class MyPrintService extends PrintService {
 
     @Override
     protected void onDisconnected() {
+        cancellAddingFakePrinters();
         Log.i(LOG_TAG, "#onDisconnected()");
     }
 
@@ -59,6 +60,7 @@ public class MyPrintService extends PrintService {
 
     @Override
     protected void onStopPrinterDiscovery() {
+        cancellAddingFakePrinters();
         Log.i(LOG_TAG, "#onStopDiscoverPrinters()");
     }
 
@@ -210,6 +212,11 @@ public class MyPrintService extends PrintService {
         List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
         printers.add(printer);
         addDiscoveredPrinters(printers);
+    }
+
+    private void cancellAddingFakePrinters() {
+        mHandler.removeMessages(MyHandler.MESSAGE_ADD_FIRST_FAKE_PRINTER);
+        mHandler.removeMessages(MyHandler.MESSAGE_ADD_FIRST_FAKE_PRINTER);
     }
 
     private final class MyHandler extends Handler {

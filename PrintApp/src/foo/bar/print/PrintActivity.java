@@ -100,7 +100,7 @@ public class PrintActivity extends Activity {
                 @Override
                 public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes,
                         CancellationSignal cancellationSignal, LayoutResultCallback callback) {
-                    Log.i(LOG_TAG, "onPrintAttributesChanged");
+                    Log.i(LOG_TAG, "onLayout");
 
                     mPdfDocument = new PrintedPdfDocument(PrintActivity.this, newAttributes);
                     Page page = mPdfDocument.startPage();
@@ -119,7 +119,7 @@ public class PrintActivity extends Activity {
                         final FileDescriptor destination,
                         final CancellationSignal canclleationSignal,
                         final WriteResultCallback callback) {
-                    Log.i(LOG_TAG, "onPrint");
+                    Log.i(LOG_TAG, "onWrite");
                     final AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
                         @Override
                         protected Void doInBackground(Void... params) {
