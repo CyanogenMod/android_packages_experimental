@@ -99,7 +99,8 @@ public class PrintActivity extends Activity {
 
                 @Override
                 public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes,
-                        CancellationSignal cancellationSignal, LayoutResultCallback callback) {
+                        CancellationSignal cancellationSignal, LayoutResultCallback callback,
+                        Bundle metadata) {
                     Log.i(LOG_TAG, "onLayout");
 
                     mPdfDocument = new PrintedPdfDocument(PrintActivity.this, newAttributes);

@@ -8,9 +8,9 @@ import android.os.Looper;
 import android.os.Message;
 import android.print.PrintAttributes;
 import android.print.PrintAttributes.Margins;
+import android.print.PrintAttributes.MediaSize;
 import android.print.PrintAttributes.Resolution;
 import android.print.PrintAttributes.Tray;
-import android.print.PrintAttributes.MediaSize;
 import android.print.PrintJobInfo;
 import android.print.PrinterId;
 import android.print.PrinterInfo;
@@ -66,7 +66,7 @@ public class MyPrintService extends PrintService {
 
     @Override
     public void onPrintJobQueued(final PrintJob printJob) {
-        Log.i(LOG_TAG, "#onPrintJobPending()");
+        Log.i(LOG_TAG, "#onPrintJobQueued()");
         PrintJobInfo info = printJob.getInfo();
         final File file = new File(getFilesDir(), info.getLabel() + ".pdf");
         if (file.exists()) {
