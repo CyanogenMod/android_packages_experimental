@@ -13,7 +13,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service  android:name=".NotificationShowcaseActivity$UpdateService"/>
-        <service  android:name=".NotificationShowcaseActivity$ProgressService"/>
+        <service  android:name=".NotificationService"/>
+        <service  android:name=".UpdateService"/>
+        <service  android:name=".ProgressService"/>
+        <service  android:name=".ToastService"/>
     </application>
 </manifest>
