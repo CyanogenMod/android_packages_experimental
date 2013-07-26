@@ -127,7 +127,7 @@ public class NotificationService extends IntentService {
         long uploadWhen = System.currentTimeMillis();
         mNotifications.add(makeUploadNotification(this, 10, uploadWhen));
 
-        mNotifications.add(new NotificationCompat.Builder(this)
+        Notification phoneCall = new NotificationCompat.Builder(this)
                 .setContentTitle("Incoming call")
                 .setContentText("Matias Duarte")
                 .setLargeIcon(getBitmap(this, R.drawable.matias_hed))
@@ -140,7 +140,9 @@ public class NotificationService extends IntentService {
                 .addAction(R.drawable.ic_end_call, "Ignore",
                         ToastService.getPendingIntent(this, "call ignored"))
                 .setAutoCancel(true)
-                .build());
+                .build();
+        phoneCall.flags |= Notification.FLAG_INSISTENT;
+        mNotifications.add(phoneCall);
 
         mNotifications.add(new NotificationCompat.Builder(this)
                 .setContentTitle("Stopwatch PRO")
