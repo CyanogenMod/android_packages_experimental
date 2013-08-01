@@ -29,6 +29,7 @@ import android.print.pdf.PdfDocument;
 import android.print.pdf.PdfDocument.Page;
 import android.print.pdf.PdfDocument.PageInfo;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 
 import java.io.OutputStream;
@@ -71,8 +72,13 @@ public final class PrintedPdfDocument {
         Resolution resolution = attributes.getResolution();
 
         // TODO: What to do if horizontal and vertical DPI differ?
+        try {
         mCanvasDensityDpi = Math.max(attributes.getResolution().getHorizontalDpi(), attributes
                 .getResolution().getVerticalDpi());
+        } catch (NullPointerException npe) {
+            Log.i("FUCK", "FUCK");
+            throw new RuntimeException(npe);
+        }
 
         // Figure out the scale since the content and the target DPI may differ.
         DisplayMetrics metrics = new DisplayMetrics();
