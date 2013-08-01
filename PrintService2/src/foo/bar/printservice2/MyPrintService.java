@@ -121,7 +121,7 @@ public class MyPrintService extends PrintService {
 
                 PrintJobInfo info =  printJob.getInfo();
                 Toast.makeText(MyPrintService.this,
-                        "Printer: " + info.getPrinterId().getLocalId()
+                        "Printer: " + info.getPrinterId().getName()
                         + " copies: " + info.getAttributes().getCopies(),
                         Toast.LENGTH_SHORT).show();
 
@@ -166,7 +166,7 @@ public class MyPrintService extends PrintService {
                 .create();
         List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
         printers.add(printer);
-        addDiscoveredPrinters(printers);
+        addPrinters(printers);
     }
 
     private void addSecondFakePrinter() {
@@ -204,7 +204,7 @@ public class MyPrintService extends PrintService {
                 .create();
         List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
         printers.add(printer);
-        addDiscoveredPrinters(printers);
+        addPrinters(printers);
     }
 
     private final class MyHandler extends Handler {
