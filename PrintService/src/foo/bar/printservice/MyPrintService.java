@@ -39,6 +39,16 @@ public class MyPrintService extends PrintService {
 
     private Handler mHandler;
 
+    private PrinterId mFirstFakePrinterId;
+
+    private PrinterId mSecondFakePrinterId;
+
+    @Override
+    public void onCreate() {
+        mFirstFakePrinterId = generatePrinterId("1");
+        mSecondFakePrinterId = generatePrinterId("2");
+    }
+
     @Override
     protected void onConnected() {
         mHandler = new MyHandler(getMainLooper());
@@ -65,6 +75,87 @@ public class MyPrintService extends PrintService {
     protected void onStopPrinterDiscovery() {
         cancellAddingFakePrinters();
         Log.i(LOG_TAG, "#onStopDiscoverPrinters()");
+    }
+
+    @Override
+    protected void onRequestUpdatePrinters(List<PrinterId> printerIds) {
+        List<PrinterInfo> udpatedPrinters = new ArrayList<PrinterInfo>();
+        final int printerIdCount = printerIds.size();
+        for (int i = 0; i < printerIdCount; i++) {
+            PrinterId printerId = printerIds.get(i);
+            if (printerId.equals(mFirstFakePrinterId)) {
+                PrinterInfo printer = new PrinterInfo.Builder(printerId, "Printer 1")
+                        .setStatus(PrinterInfo.STATUS_READY)
+                        .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
+                        .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                                MediaSize.ISO_A2), true)
+                        .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                                MediaSize.ISO_A3), false)
+                        .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                                MediaSize.ISO_A4), false)
+                        .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                                MediaSize.NA_LETTER), false)
+                        .addResolution(new Resolution("R1", getString(
+                                R.string.resolution_600x600), 600, 600), true)
+                        .addInputTray(new Tray("FirstInputTray", getString(
+                                R.string.input_tray_first)), false)
+                        .addOutputTray(new Tray("FirstOutputTray", getString(
+                                R.string.output_tray_first)), false)
+                        .setDuplexModes(PrintAttributes.DUPLEX_MODE_NONE
+                                | PrintAttributes.DUPLEX_MODE_LONG_EDGE
+                                | PrintAttributes.DUPLEX_MODE_SHORT_EDGE,
+                                PrintAttributes.DUPLEX_MODE_NONE)
+                        .setColorModes(PrintAttributes.COLOR_MODE_COLOR
+                                | PrintAttributes.COLOR_MODE_MONOCHROME,
+                                PrintAttributes.COLOR_MODE_COLOR)
+                        .setFittingModes(PrintAttributes.FITTING_MODE_NONE
+                                | PrintAttributes.FITTING_MODE_FIT_TO_PAGE,
+                                PrintAttributes.FITTING_MODE_NONE)
+                        .setOrientations(PrintAttributes.ORIENTATION_PORTRAIT
+                                | PrintAttributes.ORIENTATION_LANDSCAPE,
+                                PrintAttributes.ORIENTATION_PORTRAIT)
+                        .create();
+                udpatedPrinters.add(printer);
+            } else if (printerId.equals(mSecondFakePrinterId)) {
+                PrinterInfo printer = new PrinterInfo.Builder(printerId, "Printer 2")
+                        .setStatus(PrinterInfo.STATUS_READY)
+                        .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
+                        .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                                MediaSize.ISO_A4), true)
+                        .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
+                                MediaSize.ISO_A5), false)
+                        .addResolution(new Resolution("R1", getString(
+                                R.string.resolution_200x200), 200, 200), true)
+                        .addResolution(new Resolution("R2", getString(
+                                R.string.resolution_300x300), 300, 300), false)
+                        .addInputTray(new Tray("FirstInputTray", getString(
+                                R.string.input_tray_first)), false)
+                        .addInputTray(new Tray("SecondInputTray", getString(
+                                R.string.input_tray_second)), true)
+                        .addOutputTray(new Tray("FirstOutputTray", getString(
+                                R.string.output_tray_first)), false)
+                        .addOutputTray(new Tray("SecondOutputTray",  getString(
+                                R.string.output_tray_second)), true)
+                        .setDuplexModes(PrintAttributes.DUPLEX_MODE_NONE
+                                | PrintAttributes.DUPLEX_MODE_LONG_EDGE
+                                | PrintAttributes.DUPLEX_MODE_SHORT_EDGE,
+                                PrintAttributes.DUPLEX_MODE_SHORT_EDGE)
+                        .setColorModes(PrintAttributes.COLOR_MODE_COLOR
+                                | PrintAttributes.COLOR_MODE_MONOCHROME,
+                                PrintAttributes.COLOR_MODE_MONOCHROME)
+                        .setFittingModes(PrintAttributes.FITTING_MODE_FIT_TO_PAGE
+                                | PrintAttributes.FITTING_MODE_NONE,
+                                PrintAttributes.FITTING_MODE_FIT_TO_PAGE)
+                        .setOrientations(PrintAttributes.ORIENTATION_PORTRAIT
+                                | PrintAttributes.ORIENTATION_LANDSCAPE,
+                                PrintAttributes.ORIENTATION_LANDSCAPE)
+                        .create();
+                udpatedPrinters.add(printer);
+            }
+            if (!udpatedPrinters.isEmpty()) {
+                updateDiscoveredPrinters(udpatedPrinters);
+            }
+        }
     }
 
     @Override
@@ -137,37 +228,7 @@ public class MyPrintService extends PrintService {
 
     private void addFirstFakePrinter() {
         PrinterId printerId = generatePrinterId("1");
-        PrinterInfo printer = new PrinterInfo.Builder(printerId, "Printer 1")
-                .setStatus(PrinterInfo.STATUS_READY)
-                .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
-                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                        MediaSize.ISO_A2), true)
-                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                        MediaSize.ISO_A3), false)
-                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                        MediaSize.ISO_A4), false)
-                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                        MediaSize.NA_LETTER), false)
-                .addResolution(new Resolution("R1", getString(
-                        R.string.resolution_600x600), 600, 600), true)
-                .addInputTray(new Tray("FirstInputTray", getString(
-                        R.string.input_tray_first)), false)
-                .addOutputTray(new Tray("FirstOutputTray", getString(
-                        R.string.output_tray_first)), false)
-                .setDuplexModes(PrintAttributes.DUPLEX_MODE_NONE
-                        | PrintAttributes.DUPLEX_MODE_LONG_EDGE
-                        | PrintAttributes.DUPLEX_MODE_SHORT_EDGE,
-                        PrintAttributes.DUPLEX_MODE_NONE)
-                .setColorModes(PrintAttributes.COLOR_MODE_COLOR
-                        | PrintAttributes.COLOR_MODE_MONOCHROME,
-                        PrintAttributes.COLOR_MODE_COLOR)
-                .setFittingModes(PrintAttributes.FITTING_MODE_NONE
-                        | PrintAttributes.FITTING_MODE_FIT_TO_PAGE,
-                        PrintAttributes.FITTING_MODE_NONE)
-                .setOrientations(PrintAttributes.ORIENTATION_PORTRAIT
-                        | PrintAttributes.ORIENTATION_LANDSCAPE,
-                        PrintAttributes.ORIENTATION_PORTRAIT)
-                .create();
+        PrinterInfo printer = new PrinterInfo.Builder(printerId, "Printer 1").create();
         List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
         printers.add(printer);
         addDiscoveredPrinters(printers);
@@ -175,39 +236,7 @@ public class MyPrintService extends PrintService {
 
     private void addSecondFakePrinter() {
         PrinterId printerId = generatePrinterId("2");
-        PrinterInfo printer = new PrinterInfo.Builder(printerId, "Printer 2")
-                .setStatus(PrinterInfo.STATUS_READY)
-                .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
-                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                        MediaSize.ISO_A4), true)
-                .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                        MediaSize.ISO_A5), false)
-                .addResolution(new Resolution("R1", getString(
-                        R.string.resolution_200x200), 200, 200), true)
-                .addResolution(new Resolution("R2", getString(
-                        R.string.resolution_300x300), 300, 300), false)
-                .addInputTray(new Tray("FirstInputTray", getString(
-                        R.string.input_tray_first)), false)
-                .addInputTray(new Tray("SecondInputTray", getString(
-                        R.string.input_tray_second)), true)
-                .addOutputTray(new Tray("FirstOutputTray", getString(
-                        R.string.output_tray_first)), false)
-                .addOutputTray(new Tray("SecondOutputTray",  getString(
-                        R.string.output_tray_second)), true)
-                .setDuplexModes(PrintAttributes.DUPLEX_MODE_NONE
-                        | PrintAttributes.DUPLEX_MODE_LONG_EDGE
-                        | PrintAttributes.DUPLEX_MODE_SHORT_EDGE,
-                        PrintAttributes.DUPLEX_MODE_SHORT_EDGE)
-                .setColorModes(PrintAttributes.COLOR_MODE_COLOR
-                        | PrintAttributes.COLOR_MODE_MONOCHROME,
-                        PrintAttributes.COLOR_MODE_MONOCHROME)
-                .setFittingModes(PrintAttributes.FITTING_MODE_FIT_TO_PAGE
-                        | PrintAttributes.FITTING_MODE_NONE,
-                        PrintAttributes.FITTING_MODE_FIT_TO_PAGE)
-                .setOrientations(PrintAttributes.ORIENTATION_PORTRAIT
-                        | PrintAttributes.ORIENTATION_LANDSCAPE,
-                        PrintAttributes.ORIENTATION_LANDSCAPE)
-                .create();
+        PrinterInfo printer = new PrinterInfo.Builder(printerId, "Printer 2").create();
         List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
         printers.add(printer);
         addDiscoveredPrinters(printers);
