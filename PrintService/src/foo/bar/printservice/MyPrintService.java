@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.print.PrintAttributes;
 import android.print.PrintAttributes.Margins;
 import android.print.PrintAttributes.MediaSize;
@@ -18,6 +19,8 @@ import android.printservice.PrintJob;
 import android.printservice.PrintService;
 import android.util.Log;
 import android.widget.Toast;
+
+import libcore.io.IoUtils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -91,18 +94,8 @@ public class MyPrintService extends PrintService {
                 } catch (IOException ioe) {
                     /* ignore */
                 } finally {
-                    try {
-                        in.close();
-                    } catch (IOException ioe) {
-                       /* ignore */
-                    }
-                    if (out != null) {
-                        try {
-                            out.close();
-                        } catch (IOException ioe) {
-                           /* ignore */
-                        }
-                    }
+                    IoUtils.closeQuietly(in);
+                    IoUtils.closeQuietly(out);
                 }
                 return null;
             }
@@ -123,9 +116,15 @@ public class MyPrintService extends PrintService {
                 }
 
                 PrintJobInfo info =  printJob.getInfo();
+
                 Toast.makeText(MyPrintService.this,
-                        "Printer: " + info.getPrinterId().getLocalId()
-                        + " copies: " + info.getAttributes().getCopies(),
+                        "[STARTED] Printer: " + info.getPrinterId().getLocalId(),
+                        Toast.LENGTH_SHORT).show();
+
+                SystemClock.sleep(5000);
+
+                Toast.makeText(MyPrintService.this,
+                        "[COMPLETED] Printer: " + info.getPrinterId().getLocalId(),
                         Toast.LENGTH_SHORT).show();
 
                 if (printJob.isStarted()) {
