@@ -115,11 +115,11 @@ public class PrintActivity extends Activity {
                     final boolean cancelled;
                     synchronized (mLock) {
                         mCancelled = false;
-                        try {
-                            mLock.wait(5000);
-                        } catch (InterruptedException ie) {
-                            mCancelled = true;
-                        }
+//                        try {
+//                            mLock.wait(5000);
+//                        } catch (InterruptedException ie) {
+//                            mCancelled = true;
+//                        }
                         cancelled = mCancelled;
                     }
 
@@ -159,11 +159,11 @@ public class PrintActivity extends Activity {
                         protected void onPreExecute() {
                             synchronized (mLock) {
                                 for (int i = 0; i < 5; i++) {
-                                    try {
-                                        mLock.wait(1000);
-                                    } catch (InterruptedException ie) {
+//                                    try {
+//                                        mLock.wait(1000);
+//                                    } catch (InterruptedException ie) {
                                         /* ignore */
-                                    }
+//                                    }
                                     if (isCancelled()) {
                                         mPdfDocument.close();
                                         mPdfDocument = null;
