@@ -20,9 +20,7 @@ import android.printservice.PrintJob;
 import android.printservice.PrintService;
 import android.printservice.PrinterDiscoverySession;
 import android.util.Log;
-import android.widget.Toast;
-
-import libcore.io.IoUtils;
+import android.util.SparseArray;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -35,9 +33,23 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import libcore.io.IoUtils;
+
 public class MyPrintService extends PrintService {
 
     private static final String LOG_TAG = "MyPrintService";
+
+    private static final long STANDARD_DELAY_MILLIS = 10000;
+
+    static final String INTENT_EXTRA_ACTION_TYPE = "INTENT_EXTRA_ACTION_TYPE";
+    static final String INTENT_EXTRA_PRINT_JOB_ID = "INTENT_EXTRA_PRINT_JOB_ID";
+
+    static final int ACTION_TYPE_ON_PRINT_JOB_PENDING = 1;
+    static final int ACTION_TYPE_ON_REQUEST_CANCEL_PRINT_JOB = 2;
+
+    private static final Object sLock = new Object();
+
+    private static MyPrintService sInstance;
 
     private Handler mHandler;
 
@@ -47,7 +59,15 @@ public class MyPrintService extends PrintService {
 
     private AsyncTask<Void, Void, Void> mFakePrintTask;
 
-    private FakePrinterDiscoverySession mSession;
+    private MyPrinterDiscoverySession mSession;
+
+    private final SparseArray<PrintJob> mProcessedPrintJobs = new SparseArray<PrintJob>();
+
+    public static MyPrintService peekInstance() {
+        synchronized (sLock) {
+            return sInstance;
+        }
+    }
 
     @Override
     public void onCreate() {
@@ -61,6 +81,9 @@ public class MyPrintService extends PrintService {
     protected void onConnected() {
         Log.i(LOG_TAG, "#onConnected()");
         mHandler = new MyHandler(getMainLooper());
+        synchronized (sLock) {
+            sInstance = this;
+        }
     }
 
     @Override
@@ -69,40 +92,80 @@ public class MyPrintService extends PrintService {
         if (mSession != null) {
             mSession.cancellAddingFakePrinters();
         }
+        synchronized (sLock) {
+            sInstance = null;
+        }
     }
 
     @Override
     protected PrinterDiscoverySession onCreatePrinterDiscoverySession() {
-        return new FakePrinterDiscoverySession(this);
+        return new MyPrinterDiscoverySession(this);
     }
 
     @Override
-    protected void onRequestCancelPrintJob(PrintJob printJob) {
-        Log.i(LOG_TAG, "#onRequestCancelPrintJob() printJobId: " + printJob.getId());
-        if (mHandler.hasMessages(MyHandler.MSG_HANDLE_PRINT_JOB)) {
-            mHandler.removeMessages(MyHandler.MSG_HANDLE_PRINT_JOB);
-            if (printJob.isQueued() || printJob.isStarted()) {
-                printJob.cancel();
-            }
-        } else if (mFakePrintTask != null) {
-            mFakePrintTask.cancel(true);
-        } else {
-            if (printJob.isQueued() || printJob.isStarted()) {
-                printJob.cancel();
-            }
-        }
+    protected void onRequestCancelPrintJob(final PrintJob printJob) {
+        Log.i(LOG_TAG, "#onRequestCancelPrintJob()");
+        mProcessedPrintJobs.put(printJob.getId(), printJob);
+        Intent intent = new Intent(this, MyDialogActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(INTENT_EXTRA_PRINT_JOB_ID, printJob.getId());
+        intent.putExtra(INTENT_EXTRA_ACTION_TYPE, ACTION_TYPE_ON_REQUEST_CANCEL_PRINT_JOB);
+        startActivity(intent);
     }
 
     @Override
     public void onPrintJobQueued(final PrintJob printJob) {
         Log.i(LOG_TAG, "#onPrintJobQueued()");
-//        printJob.fail("I am lazy today!");
-        Message message = mHandler.obtainMessage(MyHandler.MSG_HANDLE_PRINT_JOB, printJob);
-//        mHandler.sendMessageDelayed(message, 20000);
-        mHandler.sendMessageDelayed(message, 0);
+        mProcessedPrintJobs.put(printJob.getId(), printJob);
+        Intent intent = new Intent(this, MyDialogActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(INTENT_EXTRA_PRINT_JOB_ID, printJob.getId());
+        intent.putExtra(INTENT_EXTRA_ACTION_TYPE, ACTION_TYPE_ON_PRINT_JOB_PENDING);
+        startActivity(intent);
     }
 
-    private void handleHandleQueuedPrintJob(final PrintJob printJob) {
+    void handleRequestCancelPrintJob(int printJobId) {
+        PrintJob printJob = mProcessedPrintJobs.get(printJobId);
+        if (printJob == null) {
+            return;
+        }
+        mProcessedPrintJobs.remove(printJobId);
+        if (printJob.isQueued() || printJob.isStarted()) {
+            mHandler.removeMessages(MyHandler.MSG_HANDLE_DO_PRINT_JOB);
+            mHandler.removeMessages(MyHandler.MSG_HANDLE_FAIL_PRINT_JOB);
+            printJob.cancel();
+        }
+    }
+
+    void handleFailPrintJobDelayed(int printJobId) {
+        Message message = mHandler.obtainMessage(
+                MyHandler.MSG_HANDLE_FAIL_PRINT_JOB, printJobId, 0);
+        mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
+    }
+
+    void handleFailPrintJob(int printJobId) {
+        PrintJob printJob = mProcessedPrintJobs.get(printJobId);
+        if (printJob == null) {
+            return;
+        }
+        mProcessedPrintJobs.remove(printJobId);
+        if (printJob.isQueued() || printJob.isStarted()) {
+            printJob.fail(getString(R.string.fail_reason));
+        }
+    }
+
+    void handleQueuedPrintJobDelayed(int printJobId) {
+        Message message = mHandler.obtainMessage(
+                MyHandler.MSG_HANDLE_DO_PRINT_JOB, printJobId, 0);
+        mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
+    }
+
+    void handleQueuedPrintJob(int printJobId) {
+        final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
+        if (printJob == null) {
+            return;
+        }
+
         if (printJob.isQueued()) {
             printJob.start();
         }
@@ -110,16 +173,9 @@ public class MyPrintService extends PrintService {
         final PrintJobInfo info = printJob.getInfo();
         final File file = new File(getFilesDir(), info.getLabel() + ".pdf");
 
-        Toast.makeText(MyPrintService.this,
-                "[STARTED] Printer: " + info.getPrinterId().getLocalId(),
-                Toast.LENGTH_SHORT).show();
-
         mFakePrintTask = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
-                // Simulate slow print service
-//                SystemClock.sleep(20000);
-
                 InputStream in = new BufferedInputStream(
                         new FileInputStream(printJob.getDocument().getData()));
                 OutputStream out = null;
@@ -157,12 +213,9 @@ public class MyPrintService extends PrintService {
                     printJob.complete();
                 }
 
-                Toast.makeText(MyPrintService.this,
-                        "[COMPLETED] Printer: " + info.getPrinterId().getLocalId(),
-                        Toast.LENGTH_SHORT).show();
-
                 file.setReadable(true, false);
 
+                // Quick and dirty to show the file - use a content provider instead.
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setDataAndType(Uri.fromFile(file), "application/pdf");
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -175,7 +228,8 @@ public class MyPrintService extends PrintService {
     }
 
     private final class MyHandler extends Handler {
-        public static final int MSG_HANDLE_PRINT_JOB = 3;
+        public static final int MSG_HANDLE_DO_PRINT_JOB = 1;
+        public static final int MSG_HANDLE_FAIL_PRINT_JOB = 2;
 
         public MyHandler(Looper looper) {
             super(looper, null, true);
@@ -184,18 +238,23 @@ public class MyPrintService extends PrintService {
         @Override
         public void handleMessage(Message message) {
             switch (message.what) {
-                case MSG_HANDLE_PRINT_JOB: {
-                    PrintJob printJob = (PrintJob) message.obj;
-                    handleHandleQueuedPrintJob(printJob);
+                case MSG_HANDLE_DO_PRINT_JOB: {
+                    final int printJobId = message.arg1;
+                    handleQueuedPrintJob(printJobId);
+                } break;
+
+                case MSG_HANDLE_FAIL_PRINT_JOB: {
+                    final int printJobId = message.arg1;
+                    handleFailPrintJob(printJobId);
                 } break;
             }
         }
     }
 
-    private final class FakePrinterDiscoverySession extends  PrinterDiscoverySession {
+    private final class MyPrinterDiscoverySession extends  PrinterDiscoverySession {
         private final Handler mSesionHandler = new SessionHandler(getMainLooper());
 
-        public FakePrinterDiscoverySession(Context context) {
+        public MyPrinterDiscoverySession(Context context) {
             super(context);
         }
 
