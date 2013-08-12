@@ -15,4 +15,16 @@
     <string name="output_tray_first">First output tray</string>
     <string name="output_tray_second">Second output tray</string>
 
+    <string name="print_now">Print now</string>
+    <string name="print_delayed">Print dealyed</string>
+    <string name="fail_now">Fail now</string>
+    <string name="fail_delayed">Fail delayed</string>
+    <string name="cancel_yes">Cancel</string>
+    <string name="cancel_no">Don\'t cancel</string>
+
+    <string name="fail_reason">Don\'t feel like doing it</string>
+
+    <string name="on_print_job_pending_activity_title">New print job pending. What to do?</string>
+    <string name="on_cancle_print_job_requested_activity_title">Print job cancel reqeusted. What to do?</string>
+
 </resources>

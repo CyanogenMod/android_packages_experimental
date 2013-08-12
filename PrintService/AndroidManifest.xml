@@ -32,6 +32,12 @@
             android:label="@string/add_pritners_activity_label"
             android:permission="android.permission.BIND_PRINT_SERVICE">
         </activity>
+
+        <activity
+            android:name=".MyDialogActivity"
+            android:exported="false">
+        </activity>
+
     </application>
 
 </manifest>
