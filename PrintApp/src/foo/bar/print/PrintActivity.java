@@ -78,7 +78,8 @@ public class PrintActivity extends Activity {
     public void printFileSimple() {
         PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
 
-        PrintJob printJob = printManager.print("My Print Job", new File("foo.pdf"), null);
+        PrintJob printJob = printManager.print("My Print Job", new File("foo.pdf"),
+                new PrintDocumentInfo.Builder("foo.pdf").create(), null);
 
         if (printJob != null) {
             /* Yay, we scheduled something to be printed!!! */
@@ -128,7 +129,7 @@ public class PrintActivity extends Activity {
                         mPdfDocument = null;
                         callback.onLayoutCancelled();
                     } else {
-                        PrintDocumentInfo info = new PrintDocumentInfo.Builder()
+                        PrintDocumentInfo info = new PrintDocumentInfo.Builder("print_view.pdf")
                             .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
                             .setPageCount(5)
                             .create();
