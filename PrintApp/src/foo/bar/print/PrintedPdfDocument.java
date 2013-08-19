@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package foo.bar.print;
 
 import android.content.Context;
@@ -29,7 +28,6 @@ import android.print.pdf.PdfDocument;
 import android.print.pdf.PdfDocument.Page;
 import android.print.pdf.PdfDocument.PageInfo;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 
 import java.io.OutputStream;
@@ -38,19 +36,9 @@ import java.io.OutputStream;
  * This class is a helper for printing content to a different media
  * size. The printed content will be as large as it would be on the
  * screen.
- *
- * THIS IS A TEST CODE AND IS HIDDEN
- *
- * @hide
  */
 public final class PrintedPdfDocument {
     private static final int MILS_PER_INCH = 1000;
-
-    /**
-     * Maximum bitmap size as defined in Skia's native code (see SkCanvas.cpp,
-     * SkDraw.cpp)
-     */
-    private static final int MAXMIMUM_BITMAP_SIZE = 32766;
 
     private final PdfDocument mDocument = PdfDocument.open();
     private final Rect mPageSize = new Rect();
@@ -71,14 +59,8 @@ public final class PrintedPdfDocument {
         MediaSize mediaSize = attributes.getMediaSize();
         Resolution resolution = attributes.getResolution();
 
-        // TODO: What to do if horizontal and vertical DPI differ?
-        try {
         mCanvasDensityDpi = Math.max(attributes.getResolution().getHorizontalDpi(), attributes
                 .getResolution().getVerticalDpi());
-        } catch (NullPointerException npe) {
-            Log.i("FUCK", "FUCK");
-            throw new RuntimeException(npe);
-        }
 
         // Figure out the scale since the content and the target DPI may differ.
         DisplayMetrics metrics = new DisplayMetrics();
@@ -89,21 +71,22 @@ public final class PrintedPdfDocument {
         mContentToPageTransform.setScale(scaleFactor, scaleFactor);
 
         // Compute the size of the target canvas from the attributes.
-        final int pageWidth = (mediaSize.getWidthMils() / MILS_PER_INCH)
-                * resolution.getHorizontalDpi();
-        final int pageHeight = (mediaSize.getHeightMils() / MILS_PER_INCH)
-                * resolution.getVerticalDpi();
+        final int pageWidth = (int) (((float) mediaSize.getWidthMils() / (float) MILS_PER_INCH)
+                * (float) resolution.getHorizontalDpi());
+        final int pageHeight = (int) (((float) mediaSize.getHeightMils() / (float) MILS_PER_INCH)
+                * (float) resolution.getVerticalDpi());
         mPageSize.set(0, 0, pageWidth, pageHeight);
 
         // Compute the content size from the attributes.
         Margins margins = attributes.getMargins();
-        final int marginLeft = (margins.getLeftMils() / MILS_PER_INCH)
-                * resolution.getHorizontalDpi();
-        final int marginTop = (margins.getTopMils() / MILS_PER_INCH) * resolution.getVerticalDpi();
-        final int marginRight = (margins.getRightMils() / MILS_PER_INCH)
-                * resolution.getHorizontalDpi();
-        final int marginBottom = (margins.getBottomMils() / MILS_PER_INCH)
-                * resolution.getVerticalDpi();
+        final int marginLeft = (int) (((float) margins.getLeftMils() / (int) MILS_PER_INCH)
+                * (float) resolution.getHorizontalDpi());
+        final int marginTop = (int) (((float) margins.getTopMils() / (float) MILS_PER_INCH)
+                * (float) resolution.getVerticalDpi());
+        final int marginRight = (int) (((float) margins.getRightMils() / (float) MILS_PER_INCH)
+                * (float) resolution.getHorizontalDpi());
+        final int marginBottom = (int) (((float) margins.getBottomMils() / (float) MILS_PER_INCH)
+                * (float) resolution.getVerticalDpi());
         mContentSize.set(mPageSize.left + marginLeft, mPageSize.top + marginTop, mPageSize.right
                 - marginRight, mPageSize.bottom - marginBottom);
     }
