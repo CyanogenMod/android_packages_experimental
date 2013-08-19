@@ -86,7 +86,7 @@ public class NotificationService extends IntentService {
         }
         NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
         bigTextStyle.bigText(addendum + longSmsText);
-        NotificationCompat.Builder bigTextNotification = new NotificationCompat.Builder(context)
+        Notification bigText = new NotificationCompat.Builder(context)
                 .setContentTitle(addendum + "Mike Cleron")
                 .setContentIntent(ToastService.getPendingIntent(context, "Clicked on bigText"))
                 .setContentText(addendum + longSmsText)
@@ -94,24 +94,28 @@ public class NotificationService extends IntentService {
                 .setWhen(when)
                 .setLargeIcon(getBitmap(context, R.drawable.bucket))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(Notification.DEFAULT_SOUND)
                 .addAction(R.drawable.ic_media_next,
                         "update: " + update,
                         UpdateService.getPendingIntent(context, update + 1, id, when))
                 .setSmallIcon(R.drawable.stat_notify_talk_text)
-                .setStyle(bigTextStyle);
-        return bigTextNotification.build();
+                .setStyle(bigTextStyle)
+                .build();
+        return bigText;
     }
 
     public static Notification makeUploadNotification(Context context, int progress, long when) {
-        NotificationCompat.Builder uploadNotification = new NotificationCompat.Builder(context)
+        Notification uploadNotification = new NotificationCompat.Builder(context)
                 .setContentTitle("File Upload")
                 .setContentText("foo.txt")
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setContentIntent(ToastService.getPendingIntent(context, "Clicked on Upload"))
+                .setDeleteIntent(ProgressService.getSilencePendingIntent(context))
                 .setWhen(when)
                 .setSmallIcon(R.drawable.ic_menu_upload)
-                .setProgress(100, Math.min(progress, 100), false);
-        return uploadNotification.build();
+                .setProgress(100, Math.min(progress, 100), false)
+                .build();
+        return uploadNotification;
     }
 
     @Override
@@ -125,7 +129,7 @@ public class NotificationService extends IntentService {
 
         int uploadId = mNotifications.size();
         long uploadWhen = System.currentTimeMillis();
-        mNotifications.add(makeUploadNotification(this, 10, uploadWhen));
+        mNotifications.add(makeUploadNotification(this, 0, uploadWhen));
 
         Notification phoneCall = new NotificationCompat.Builder(this)
                 .setContentTitle("Incoming call")
