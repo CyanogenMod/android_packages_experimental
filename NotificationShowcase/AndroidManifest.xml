@@ -14,9 +14,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".FullScreenActivity"
+                  android:label="@string/full_screen_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
         <service  android:name=".NotificationService"/>
         <service  android:name=".UpdateService"/>
         <service  android:name=".ProgressService"/>
+        <service  android:name=".PhoneService"/>
         <service  android:name=".ToastService"/>
     </application>
 </manifest>
