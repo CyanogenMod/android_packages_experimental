@@ -131,6 +131,8 @@ public class NotificationService extends IntentService {
         long uploadWhen = System.currentTimeMillis();
         mNotifications.add(makeUploadNotification(this, 0, uploadWhen));
 
+        int phoneId = mNotifications.size();
+        final PendingIntent fullscreenIntent = FullScreenActivity.getPendingIntent(this, phoneId);
         Notification phoneCall = new NotificationCompat.Builder(this)
                 .setContentTitle("Incoming call")
                 .setContentText("Matias Duarte")
@@ -138,14 +140,14 @@ public class NotificationService extends IntentService {
                 .setSmallIcon(R.drawable.stat_sys_phone_call)
                 .setDefaults(Notification.DEFAULT_SOUND)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setContentIntent(ToastService.getPendingIntent(this, "Clicked on Matias"))
+                .setContentIntent(fullscreenIntent)
+                .setFullScreenIntent(fullscreenIntent, true)
                 .addAction(R.drawable.ic_dial_action_call, "Answer",
-                        ToastService.getPendingIntent(this, "call answered"))
+                        PhoneService.getPendingIntent(this, phoneId, PhoneService.ACTION_ANSWER))
                 .addAction(R.drawable.ic_end_call, "Ignore",
-                        ToastService.getPendingIntent(this, "call ignored"))
-                .setAutoCancel(true)
+                        PhoneService.getPendingIntent(this, phoneId, PhoneService.ACTION_IGNORE))
+                .setOngoing(true)
                 .build();
-        phoneCall.flags |= Notification.FLAG_INSISTENT;
         mNotifications.add(phoneCall);
 
         mNotifications.add(new NotificationCompat.Builder(this)
