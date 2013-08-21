@@ -18,11 +18,10 @@ package com.android.example.notificationshowcase;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
-import android.app.Service;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
-import android.os.IBinder;
 import android.util.Log;
 
 public class ProgressService extends IntentService {
@@ -30,8 +29,11 @@ public class ProgressService extends IntentService {
     private static final String TAG = "ProgressService";
 
     private static final String ACTION_PROGRESS = "progress";
+    private static final String ACTION_SILENT = "silent";
 
-    private Handler handler;
+    private static ProgressService.UpdateRunnable mUpdateRunnable;
+
+    private Handler mHandler;
 
     public ProgressService() {
         super(TAG);
@@ -47,38 +49,52 @@ public class ProgressService extends IntentService {
         private int mProgress;
 
         UpdateRunnable(int id, long when, int progress) {
-            mId = id;
+            mId = NotificationService.NOTIFICATION_ID + id;
             mWhen = when;
             mProgress = progress;
         }
 
         @Override
-        public void run() {            NotificationManager noMa = (NotificationManager)
-                getSystemService(Context.NOTIFICATION_SERVICE);
+        public void run() {
+            NotificationManager noMa = (NotificationManager)
+                    getSystemService(Context.NOTIFICATION_SERVICE);
+            if (mUpdateRunnable != null) {
                 Log.v(TAG, "id: " + mId + " when: " + mWhen + " progress: " + mProgress);
-                noMa.notify(NotificationService.NOTIFICATION_ID + mId,
-                        NotificationService.makeUploadNotification(
-                                ProgressService.this, mProgress, mWhen));
-                mProgress += 10;
-            if (mProgress <= 100) {
-                handler.postDelayed(this, 1000);
+                noMa.notify(mId, NotificationService.makeUploadNotification(
+                        ProgressService.this, mProgress, mWhen));
+                mProgress += 2;
+                if (mProgress <= 100) {
+                    mHandler.postDelayed(mUpdateRunnable, 100);
+                }
+            } else {
+                noMa.cancel(mId);
+                Log.d(TAG, "mUpdateRunnable is null ");
             }
         }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        handler = new Handler();
+        mHandler = new Handler();
         return super.onStartCommand(intent, flags, startId);
     }
 
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        final int id = intent.getIntExtra("id", 0);
-        final long when = intent.getLongExtra("when", 0L);
-        int progress = intent.getIntExtra("progress", 0);
-        handler.postDelayed(new UpdateRunnable(id, when, progress), 1000);
+        Log.d(TAG, "onHandleIntent " + intent.getAction());
+        if (ACTION_PROGRESS.equals(intent.getAction())) {
+            final int id = intent.getIntExtra("id", 0);
+            final long when = intent.getLongExtra("when", 0L);
+            int progress = intent.getIntExtra("progress", 0);
+            mUpdateRunnable = new UpdateRunnable(id, when, progress);
+            mHandler.postDelayed(mUpdateRunnable, 1000);
+        } else if (ACTION_SILENT.equals(intent.getAction())) {
+            Log.d(TAG, "cancelling ");
+            if (mUpdateRunnable != null) {
+                mUpdateRunnable = null;
+            }
+        }
     }
 
     public static void startProgressUpdater(Context context, int id, long when, int progress) {
@@ -89,5 +105,15 @@ public class ProgressService extends IntentService {
         progressIntent.putExtra("when", when);
         progressIntent.putExtra("progress", progress);
         context.startService(progressIntent);
+    }
+
+    public static PendingIntent getSilencePendingIntent(Context context) {
+        Log.d(TAG, "getSilencePendingIntent ");
+        Intent silenceIntent = new Intent(context, ProgressService.class);
+        silenceIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        silenceIntent.setAction(ACTION_SILENT);
+        PendingIntent pi = PendingIntent.getService(
+                context, 0, silenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return pi;
     }
 }
