@@ -24,13 +24,11 @@
         </service>
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/settings_activity_label"
-            android:permission="android.permission.BIND_PRINT_SERVICE">
+            android:label="@string/settings_activity_label">
         </activity>
         <activity
             android:name=".AddPrintersActivity"
-            android:label="@string/add_pritners_activity_label"
-            android:permission="android.permission.BIND_PRINT_SERVICE">
+            android:label="@string/add_pritners_activity_label">
         </activity>
 
         <activity

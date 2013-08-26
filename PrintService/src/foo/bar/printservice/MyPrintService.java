@@ -1,6 +1,21 @@
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package foo.bar.printservice;
 
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -25,6 +40,7 @@ import android.util.SparseArray;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -53,13 +69,9 @@ public class MyPrintService extends PrintService {
 
     private Handler mHandler;
 
-    private PrinterInfo mFirstFakePrinter;
+    private AsyncTask<FileDescriptor, Void, Void> mFakePrintTask;
 
-    private PrinterInfo mSecondFakePrinter;
-
-    private AsyncTask<Void, Void, Void> mFakePrintTask;
-
-    private MyPrinterDiscoverySession mSession;
+    private FakePrinterDiscoverySession mSession;
 
     private final SparseArray<PrintJob> mProcessedPrintJobs = new SparseArray<PrintJob>();
 
@@ -67,14 +79,6 @@ public class MyPrintService extends PrintService {
         synchronized (sLock) {
             return sInstance;
         }
-    }
-
-    @Override
-    public void onCreate() {
-        mFirstFakePrinter = new PrinterInfo.Builder(generatePrinterId("Printer 1"),
-                "SHGH-21344", PrinterInfo.STATUS_READY).create();
-        mSecondFakePrinter = new PrinterInfo.Builder(generatePrinterId("Printer 2"),
-                "OPPPP-09434", PrinterInfo.STATUS_READY).create();
     }
 
     @Override
@@ -99,7 +103,8 @@ public class MyPrintService extends PrintService {
 
     @Override
     protected PrinterDiscoverySession onCreatePrinterDiscoverySession() {
-        return new MyPrinterDiscoverySession(this);
+        Log.i(LOG_TAG, "#onCreatePrinterDiscoverySession()");
+        return new FakePrinterDiscoverySession();
     }
 
     @Override
@@ -173,20 +178,16 @@ public class MyPrintService extends PrintService {
         final PrintJobInfo info = printJob.getInfo();
         final File file = new File(getFilesDir(), info.getLabel() + ".pdf");
 
-        mFakePrintTask = new AsyncTask<Void, Void, Void>() {
+        mFakePrintTask = new AsyncTask<FileDescriptor, Void, Void>() {
             @Override
-            protected Void doInBackground(Void... params) {
-                InputStream in = new BufferedInputStream(
-                        new FileInputStream(printJob.getDocument().getData()));
+            protected Void doInBackground(FileDescriptor... params) {
+                InputStream in = new BufferedInputStream(new FileInputStream(params[0]));
                 OutputStream out = null;
                 try {
                     out = new BufferedOutputStream(new FileOutputStream(file));
                     final byte[] buffer = new byte[8192];
                     while (true) {
                         if (isCancelled()) {
-                            if (printJob.isStarted()) {
-                                printJob.cancel();
-                            }
                             break;
                         }
                         final int readByteCount = in.read(buffer);
@@ -196,7 +197,7 @@ public class MyPrintService extends PrintService {
                         out.write(buffer, 0, readByteCount);
                     }
                 } catch (IOException ioe) {
-                    /* ignore */
+                    throw new RuntimeException(ioe);
                 } finally {
                     IoUtils.closeQuietly(in);
                     IoUtils.closeQuietly(out);
@@ -223,8 +224,16 @@ public class MyPrintService extends PrintService {
 
                 mFakePrintTask = null;
             }
+
+            @Override
+            protected void onCancelled(Void result) {
+                if (printJob.isStarted()) {
+                    printJob.cancel();
+                }
+            }
         };
-        mFakePrintTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, (Void[]) null);
+        mFakePrintTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,
+                printJob.getDocument().getData());
     }
 
     private final class MyHandler extends Handler {
@@ -251,75 +260,50 @@ public class MyPrintService extends PrintService {
         }
     }
 
-    private final class MyPrinterDiscoverySession extends  PrinterDiscoverySession {
+    private final class FakePrinterDiscoverySession extends  PrinterDiscoverySession {
         private final Handler mSesionHandler = new SessionHandler(getMainLooper());
 
-        public MyPrinterDiscoverySession(Context context) {
-            super(context);
+        private final List<PrinterInfo> mFakePrinters = new ArrayList<PrinterInfo>();
+
+        public FakePrinterDiscoverySession() {
+            for (int i = 0; i < 1000; i++) {
+                String printerName = "Printer " + i;
+                PrinterInfo printer = new PrinterInfo.Builder(generatePrinterId(printerName),
+                        printerName, PrinterInfo.STATUS_READY).create();
+                mFakePrinters.add(printer);
+            }
         }
 
         @Override
-        public void onOpen(List<PrinterId> priorityList) {
-            Log.i(LOG_TAG, "#onStartDiscoverPrinters()");
+        public void onDestroy() {
+            Log.i(LOG_TAG, "FakePrinterDiscoverySession#onDestroy()");
+            mSesionHandler.removeMessages(SessionHandler.MSG_ADD_FIRST_BATCH_FAKE_PRINTERS);
+            mSesionHandler.removeMessages(SessionHandler.MSG_ADD_SECOND_BATCH_FAKE_PRINTERS);
+        }
+
+        @Override
+        public void onStartPrinterDiscovery(List<PrinterId> priorityList) {
+            Log.i(LOG_TAG, "FakePrinterDiscoverySession#onStartPrinterDiscovery()");
             Message message1 = mSesionHandler.obtainMessage(
-                    SessionHandler.MSG_ADD_FIRST_FAKE_PRINTER, this);
+                    SessionHandler.MSG_ADD_FIRST_BATCH_FAKE_PRINTERS, this);
             mSesionHandler.sendMessageDelayed(message1, 0);
 
             Message message2 = mSesionHandler.obtainMessage(
-                    SessionHandler.MSG_ADD_SECOND_FAKE_PRINTER, this);
+                    SessionHandler.MSG_ADD_SECOND_BATCH_FAKE_PRINTERS, this);
             mSesionHandler.sendMessageDelayed(message2, 10000);
         }
 
         @Override
-        public void onClose() {
+        public void onStopPrinterDiscovery() {
+            Log.i(LOG_TAG, "FakePrinterDiscoverySession#onStopPrinterDiscovery()");
             cancellAddingFakePrinters();
-            Log.i(LOG_TAG, "#onStopDiscoverPrinters()");
         }
 
         @Override
         public void onRequestPrinterUpdate(PrinterId printerId) {
-            if (printerId.equals(mFirstFakePrinter.getId())) {
-                PrinterCapabilitiesInfo capabilities =
-                        new PrinterCapabilitiesInfo.Builder(printerId)
-                    .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
-                    .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                            MediaSize.ISO_A2), true)
-                    .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                            MediaSize.ISO_A3), false)
-                    .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                            MediaSize.ISO_A4), false)
-                    .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                            MediaSize.NA_LETTER), false)
-                    .addResolution(new Resolution("R1", getString(
-                            R.string.resolution_600x600), 600, 600), true)
-                    .addInputTray(new Tray("FirstInputTray", getString(
-                            R.string.input_tray_first)), false)
-                    .addOutputTray(new Tray("FirstOutputTray", getString(
-                            R.string.output_tray_first)), false)
-                    .setDuplexModes(PrintAttributes.DUPLEX_MODE_NONE
-                            | PrintAttributes.DUPLEX_MODE_LONG_EDGE
-                            | PrintAttributes.DUPLEX_MODE_SHORT_EDGE,
-                            PrintAttributes.DUPLEX_MODE_NONE)
-                    .setColorModes(PrintAttributes.COLOR_MODE_COLOR
-                            | PrintAttributes.COLOR_MODE_MONOCHROME,
-                            PrintAttributes.COLOR_MODE_COLOR)
-                    .setFittingModes(PrintAttributes.FITTING_MODE_NONE
-                            | PrintAttributes.FITTING_MODE_FIT_TO_PAGE,
-                            PrintAttributes.FITTING_MODE_NONE)
-                    .setOrientations(PrintAttributes.ORIENTATION_PORTRAIT
-                            | PrintAttributes.ORIENTATION_LANDSCAPE,
-                            PrintAttributes.ORIENTATION_PORTRAIT)
-                    .create();
-
-                PrinterInfo printer = new PrinterInfo.Builder(mFirstFakePrinter)
-                        .setCapabilities(capabilities)
-                        .create();
-
-                List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
-                printers.add(printer);
-                updatePrinters(printers);
-
-            } else if (printerId.equals(mSecondFakePrinter.getId())) {
+            Log.i(LOG_TAG, "FakePrinterDiscoverySession#onRequestPrinterUpdate()");
+            PrinterInfo printer = findPrinterInfo(printerId);
+            if (printer != null) {
                 PrinterCapabilitiesInfo capabilities =
                         new PrinterCapabilitiesInfo.Builder(printerId)
                     .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
@@ -354,7 +338,7 @@ public class MyPrintService extends PrintService {
                             PrintAttributes.ORIENTATION_LANDSCAPE)
                     .create();
 
-                PrinterInfo printer = new PrinterInfo.Builder(mSecondFakePrinter)
+                printer = new PrinterInfo.Builder(printer)
                     .setCapabilities(capabilities)
                     .create();
 
@@ -364,26 +348,37 @@ public class MyPrintService extends PrintService {
             }
         }
 
-        private void addFirstFakePrinter(PrinterDiscoverySession session) {
-            List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
-            printers.add(mFirstFakePrinter);
-            session.addPrinters(printers);
+        private void addFirstBatchFakePrinters() {
+            List<PrinterInfo> printers = mFakePrinters.subList(0, mFakePrinters.size() / 2);
+            addPrinters(printers);
         }
 
-        private void addSecondFakePrinter(PrinterDiscoverySession session) {
-            List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
-            printers.add(mSecondFakePrinter);
-            session.addPrinters(printers);
+        private void addSecondBatchFakePrinters() {
+            List<PrinterInfo> printers = mFakePrinters.subList(mFakePrinters.size() / 2,
+                    mFakePrinters.size());
+            addPrinters(printers);
+        }
+
+        private PrinterInfo findPrinterInfo(PrinterId printerId) {
+            List<PrinterInfo> printers = getPrinters();
+            final int printerCount = getPrinters().size();
+            for (int i = 0; i < printerCount; i++) {
+                PrinterInfo printer = printers.get(i);
+                if (printer.getId().equals(printerId)) {
+                    return printer;
+                }
+            }
+            return null;
         }
 
         private void cancellAddingFakePrinters() {
-            mSesionHandler.removeMessages(SessionHandler.MSG_ADD_FIRST_FAKE_PRINTER);
-            mSesionHandler.removeMessages(SessionHandler.MSG_ADD_SECOND_FAKE_PRINTER);
+            mSesionHandler.removeMessages(SessionHandler.MSG_ADD_FIRST_BATCH_FAKE_PRINTERS);
+            mSesionHandler.removeMessages(SessionHandler.MSG_ADD_SECOND_BATCH_FAKE_PRINTERS);
         }
 
         final class SessionHandler extends Handler {
-            public static final int MSG_ADD_FIRST_FAKE_PRINTER = 1;
-            public static final int MSG_ADD_SECOND_FAKE_PRINTER = 2;
+            public static final int MSG_ADD_FIRST_BATCH_FAKE_PRINTERS = 1;
+            public static final int MSG_ADD_SECOND_BATCH_FAKE_PRINTERS = 2;
 
             public SessionHandler(Looper looper) {
                 super(looper, null, true);
@@ -392,16 +387,12 @@ public class MyPrintService extends PrintService {
             @Override
             public void handleMessage(Message message) {
                 switch (message.what) {
-                    case MSG_ADD_FIRST_FAKE_PRINTER: {
-                        PrinterDiscoverySession session =
-                                (PrinterDiscoverySession) message.obj;
-                        addFirstFakePrinter(session);
+                    case MSG_ADD_FIRST_BATCH_FAKE_PRINTERS: {
+                        addFirstBatchFakePrinters();
                     } break;
 
-                    case MSG_ADD_SECOND_FAKE_PRINTER: {
-                        PrinterDiscoverySession session =
-                                (PrinterDiscoverySession) message.obj;
-                        addSecondFakePrinter(session);
+                    case MSG_ADD_SECOND_BATCH_FAKE_PRINTERS: {
+                        addSecondBatchFakePrinters();
                     } break;
                 }
             }
