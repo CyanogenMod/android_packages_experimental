@@ -10,4 +10,6 @@ LOCAL_PACKAGE_NAME := Print
 
 LOCAL_CERTIFICATE := platform
 
+LOCAL_SDK_VERSION := current
+
 include $(BUILD_PACKAGE)
