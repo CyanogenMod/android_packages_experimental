@@ -29,6 +29,7 @@ import android.print.PrintDocumentInfo;
 import android.print.PrintJob;
 import android.print.PrintManager;
 import android.print.pdf.PdfDocument.Page;
+import android.print.pdf.PrintedPdfDocument;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.Menu;
@@ -111,7 +112,7 @@ public class PrintActivity extends Activity {
                             + ", newAttributes: " + newAttributes + "] preview: "
                             + metadata.getBoolean(PrintDocumentAdapter.METADATA_KEY_PRINT_PREVIEW));
 
-                    mPdfDocument = new PrintedPdfDocument(PrintActivity.this, newAttributes);
+                    mPdfDocument = PrintedPdfDocument.open(PrintActivity.this, newAttributes);
 
                     final boolean cancelled;
                     synchronized (mLock) {
@@ -124,10 +125,11 @@ public class PrintActivity extends Activity {
                         mPdfDocument = null;
                         callback.onLayoutCancelled();
                     } else {
-                        PrintDocumentInfo info = new PrintDocumentInfo.Builder("print_view.pdf")
-                            .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
-                            .setPageCount(5)
-                            .create();
+                        PrintDocumentInfo info = new PrintDocumentInfo
+                                .Builder("print_view.pdf", newAttributes)
+                                .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
+                                .setPageCount(5)
+                                .create();
                         callback.onLayoutFinished(info, false);
                     }
 
@@ -163,7 +165,7 @@ public class PrintActivity extends Activity {
                                     }
                                     if (containsPage(pages, i)) {
                                         writtenPagesArray.append(writtenPagesArray.size(), i);
-                                        Page page = mPdfDocument.startPage();
+                                        Page page = mPdfDocument.startPage(i);
                                         view.draw(page.getCanvas());
                                         mPdfDocument.finishPage(page);
                                     }

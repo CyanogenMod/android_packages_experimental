@@ -267,9 +267,12 @@ public class MyPrintService extends PrintService {
 
         public FakePrinterDiscoverySession() {
             for (int i = 0; i < 1000; i++) {
-                String printerName = "Printer " + i;
-                PrinterInfo printer = new PrinterInfo.Builder(generatePrinterId(printerName),
-                        printerName, PrinterInfo.STATUS_READY).create();
+                String name = "Printer " + i;
+                PrinterId id = generatePrinterId(name);
+                PrinterInfo printer = PrinterInfo.obtain();
+                printer.getInitializer()
+                        .beginInit(id, name, PrinterInfo.STATUS_IDLE)
+                        .endInit();
                 mFakePrinters.add(printer);
             }
         }
@@ -330,9 +333,10 @@ public class MyPrintService extends PrintService {
                     .setColorModes(PrintAttributes.COLOR_MODE_COLOR
                             | PrintAttributes.COLOR_MODE_MONOCHROME,
                             PrintAttributes.COLOR_MODE_MONOCHROME)
-                    .setFittingModes(PrintAttributes.FITTING_MODE_FIT_TO_PAGE
+                    .setFittingModes(PrintAttributes.FITTING_MODE_SCALE_TO_FILL
+                            | PrintAttributes.FITTING_MODE_SCALE_TO_FIT
                             | PrintAttributes.FITTING_MODE_NONE,
-                            PrintAttributes.FITTING_MODE_FIT_TO_PAGE)
+                            PrintAttributes.FITTING_MODE_NONE)
                     .setOrientations(PrintAttributes.ORIENTATION_PORTRAIT
                             | PrintAttributes.ORIENTATION_LANDSCAPE,
                             PrintAttributes.ORIENTATION_LANDSCAPE)
