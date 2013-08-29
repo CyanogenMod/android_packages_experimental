@@ -19,6 +19,9 @@
     <string name="print_delayed">Print dealyed</string>
     <string name="fail_now">Fail now</string>
     <string name="fail_delayed">Fail delayed</string>
+    <string name="block_now">Block now</string>
+    <string name="block_delayed">Block delayed</string>
+    <string name="block_and_delayed_unblock">Block and delayed unblock</string>
     <string name="cancel_yes">Cancel</string>
     <string name="cancel_no">Don\'t cancel</string>
 

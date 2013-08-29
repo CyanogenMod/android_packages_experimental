@@ -22,6 +22,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.ParcelFileDescriptor;
 import android.print.PrintAttributes;
 import android.print.PrintAttributes.Margins;
 import android.print.PrintAttributes.MediaSize;
@@ -40,7 +41,6 @@ import android.util.SparseArray;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,8 +48,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import libcore.io.IoUtils;
 
 public class MyPrintService extends PrintService {
 
@@ -69,7 +67,7 @@ public class MyPrintService extends PrintService {
 
     private Handler mHandler;
 
-    private AsyncTask<FileDescriptor, Void, Void> mFakePrintTask;
+    private AsyncTask<ParcelFileDescriptor, Void, Void> mFakePrintTask;
 
     private FakePrinterDiscoverySession mSession;
 
@@ -122,6 +120,9 @@ public class MyPrintService extends PrintService {
     public void onPrintJobQueued(final PrintJob printJob) {
         Log.i(LOG_TAG, "#onPrintJobQueued()");
         mProcessedPrintJobs.put(printJob.getId(), printJob);
+        if (printJob.isQueued()) {
+            printJob.start();
+        }
         Intent intent = new Intent(this, MyDialogActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(INTENT_EXTRA_PRINT_JOB_ID, printJob.getId());
@@ -159,7 +160,51 @@ public class MyPrintService extends PrintService {
         }
     }
 
+    void handleBlockPrintJobDelayed(int printJobId) {
+        Message message = mHandler.obtainMessage(
+                MyHandler.MSG_HANDLE_BLOCK_PRINT_JOB, printJobId, 0);
+        mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
+    }
+
+    void handleBlockPrintJob(int printJobId) {
+        final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
+        if (printJob == null) {
+            return;
+        }
+
+        if (printJob.isStarted()) {
+            printJob.block("Gimme some reset, dude");
+        }
+    }
+
+    void handleBlockAndDelayedUnblockPrintJob(int printJobId) {
+        handleBlockPrintJob(printJobId);
+
+        Message message = mHandler.obtainMessage(
+                MyHandler.MSG_HANDLE_UNBLOCK_PRINT_JOB, printJobId, 0);
+        mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
+    }
+
+    void handleUnblockPrintJob(int printJobId) {
+        final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
+        if (printJob == null) {
+            return;
+        }
+
+        if (printJob.isBlocked()) {
+            printJob.start();
+        }
+    }
+
     void handleQueuedPrintJobDelayed(int printJobId) {
+        final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
+        if (printJob == null) {
+            return;
+        }
+
+        if (printJob.isQueued()) {
+            printJob.start();
+        }
         Message message = mHandler.obtainMessage(
                 MyHandler.MSG_HANDLE_DO_PRINT_JOB, printJobId, 0);
         mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
@@ -178,10 +223,11 @@ public class MyPrintService extends PrintService {
         final PrintJobInfo info = printJob.getInfo();
         final File file = new File(getFilesDir(), info.getLabel() + ".pdf");
 
-        mFakePrintTask = new AsyncTask<FileDescriptor, Void, Void>() {
+        mFakePrintTask = new AsyncTask<ParcelFileDescriptor, Void, Void>() {
             @Override
-            protected Void doInBackground(FileDescriptor... params) {
-                InputStream in = new BufferedInputStream(new FileInputStream(params[0]));
+            protected Void doInBackground(ParcelFileDescriptor... params) {
+                InputStream in = new BufferedInputStream(new FileInputStream(
+                        params[0].getFileDescriptor()));
                 OutputStream out = null;
                 try {
                     out = new BufferedOutputStream(new FileOutputStream(file));
@@ -199,8 +245,20 @@ public class MyPrintService extends PrintService {
                 } catch (IOException ioe) {
                     throw new RuntimeException(ioe);
                 } finally {
-                    IoUtils.closeQuietly(in);
-                    IoUtils.closeQuietly(out);
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (IOException ioe) {
+                            /* ignore */
+                        }
+                    }
+                    if (out != null) {
+                        try {
+                            out.close();
+                        } catch (IOException ioe) {
+                            /* ignore */
+                        }
+                    }
                     if (isCancelled()) {
                         file.delete();
                     }
@@ -239,9 +297,11 @@ public class MyPrintService extends PrintService {
     private final class MyHandler extends Handler {
         public static final int MSG_HANDLE_DO_PRINT_JOB = 1;
         public static final int MSG_HANDLE_FAIL_PRINT_JOB = 2;
+        public static final int MSG_HANDLE_BLOCK_PRINT_JOB = 3;
+        public static final int MSG_HANDLE_UNBLOCK_PRINT_JOB = 4;
 
         public MyHandler(Looper looper) {
-            super(looper, null, true);
+            super(looper);
         }
 
         @Override
@@ -256,6 +316,16 @@ public class MyPrintService extends PrintService {
                     final int printJobId = message.arg1;
                     handleFailPrintJob(printJobId);
                 } break;
+
+                case MSG_HANDLE_BLOCK_PRINT_JOB: {
+                    final int printJobId = message.arg1;
+                    handleBlockPrintJob(printJobId);
+                } break;
+
+                case MSG_HANDLE_UNBLOCK_PRINT_JOB: {
+                    final int printJobId = message.arg1;
+                    handleUnblockPrintJob(printJobId);
+                } break;
             }
         }
     }
@@ -268,11 +338,9 @@ public class MyPrintService extends PrintService {
         public FakePrinterDiscoverySession() {
             for (int i = 0; i < 1000; i++) {
                 String name = "Printer " + i;
-                PrinterId id = generatePrinterId(name);
-                PrinterInfo printer = PrinterInfo.obtain();
-                printer.getInitializer()
-                        .beginInit(id, name, PrinterInfo.STATUS_IDLE)
-                        .endInit();
+                PrinterInfo printer = new PrinterInfo
+                        .Builder(generatePrinterId(name), name, PrinterInfo.STATUS_IDLE)
+                        .create();
                 mFakePrinters.add(printer);
             }
         }
@@ -303,8 +371,8 @@ public class MyPrintService extends PrintService {
         }
 
         @Override
-        public void onRequestPrinterUpdate(PrinterId printerId) {
-            Log.i(LOG_TAG, "FakePrinterDiscoverySession#onRequestPrinterUpdate()");
+        public void onStartPrinterStateTracking(PrinterId printerId) {
+            Log.i(LOG_TAG, "FakePrinterDiscoverySession#onStartPrinterStateTracking()");
             PrinterInfo printer = findPrinterInfo(printerId);
             if (printer != null) {
                 PrinterCapabilitiesInfo capabilities =
@@ -352,6 +420,16 @@ public class MyPrintService extends PrintService {
             }
         }
 
+        @Override
+        public void onValidatePrinters(List<PrinterId> printerIds) {
+            Log.i(LOG_TAG, "FakePrinterDiscoverySession#onValidatePrinters()");
+        }
+
+        @Override
+        public void onStopPrinterStateTracking(PrinterId printerId) {
+            Log.i(LOG_TAG, "FakePrinterDiscoverySession#onStopPrinterStateTracking()");
+        }
+
         private void addFirstBatchFakePrinters() {
             List<PrinterInfo> printers = mFakePrinters.subList(0, mFakePrinters.size() / 2);
             addPrinters(printers);
@@ -385,7 +463,7 @@ public class MyPrintService extends PrintService {
             public static final int MSG_ADD_SECOND_BATCH_FAKE_PRINTERS = 2;
 
             public SessionHandler(Looper looper) {
-                super(looper, null, true);
+                super(looper);
             }
 
             @Override
