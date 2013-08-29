@@ -22,6 +22,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.CancellationSignal.OnCancelListener;
+import android.os.ParcelFileDescriptor;
 import android.print.PageRange;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
@@ -37,7 +38,6 @@ import android.view.MenuItem;
 import android.view.View;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -146,7 +146,8 @@ public class PrintActivity extends Activity {
                 }
 
                 @Override
-                public void onWrite(final PageRange[] pages, final FileDescriptor destination,
+                public void onWrite(final PageRange[] pages,
+                        final ParcelFileDescriptor destination,
                         final CancellationSignal canclleationSignal,
                         final WriteResultCallback callback) {
                     Log.i(LOG_TAG, "onWrite[pages: " + Arrays.toString(pages) +"]");
@@ -175,7 +176,8 @@ public class PrintActivity extends Activity {
 
                         @Override
                         protected Void doInBackground(Void... params) {
-                            mPdfDocument.writeTo(new FileOutputStream(destination));
+                            mPdfDocument.writeTo(new FileOutputStream(
+                                    destination.getFileDescriptor()));
                             mPdfDocument.close();
                             mPdfDocument = null;
 
