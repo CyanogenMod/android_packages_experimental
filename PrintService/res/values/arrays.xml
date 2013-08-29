@@ -22,6 +22,9 @@
         <item>@string/print_delayed</item>
         <item>@string/fail_now</item>
         <item>@string/fail_delayed</item>
+        <item>@string/block_now</item>
+        <item>@string/block_delayed</item>
+        <item>@string/block_and_delayed_unblock</item>
     </string-array>
 
     <string-array name="on_request_cancel_print_job_actions">
