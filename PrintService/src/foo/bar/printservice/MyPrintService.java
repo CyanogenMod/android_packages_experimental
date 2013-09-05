@@ -27,7 +27,6 @@ import android.print.PrintAttributes;
 import android.print.PrintAttributes.Margins;
 import android.print.PrintAttributes.MediaSize;
 import android.print.PrintAttributes.Resolution;
-import android.print.PrintAttributes.Tray;
 import android.print.PrintJobInfo;
 import android.print.PrinterCapabilitiesInfo;
 import android.print.PrinterId;
@@ -378,36 +377,15 @@ public class MyPrintService extends PrintService {
                 PrinterCapabilitiesInfo capabilities =
                         new PrinterCapabilitiesInfo.Builder(printerId)
                     .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
-                    .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                            MediaSize.ISO_A4), true)
-                    .addMediaSize(MediaSize.createMediaSize(getPackageManager(),
-                            MediaSize.ISO_A5), false)
+                    .addMediaSize(MediaSize.ISO_A4, true)
+                    .addMediaSize(MediaSize.ISO_A5, false)
                     .addResolution(new Resolution("R1", getString(
-                            R.string.resolution_200x200), 200, 200), true)
+                            R.string.resolution_200x200), 200, 200), false)
                     .addResolution(new Resolution("R2", getString(
-                            R.string.resolution_300x300), 300, 300), false)
-                    .addInputTray(new Tray("FirstInputTray", getString(
-                            R.string.input_tray_first)), false)
-                    .addInputTray(new Tray("SecondInputTray", getString(
-                            R.string.input_tray_second)), true)
-                    .addOutputTray(new Tray("FirstOutputTray", getString(
-                            R.string.output_tray_first)), false)
-                    .addOutputTray(new Tray("SecondOutputTray",  getString(
-                            R.string.output_tray_second)), true)
-                    .setDuplexModes(PrintAttributes.DUPLEX_MODE_NONE
-                            | PrintAttributes.DUPLEX_MODE_LONG_EDGE
-                            | PrintAttributes.DUPLEX_MODE_SHORT_EDGE,
-                            PrintAttributes.DUPLEX_MODE_SHORT_EDGE)
+                            R.string.resolution_300x300), 300, 300), true)
                     .setColorModes(PrintAttributes.COLOR_MODE_COLOR
                             | PrintAttributes.COLOR_MODE_MONOCHROME,
                             PrintAttributes.COLOR_MODE_MONOCHROME)
-                    .setFittingModes(PrintAttributes.FITTING_MODE_SCALE_TO_FILL
-                            | PrintAttributes.FITTING_MODE_SCALE_TO_FIT
-                            | PrintAttributes.FITTING_MODE_NONE,
-                            PrintAttributes.FITTING_MODE_NONE)
-                    .setOrientations(PrintAttributes.ORIENTATION_PORTRAIT
-                            | PrintAttributes.ORIENTATION_LANDSCAPE,
-                            PrintAttributes.ORIENTATION_LANDSCAPE)
                     .create();
 
                 printer = new PrinterInfo.Builder(printer)
@@ -416,7 +394,7 @@ public class MyPrintService extends PrintService {
 
                 List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
                 printers.add(printer);
-                updatePrinters(printers);
+                addPrinters(printers);
             }
         }
 
