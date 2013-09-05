@@ -126,7 +126,7 @@ public class PrintActivity extends Activity {
                         callback.onLayoutCancelled();
                     } else {
                         PrintDocumentInfo info = new PrintDocumentInfo
-                                .Builder("print_view.pdf", newAttributes)
+                                .Builder("print_view.pdf")
                                 .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
                                 .setPageCount(5)
                                 .create();
