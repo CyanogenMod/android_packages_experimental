@@ -37,7 +37,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,17 +73,6 @@ public class PrintActivity extends Activity {
             }
         }
         return false;
-    }
-
-    public void printFileSimple() {
-        PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
-
-        PrintJob printJob = printManager.print("My Print Job", new File("foo.pdf"),
-                new PrintDocumentInfo.Builder("foo.pdf").create(), null);
-
-        if (printJob != null) {
-            /* Yay, we scheduled something to be printed!!! */
-        }
     }
 
     private void printView() {
@@ -128,8 +116,8 @@ public class PrintActivity extends Activity {
                         PrintDocumentInfo info = new PrintDocumentInfo
                                 .Builder("print_view.pdf")
                                 .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
-                                .setPageCount(5)
-                                .create();
+                                .setPageCount(1)
+                                .build();
                         callback.onLayoutFinished(info, false);
                     }
 
@@ -157,7 +145,7 @@ public class PrintActivity extends Activity {
                             @Override
                         protected void onPreExecute() {
                             synchronized (mLock) {
-                                for (int i = 0; i < 5; i++) {
+                                for (int i = 0; i < 1; i++) {
                                     if (isCancelled()) {
                                         mPdfDocument.close();
                                         mPdfDocument = null;
@@ -211,10 +199,12 @@ public class PrintActivity extends Activity {
                     canclleationSignal.setOnCancelListener(new OnCancelListener() {
                         @Override
                         public void onCancel() {
-                            Log.i(LOG_TAG, "onWrite#onCancel()");
-                            task.cancel(true);
-                            mLock.notifyAll();
-                          }
+                            synchronized (mLock) {
+                                Log.i(LOG_TAG, "onWrite#onCancel()");
+                                task.cancel(true);
+                                mLock.notifyAll();
+                            }
+                        }
                     });
                 }
 
@@ -235,7 +225,7 @@ public class PrintActivity extends Activity {
                     return false;
                 }
 
-        }, new PrintAttributes.Builder().create());
+        }, null);
 
         if (printJob != null) {
             /* Yay, we scheduled something to be printed!!! */
