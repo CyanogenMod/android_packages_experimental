@@ -2,6 +2,7 @@ package foo.bar.printservice;
 
 import android.app.ListActivity;
 import android.os.Bundle;
+import android.print.PrintJobId;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -22,7 +23,8 @@ public class MyDialogActivity extends ListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final int printJobId = getIntent().getIntExtra(MyPrintService.INTENT_EXTRA_PRINT_JOB_ID, 0);
+        PrintJobId printJobId = getIntent().getParcelableExtra(
+                MyPrintService.INTENT_EXTRA_PRINT_JOB_ID);
         final int actionType = getIntent().getIntExtra(MyPrintService.INTENT_EXTRA_ACTION_TYPE,
                 MyPrintService.ACTION_TYPE_ON_PRINT_JOB_PENDING);
 
@@ -33,7 +35,7 @@ public class MyDialogActivity extends ListActivity {
         }
     }
 
-    private void createActionTypeOnPrintJobPendingUi(final int printJobId) {
+    private void createActionTypeOnPrintJobPendingUi(final PrintJobId printJobId) {
         setTitle(getString(R.string.on_print_job_pending_activity_title));
 
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
@@ -86,7 +88,7 @@ public class MyDialogActivity extends ListActivity {
         });
     }
 
-    private void createActionTypeOnReqeustCancelPrintJobUi(final int printJobId) {
+    private void createActionTypeOnReqeustCancelPrintJobUi(final PrintJobId printJobId) {
         setTitle(getString(R.string.on_cancle_print_job_requested_activity_title));
 
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
