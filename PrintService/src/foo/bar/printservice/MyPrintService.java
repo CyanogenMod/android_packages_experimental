@@ -27,6 +27,7 @@ import android.print.PrintAttributes;
 import android.print.PrintAttributes.Margins;
 import android.print.PrintAttributes.MediaSize;
 import android.print.PrintAttributes.Resolution;
+import android.print.PrintJobId;
 import android.print.PrintJobInfo;
 import android.print.PrinterCapabilitiesInfo;
 import android.print.PrinterId;
@@ -34,8 +35,8 @@ import android.print.PrinterInfo;
 import android.printservice.PrintJob;
 import android.printservice.PrintService;
 import android.printservice.PrinterDiscoverySession;
+import android.util.ArrayMap;
 import android.util.Log;
-import android.util.SparseArray;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -47,6 +48,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class MyPrintService extends PrintService {
 
@@ -70,7 +72,8 @@ public class MyPrintService extends PrintService {
 
     private FakePrinterDiscoverySession mSession;
 
-    private final SparseArray<PrintJob> mProcessedPrintJobs = new SparseArray<PrintJob>();
+    private final Map<PrintJobId, PrintJob> mProcessedPrintJobs =
+            new ArrayMap<PrintJobId, PrintJob>();
 
     public static MyPrintService peekInstance() {
         synchronized (sLock) {
@@ -129,7 +132,7 @@ public class MyPrintService extends PrintService {
         startActivity(intent);
     }
 
-    void handleRequestCancelPrintJob(int printJobId) {
+    void handleRequestCancelPrintJob(PrintJobId printJobId) {
         PrintJob printJob = mProcessedPrintJobs.get(printJobId);
         if (printJob == null) {
             return;
@@ -142,13 +145,13 @@ public class MyPrintService extends PrintService {
         }
     }
 
-    void handleFailPrintJobDelayed(int printJobId) {
+    void handleFailPrintJobDelayed(PrintJobId printJobId) {
         Message message = mHandler.obtainMessage(
-                MyHandler.MSG_HANDLE_FAIL_PRINT_JOB, printJobId, 0);
+                MyHandler.MSG_HANDLE_FAIL_PRINT_JOB, printJobId);
         mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
     }
 
-    void handleFailPrintJob(int printJobId) {
+    void handleFailPrintJob(PrintJobId printJobId) {
         PrintJob printJob = mProcessedPrintJobs.get(printJobId);
         if (printJob == null) {
             return;
@@ -159,32 +162,32 @@ public class MyPrintService extends PrintService {
         }
     }
 
-    void handleBlockPrintJobDelayed(int printJobId) {
+    void handleBlockPrintJobDelayed(PrintJobId printJobId) {
         Message message = mHandler.obtainMessage(
-                MyHandler.MSG_HANDLE_BLOCK_PRINT_JOB, printJobId, 0);
+                MyHandler.MSG_HANDLE_BLOCK_PRINT_JOB, printJobId);
         mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
     }
 
-    void handleBlockPrintJob(int printJobId) {
+    void handleBlockPrintJob(PrintJobId printJobId) {
         final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
         if (printJob == null) {
             return;
         }
 
         if (printJob.isStarted()) {
-            printJob.block("Gimme some reset, dude");
+            printJob.block("Gimme some rest, dude");
         }
     }
 
-    void handleBlockAndDelayedUnblockPrintJob(int printJobId) {
+    void handleBlockAndDelayedUnblockPrintJob(PrintJobId printJobId) {
         handleBlockPrintJob(printJobId);
 
         Message message = mHandler.obtainMessage(
-                MyHandler.MSG_HANDLE_UNBLOCK_PRINT_JOB, printJobId, 0);
+                MyHandler.MSG_HANDLE_UNBLOCK_PRINT_JOB, printJobId);
         mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
     }
 
-    void handleUnblockPrintJob(int printJobId) {
+    void handleUnblockPrintJob(PrintJobId printJobId) {
         final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
         if (printJob == null) {
             return;
@@ -195,7 +198,7 @@ public class MyPrintService extends PrintService {
         }
     }
 
-    void handleQueuedPrintJobDelayed(int printJobId) {
+    void handleQueuedPrintJobDelayed(PrintJobId printJobId) {
         final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
         if (printJob == null) {
             return;
@@ -205,11 +208,11 @@ public class MyPrintService extends PrintService {
             printJob.start();
         }
         Message message = mHandler.obtainMessage(
-                MyHandler.MSG_HANDLE_DO_PRINT_JOB, printJobId, 0);
+                MyHandler.MSG_HANDLE_DO_PRINT_JOB, printJobId);
         mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
     }
 
-    void handleQueuedPrintJob(int printJobId) {
+    void handleQueuedPrintJob(PrintJobId printJobId) {
         final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
         if (printJob == null) {
             return;
@@ -307,22 +310,22 @@ public class MyPrintService extends PrintService {
         public void handleMessage(Message message) {
             switch (message.what) {
                 case MSG_HANDLE_DO_PRINT_JOB: {
-                    final int printJobId = message.arg1;
+                    PrintJobId printJobId = (PrintJobId) message.obj;
                     handleQueuedPrintJob(printJobId);
                 } break;
 
                 case MSG_HANDLE_FAIL_PRINT_JOB: {
-                    final int printJobId = message.arg1;
+                    PrintJobId printJobId = (PrintJobId) message.obj;
                     handleFailPrintJob(printJobId);
                 } break;
 
                 case MSG_HANDLE_BLOCK_PRINT_JOB: {
-                    final int printJobId = message.arg1;
+                    PrintJobId printJobId = (PrintJobId) message.obj;
                     handleBlockPrintJob(printJobId);
                 } break;
 
                 case MSG_HANDLE_UNBLOCK_PRINT_JOB: {
-                    final int printJobId = message.arg1;
+                    PrintJobId printJobId = (PrintJobId) message.obj;
                     handleUnblockPrintJob(printJobId);
                 } break;
             }
@@ -339,7 +342,7 @@ public class MyPrintService extends PrintService {
                 String name = "Printer " + i;
                 PrinterInfo printer = new PrinterInfo
                         .Builder(generatePrinterId(name), name, PrinterInfo.STATUS_IDLE)
-                        .create();
+                        .build();
                 mFakePrinters.add(printer);
             }
         }
@@ -376,7 +379,7 @@ public class MyPrintService extends PrintService {
             if (printer != null) {
                 PrinterCapabilitiesInfo capabilities =
                         new PrinterCapabilitiesInfo.Builder(printerId)
-                    .setMinMargins(new Margins(0, 0, 0, 0), new Margins(0, 0, 0, 0))
+                    .setMinMargins(new Margins(0, 0, 0, 0))
                     .addMediaSize(MediaSize.ISO_A4, true)
                     .addMediaSize(MediaSize.ISO_A5, false)
                     .addResolution(new Resolution("R1", getString(
@@ -386,11 +389,11 @@ public class MyPrintService extends PrintService {
                     .setColorModes(PrintAttributes.COLOR_MODE_COLOR
                             | PrintAttributes.COLOR_MODE_MONOCHROME,
                             PrintAttributes.COLOR_MODE_MONOCHROME)
-                    .create();
+                    .build();
 
                 printer = new PrinterInfo.Builder(printer)
                     .setCapabilities(capabilities)
-                    .create();
+                    .build();
 
                 List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
                 printers.add(printer);
