@@ -18,6 +18,7 @@ package foo.bar.print;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.pdf.PdfDocument.Page;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CancellationSignal;
@@ -29,7 +30,6 @@ import android.print.PrintDocumentAdapter;
 import android.print.PrintDocumentInfo;
 import android.print.PrintJob;
 import android.print.PrintManager;
-import android.print.pdf.PdfDocument.Page;
 import android.print.pdf.PrintedPdfDocument;
 import android.util.Log;
 import android.util.SparseIntArray;
@@ -38,6 +38,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -98,9 +99,9 @@ public class PrintActivity extends Activity {
                         Bundle metadata) {
                     Log.i(LOG_TAG, "onLayout[oldAttributes: " + oldAttributes
                             + ", newAttributes: " + newAttributes + "] preview: "
-                            + metadata.getBoolean(PrintDocumentAdapter.METADATA_KEY_PRINT_PREVIEW));
+                            + metadata.getBoolean(PrintDocumentAdapter.EXTRA_PRINT_PREVIEW));
 
-                    mPdfDocument = PrintedPdfDocument.open(PrintActivity.this, newAttributes);
+                    mPdfDocument = new PrintedPdfDocument(PrintActivity.this, newAttributes);
 
                     final boolean cancelled;
                     synchronized (mLock) {
@@ -164,8 +165,17 @@ public class PrintActivity extends Activity {
 
                         @Override
                         protected Void doInBackground(Void... params) {
-                            mPdfDocument.writeTo(new FileOutputStream(
-                                    destination.getFileDescriptor()));
+                            try {
+                                mPdfDocument.writeTo(new FileOutputStream(
+                                        destination.getFileDescriptor()));
+                                mPdfDocument.writeTo(new FileOutputStream(
+                                        destination.getFileDescriptor()));
+                            } catch (IOException ioe) {
+                                mPdfDocument.close();
+                                callback.onWriteFailed(null);
+                                return null;
+                            }
+
                             mPdfDocument.close();
                             mPdfDocument = null;
 
