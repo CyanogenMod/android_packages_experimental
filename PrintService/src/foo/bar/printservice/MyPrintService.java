@@ -338,7 +338,7 @@ public class MyPrintService extends PrintService {
         private final List<PrinterInfo> mFakePrinters = new ArrayList<PrinterInfo>();
 
         public FakePrinterDiscoverySession() {
-            for (int i = 0; i < 1000; i++) {
+            for (int i = 0; i < 10; i++) {
                 String name = "Printer " + i;
                 PrinterInfo printer = new PrinterInfo
                         .Builder(generatePrinterId(name), name, PrinterInfo.STATUS_IDLE)
@@ -379,7 +379,7 @@ public class MyPrintService extends PrintService {
             if (printer != null) {
                 PrinterCapabilitiesInfo capabilities =
                         new PrinterCapabilitiesInfo.Builder(printerId)
-                    .setMinMargins(new Margins(0, 0, 0, 0))
+                    .setMinMargins(new Margins(200, 200, 200, 200))
                     .addMediaSize(MediaSize.ISO_A4, true)
                     .addMediaSize(MediaSize.ISO_A5, false)
                     .addResolution(new Resolution("R1", getString(
@@ -412,13 +412,18 @@ public class MyPrintService extends PrintService {
         }
 
         private void addFirstBatchFakePrinters() {
-            List<PrinterInfo> printers = mFakePrinters.subList(0, mFakePrinters.size() / 2);
+            List<PrinterInfo> printers = mFakePrinters.subList(0, mFakePrinters.size()/* / 2*/);
             addPrinters(printers);
         }
 
         private void addSecondBatchFakePrinters() {
-            List<PrinterInfo> printers = mFakePrinters.subList(mFakePrinters.size() / 2,
-                    mFakePrinters.size());
+//            List<PrinterInfo> printers = mFakePrinters.subList(mFakePrinters.size() / 2,
+//                    mFakePrinters.size());
+            List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
+            final int printerCount = mFakePrinters.size();
+            for (int i = printerCount - 1; i >= 0; i--) {
+                printers.add(mFakePrinters.get(i));
+            }
             addPrinters(printers);
         }
 
