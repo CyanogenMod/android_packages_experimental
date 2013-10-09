@@ -54,7 +54,7 @@ public class MyPrintService extends PrintService {
 
     private static final String LOG_TAG = "MyPrintService";
 
-    private static final long STANDARD_DELAY_MILLIS = 10000;
+    private static final long STANDARD_DELAY_MILLIS = 10000000;
 
     static final String INTENT_EXTRA_ACTION_TYPE = "INTENT_EXTRA_ACTION_TYPE";
     static final String INTENT_EXTRA_PRINT_JOB_ID = "INTENT_EXTRA_PRINT_JOB_ID";
@@ -138,7 +138,7 @@ public class MyPrintService extends PrintService {
             return;
         }
         mProcessedPrintJobs.remove(printJobId);
-        if (printJob.isQueued() || printJob.isStarted()) {
+        if (printJob.isQueued() || printJob.isStarted() || printJob.isBlocked()) {
             mHandler.removeMessages(MyHandler.MSG_HANDLE_DO_PRINT_JOB);
             mHandler.removeMessages(MyHandler.MSG_HANDLE_FAIL_PRINT_JOB);
             printJob.cancel();
@@ -341,7 +341,8 @@ public class MyPrintService extends PrintService {
             for (int i = 0; i < 10; i++) {
                 String name = "Printer " + i;
                 PrinterInfo printer = new PrinterInfo
-                        .Builder(generatePrinterId(name), name, PrinterInfo.STATUS_IDLE)
+                        .Builder(generatePrinterId(name), name, (i % 2 == 1)
+                        ? PrinterInfo.STATUS_UNAVAILABLE : PrinterInfo.STATUS_IDLE)
                         .build();
                 mFakePrinters.add(printer);
             }
@@ -412,19 +413,18 @@ public class MyPrintService extends PrintService {
         }
 
         private void addFirstBatchFakePrinters() {
-            List<PrinterInfo> printers = mFakePrinters.subList(0, mFakePrinters.size()/* / 2*/);
+            List<PrinterInfo> printers = mFakePrinters.subList(0, mFakePrinters.size() / 2);
             addPrinters(printers);
         }
 
         private void addSecondBatchFakePrinters() {
 //            List<PrinterInfo> printers = mFakePrinters.subList(mFakePrinters.size() / 2,
 //                    mFakePrinters.size());
-            List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
-            final int printerCount = mFakePrinters.size();
-            for (int i = printerCount - 1; i >= 0; i--) {
-                printers.add(mFakePrinters.get(i));
-            }
-            addPrinters(printers);
+//            final int printerCount = mFakePrinters.size();
+//            for (int i = printerCount - 1; i >= 0; i--) {
+//                printers.add(mFakePrinters.get(i));
+//            }
+//            addPrinters(printers);
         }
 
         private PrinterInfo findPrinterInfo(PrinterId printerId) {

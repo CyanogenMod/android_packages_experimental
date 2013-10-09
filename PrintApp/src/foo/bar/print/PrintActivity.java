@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.CancellationSignal.OnCancelListener;
 import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
 import android.print.PageRange;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
@@ -50,7 +51,7 @@ public class PrintActivity extends Activity {
 
     public static final String LOG_TAG = "PrintActivity";
 
-    private final Object mLock = new Object();
+    private static final int PAGE_COUNT = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,25 +68,23 @@ public class PrintActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (!super.onOptionsItemSelected(item)) {
-            if (item.getItemId() == R.id.menu_print) {
-                printView();
-                return true;
-            }
+        if (item.getItemId() == R.id.menu_print) {
+            printView();
+            return true;
         }
-        return false;
+        return super.onOptionsItemSelected(item);
     }
 
     private void printView() {
-
         PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
-
         final View view = findViewById(R.id.content);
 
-        PrintJob printJob = printManager.print("Print_View",
+        final PrintJob printJob = printManager.print("Print_View",
             new PrintDocumentAdapter() {
-                private PrintedPdfDocument mPdfDocument;
-                private boolean mCancelled;
+                private static final int RESULT_LAYOUT_FAILED = 1;
+                private static final int RESULT_LAYOUT_FINISHED = 2;
+
+                private PrintAttributes mPrintAttributes;
 
                 @Override
                 public void onStart() {
@@ -94,44 +93,74 @@ public class PrintActivity extends Activity {
                 }
 
                 @Override
-                public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes,
-                        CancellationSignal cancellationSignal, LayoutResultCallback callback,
-                        Bundle metadata) {
+                public void onLayout(final PrintAttributes oldAttributes,
+                        final PrintAttributes newAttributes,
+                        final CancellationSignal cancellationSignal,
+                        final LayoutResultCallback callback,
+                        final Bundle metadata) {
+
                     Log.i(LOG_TAG, "onLayout[oldAttributes: " + oldAttributes
                             + ", newAttributes: " + newAttributes + "] preview: "
                             + metadata.getBoolean(PrintDocumentAdapter.EXTRA_PRINT_PREVIEW));
 
-                    mPdfDocument = new PrintedPdfDocument(PrintActivity.this, newAttributes);
-
-                    final boolean cancelled;
-                    synchronized (mLock) {
-                        mCancelled = false;
-                        cancelled = mCancelled;
-                    }
-
-                    if (cancelled) {
-                        mPdfDocument.close();
-                        mPdfDocument = null;
-                        callback.onLayoutCancelled();
-                    } else {
-                        PrintDocumentInfo info = new PrintDocumentInfo
-                                .Builder("print_view.pdf")
-                                .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
-                                .setPageCount(1)
-                                .build();
-                        callback.onLayoutFinished(info, false);
-                    }
-
-                    cancellationSignal.setOnCancelListener(new OnCancelListener() {
+                    new AsyncTask<Void, Void, Integer>() {
                         @Override
-                        public void onCancel() {
-                            Log.i(LOG_TAG, "onLayout#onCancel()");
-                            synchronized (mLock) {
-                                mCancelled = true;
-                                mLock.notifyAll();
+                        protected void onPreExecute() {
+                            cancellationSignal.setOnCancelListener(new OnCancelListener() {
+                                @Override
+                                public void onCancel() {
+                                    cancel(true);
+                                }
+                            });
+                            mPrintAttributes = newAttributes;
+                        }
+
+                        @Override
+                        protected Integer doInBackground(Void... params) {
+                            try {
+                                for (int i = 0; i < PAGE_COUNT; i++) {
+                                    if (isCancelled()) {
+                                        return null;
+                                    }
+                                    pretendDoingLayoutWork();
+                                }
+                                return RESULT_LAYOUT_FINISHED;
+                            } catch (Exception e) {
+                                return RESULT_LAYOUT_FAILED;
                             }
-                          }
-                    });
+                        }
+
+                        @Override
+                        protected void onPostExecute(Integer result) {
+                            switch (result) {
+                                case RESULT_LAYOUT_FAILED: {
+                                    Log.i(LOG_TAG, "onLayout#onLayoutFailed()");
+                                    callback.onLayoutFailed(null);
+                                } break;
+
+                                case RESULT_LAYOUT_FINISHED: {
+                                    Log.i(LOG_TAG, "onLayout#onLayoutFinished()");
+                                    PrintDocumentInfo info = new PrintDocumentInfo
+                                            .Builder("print_view.pdf")
+                                            .setContentType(PrintDocumentInfo
+                                                    .CONTENT_TYPE_DOCUMENT)
+                                            .setPageCount(PAGE_COUNT)
+                                            .build();
+                                    callback.onLayoutFinished(info, false);
+                                } break;
+                            }
+                        }
+
+                        @Override
+                        protected void onCancelled(Integer result) {
+                            Log.i(LOG_TAG, "onLayout#onLayoutCancelled()");
+                            callback.onLayoutCancelled();
+                        }
+
+                        private void pretendDoingLayoutWork() throws Exception {
+                            SystemClock.sleep(100);
+                        }
+                    }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
                 }
 
                 @Override
@@ -142,80 +171,95 @@ public class PrintActivity extends Activity {
                     Log.i(LOG_TAG, "onWrite[pages: " + Arrays.toString(pages) +"]");
 
                     final SparseIntArray writtenPagesArray = new SparseIntArray();
-                    final AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+                    final PrintedPdfDocument pdfDocument = new PrintedPdfDocument(
+                            PrintActivity.this, mPrintAttributes);
+
+                    new AsyncTask<Void, Void, Integer>() {
+                        private static final int RESULT_WRITE_FAILED = 1;
+                        private static final int RESULT_WRITE_FINISHED = 2;
+
                             @Override
                         protected void onPreExecute() {
-                            synchronized (mLock) {
-                                for (int i = 0; i < 1; i++) {
-                                    if (isCancelled()) {
-                                        mPdfDocument.close();
-                                        mPdfDocument = null;
-                                        callback.onWriteCancelled();
-                                        break;
-                                    }
-                                    if (containsPage(pages, i)) {
-                                        writtenPagesArray.append(writtenPagesArray.size(), i);
-                                        Page page = mPdfDocument.startPage(i);
-                                        view.draw(page.getCanvas());
-                                        mPdfDocument.finishPage(page);
-                                    }
+                            canclleationSignal.setOnCancelListener(new OnCancelListener() {
+                                @Override
+                                public void onCancel() {
+                                    cancel(true);
+                                }
+                            });
+
+                            for (int i = 0; i < PAGE_COUNT; i++) {
+                                if (isCancelled()) {
+                                    return;
+                                }
+
+                                SystemClock.sleep(100);
+
+                                if (containsPage(pages, i)) {
+                                    writtenPagesArray.append(writtenPagesArray.size(), i);
+                                    Page page = pdfDocument.startPage(i);
+                                    view.draw(page.getCanvas());
+                                    pdfDocument.finishPage(page);
                                 }
                             }
                         }
 
                         @Override
-                        protected Void doInBackground(Void... params) {
+                        protected Integer doInBackground(Void... params) {
                             try {
-                                mPdfDocument.writeTo(new FileOutputStream(
+                                pdfDocument.writeTo(new FileOutputStream(
                                         destination.getFileDescriptor()));
-                                mPdfDocument.writeTo(new FileOutputStream(
-                                        destination.getFileDescriptor()));
+                                return RESULT_WRITE_FINISHED;
                             } catch (IOException ioe) {
-                                mPdfDocument.close();
-                                callback.onWriteFailed(null);
-                                return null;
-                            }
-
-                            mPdfDocument.close();
-                            mPdfDocument = null;
-
-                            List<PageRange> pageRanges = new ArrayList<PageRange>();
-
-                            int start = -1;
-                            int end = -1;
-                            final int writtenPageCount = writtenPagesArray.size(); 
-                            for (int i = 0; i < writtenPageCount; i++) {
-                                if (start < 0) {
-                                    start = writtenPagesArray.valueAt(i);
-                                }
-                                int oldEnd = end = start;
-                                while (i < writtenPageCount && (end - oldEnd) <= 1) {
-                                    oldEnd = end;
-                                    end = writtenPagesArray.valueAt(i);
-                                    i++;
-                                }
-                                PageRange pageRange = new PageRange(start, end);
-                                pageRanges.add(pageRange);
-                                start = end = -1;
-                            }
-
-                            PageRange[] writtenPages = new PageRange[pageRanges.size()];
-                            pageRanges.toArray(writtenPages);
-                            callback.onWriteFinished(new PageRange[]{PageRange.ALL_PAGES});
-                                return null;
-                            }
-                        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
-
-                    canclleationSignal.setOnCancelListener(new OnCancelListener() {
-                        @Override
-                        public void onCancel() {
-                            synchronized (mLock) {
-                                Log.i(LOG_TAG, "onWrite#onCancel()");
-                                task.cancel(true);
-                                mLock.notifyAll();
+                                return RESULT_WRITE_FAILED;
                             }
                         }
-                    });
+
+                        @Override
+                        protected void onPostExecute(Integer result) {
+                            switch (result) {
+                                case RESULT_WRITE_FAILED: {
+                                    Log.i(LOG_TAG, "onWrite#onWriteFailed()");
+                                    callback.onWriteFailed(null);
+                                } break;
+
+                                case RESULT_WRITE_FINISHED: {
+                                    Log.i(LOG_TAG, "onWrite#onWriteFinished()");
+                                    List<PageRange> pageRanges = new ArrayList<PageRange>();
+
+                                    int start = -1;
+                                    int end = -1;
+                                    final int writtenPageCount = writtenPagesArray.size(); 
+                                    for (int i = 0; i < writtenPageCount; i++) {
+                                        if (start < 0) {
+                                            start = writtenPagesArray.valueAt(i);
+                                        }
+                                        int oldEnd = end = start;
+                                        while (i < writtenPageCount && (end - oldEnd) <= 1) {
+                                            oldEnd = end;
+                                            end = writtenPagesArray.valueAt(i);
+                                            i++;
+                                        }
+                                        PageRange pageRange = new PageRange(start, end);
+                                        pageRanges.add(pageRange);
+                                        start = end = -1;
+                                    }
+
+                                    PageRange[] writtenPages = new PageRange[pageRanges.size()];
+                                    pageRanges.toArray(writtenPages);
+                                    callback.onWriteFinished(writtenPages);
+                                } break;
+                            }
+
+                            pdfDocument.close();
+                        }
+
+                        @Override
+                        protected void onCancelled(Integer result) {
+                            Log.i(LOG_TAG, "onWrite#onWriteCancelled()");
+                            callback.onWriteCancelled();
+                            pdfDocument.close();
+                        }
+                    }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
                 }
 
                 @Override
@@ -238,6 +282,22 @@ public class PrintActivity extends Activity {
         }, null);
 
         if (printJob != null) {
+//            view.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    PrintManager printManager = (PrintManager)
+//                            getSystemService(Context.PRINT_SERVICE);
+//                    List<PrintJob> printJobs = printManager.getPrintJobs();
+//                    Log.i(LOG_TAG, "========================================");
+//                    final int printJobCount = printJobs.size();
+//                    for (int i = 0; i < printJobCount; i++) {
+//                        PrintJob printJob = printJobs.get(i);
+//                        Log.i(LOG_TAG, printJob.getInfo().toString());
+//                    }
+//                    Log.i(LOG_TAG, "========================================\n\n");
+//                    view.postDelayed(this, 20000);
+//                }
+//            }, 20000);
             /* Yay, we scheduled something to be printed!!! */
         }
     }
