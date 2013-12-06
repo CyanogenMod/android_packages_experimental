@@ -4,8 +4,8 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="KeyLimePie"
-        android:targetSdkVersion="KeyLimePie" />
+        android:minSdkVersion="19"
+        android:targetSdkVersion="19" />
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -24,7 +24,8 @@
         </service>
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/settings_activity_label">
+            android:label="@string/settings_activity_label"
+            >
         </activity>
         <activity
             android:name=".AddPrintersActivity"
@@ -34,6 +35,12 @@
         <activity
             android:name=".MyDialogActivity"
             android:exported="false">
+        </activity>
+
+        <activity
+            android:name=".CustomPrintOptionsActivity"
+            android:exported="true"
+            android:permission="android.permission.START_PRINT_SERVICE_CONFIG_ACTIVITY">
         </activity>
 
     </application>
