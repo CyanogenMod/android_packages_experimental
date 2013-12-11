@@ -274,7 +274,7 @@ static struct data *read_stats(char *names[], int name_count) {
         }
 
         if (pid_count >= sizeof(pids) / sizeof(pids[0])) {
-            fprintf(stderr, "warning: >%d processes\n", pid_count);
+            fprintf(stderr, "warning: >%zu processes\n", pid_count);
         } else {
             pids[pid_count++] = pid;
         }
