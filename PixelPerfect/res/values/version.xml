@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- third_party/java/android_libs/gcore/halloumi/res/values/version.xml -->
+    <integer name="google_play_services_version">4114500</integer>
+</resources>
