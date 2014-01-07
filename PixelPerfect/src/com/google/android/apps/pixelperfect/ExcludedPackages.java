@@ -1,5 +1,7 @@
 package com.google.android.apps.pixelperfect;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,6 +13,8 @@ import java.util.Set;
  */
 public class ExcludedPackages {
 
+    private static final String TAG = "PixelPerfect.ExcludedPackages";
+
     /** Harcoded packages. For apps that must be excluded. */
     private final Set<String> mHardcodedPackages;
 
@@ -21,7 +25,7 @@ public class ExcludedPackages {
         this(getHarcodedPackages());
     }
 
-    // TODO(stlafon): Figure out how to import @VisibleForTesting
+    @VisibleForTesting
     ExcludedPackages(Set<String> harcodedPackages) {
         mHardcodedPackages = harcodedPackages;
         mCustomPackages = new HashSet<String>();

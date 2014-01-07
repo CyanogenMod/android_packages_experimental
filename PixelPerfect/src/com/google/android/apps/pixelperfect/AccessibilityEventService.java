@@ -52,6 +52,7 @@ public class AccessibilityEventService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         Log.v(TAG, "onAccessibilityEvent " + event);
+
         if (mProcessor != null) {
             mProcessor.process(event);
         }

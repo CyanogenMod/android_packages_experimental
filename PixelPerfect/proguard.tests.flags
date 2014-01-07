@@ -1,5 +1,11 @@
 # Proguard flags specifically needed for tests.
 
+# TODO(stlafon): Remove the following when we start using ScreenshotGrabber in the src.
+-keep class com.google.android.apps.pixelperfect.ScreenshotGrabber
+-keepclassmember class com.google.android.apps.pixelperfect.ScreenshotGrabber {
+  float getDegreesForRotation(int);
+}
+
 # TODO(stlafon): Remove those when we start using the ExcludedPackages methods.
 -keepclassmember class com.google.android.apps.pixelperfect.ExcludedPackages {
   public void addCustom(java.lang.String);
