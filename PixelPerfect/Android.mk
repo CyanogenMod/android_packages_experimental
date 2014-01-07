@@ -15,6 +15,12 @@ LOCAL_PACKAGE_NAME := PixelPerfect
 LOCAL_PROGUARD_ENABLED := full
 LOCAL_PROGUARD_FLAG_FILES := proguard.tests.flags
 
+LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
+
+# Include GMS Core's client library.
+# The exact version is controlled by res/values/version.xml
+include vendor/unbundled_google/packages/PrebuiltGmsCore/google-play-services-first-party.mk
+
 include $(BUILD_PACKAGE)
 
 # Use the following include to make our test apk.
