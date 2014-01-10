@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">PixelPerfect</string>
-    <string name="action_settings">Settings</string>
-    <string name="accessibility_service_description">This is PixelPerfect.</string>
+    <string name="accessibility_service_description">This is PixelPerfect</string>
+    <string name="notification_title">PixelPerfect</string>
+    <string name="is_paused">PixelPerfect is paused (incognito mode)</string>
+    <string name="is_running">PixelPerfect is running</string>
+    <string name="user_in_incognito">You are in incognito mode</string>
+    <string name="user_not_incognito">You no longer are in incognito mode</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="notif_preferences">Preferences</string>
+    <string name="preferences_title">Preferences</string>
+
 </resources>
