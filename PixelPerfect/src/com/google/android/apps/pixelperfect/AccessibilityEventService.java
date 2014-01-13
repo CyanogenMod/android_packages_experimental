@@ -177,6 +177,8 @@ public class AccessibilityEventService extends AccessibilityService {
      */
     @VisibleForTesting
     Notification createNotification(boolean isPaused) {
+        int smallIconId = isPaused ? R.drawable.ic_no_cat : R.drawable.ic_cat;
+
         Intent intent = new Intent(this, PreferencesActivity.class);
         PendingIntent prefsPendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
@@ -192,7 +194,7 @@ public class AccessibilityEventService extends AccessibilityService {
         return new Notification.Builder(this)
             .setContentTitle(getText(R.string.notification_title))
             .setContentText(notifDescription)
-            .setSmallIcon(R.drawable.ic_cat)
+            .setSmallIcon(smallIconId)
             .setOngoing(true)  // cannot be dismissed
             .addAction(pauseOrResumeIcon, pauseOrResume, servicePendingIntent)
             .addAction(R.drawable.ic_preferences, getText(R.string.notif_preferences),
