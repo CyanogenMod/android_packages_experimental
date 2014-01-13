@@ -94,6 +94,12 @@ public class AccessibilityEventService extends AccessibilityService {
             }
         }
 
+        // The following will not stop the service, as the latter is not started by a call to
+        // startService(). Rather, it is enabled from the system settings. Calling stopSelf() here
+        // undoes the effect of onStartCommand(), which gets called each time the user clicks on
+        // pause/resume in the notification.
+        stopSelf();
+
         // We want this service to continue running until it is explicitly stopped,
         // so return sticky.
         return START_STICKY;
