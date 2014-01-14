@@ -8,6 +8,8 @@
     <string name="is_running">PixelPerfect is running</string>
     <string name="user_in_incognito">You are in incognito mode</string>
     <string name="user_not_incognito">You no longer are in incognito mode</string>
+    <string name="pixelperfect_running">PixelPerfect is running</string>
+    <string name="pixelperfect_not_running">PixelPerfect is no longer running</string>
     <string name="pause">Pause</string>
     <string name="resume">Resume</string>
     <string name="notif_preferences">Preferences</string>

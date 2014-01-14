@@ -42,6 +42,9 @@ public class AccessibilityEventService extends AccessibilityService {
      */
     private static boolean mIsPaused;
 
+    /** A {@link Toast} shown when the service is paused or resumed. */
+    private static Toast mToast;
+
     /**
      * The event processor. If the device doesn't have a Google corp account,
      * then this variable will be {@code null}, and no publishing in Clearcut
@@ -65,6 +68,7 @@ public class AccessibilityEventService extends AccessibilityService {
             mProcessor = new AccessibilityEventProcessor(new ExcludedPackages());
             mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             setIsPaused(false);
+            showToast(R.string.pixelperfect_running);
         }
     }
 
@@ -80,6 +84,8 @@ public class AccessibilityEventService extends AccessibilityService {
         if (mNotificationManager != null) {
             mNotificationManager.cancel(NOTIFICATION_ID);
         }
+
+        showToast(R.string.pixelperfect_not_running);
     }
 
     @Override
@@ -142,7 +148,7 @@ public class AccessibilityEventService extends AccessibilityService {
         mNotificationManager.notify(NOTIFICATION_ID, createNotification(mIsPaused));
 
         int msgId = mIsPaused ? R.string.user_in_incognito : R.string.user_not_incognito;
-        Toast.makeText(this, msgId, Toast.LENGTH_SHORT).show();
+        showToast(msgId);
     }
 
     @VisibleForTesting
@@ -206,5 +212,15 @@ public class AccessibilityEventService extends AccessibilityService {
             .addAction(R.drawable.ic_preferences, getText(R.string.notif_preferences),
                     prefsPendingIntent)
             .build();
+    }
+
+    /** Shows a {@link Toast}. */
+    private void showToast(int msgId) {
+        if (mToast == null) {
+            mToast = Toast.makeText(this, msgId, Toast.LENGTH_SHORT);
+        } else {
+            mToast.setText(msgId);
+        }
+        mToast.show();
     }
 }
