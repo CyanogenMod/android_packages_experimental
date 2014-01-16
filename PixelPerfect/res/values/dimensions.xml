@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="package_icon_size">48dp</dimen>
+    <dimen name="excluded_apps_margin">64dp</dimen>
+    <dimen name="autocomplete_padding">16dp</dimen>
+    <dimen name="preferences_title">24sp</dimen>
+    <dimen name="preferences_subtitle">16sp</dimen>
+
+</resources>

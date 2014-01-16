@@ -14,5 +14,9 @@
     <string name="resume">Resume</string>
     <string name="notif_preferences">Preferences</string>
     <string name="preferences_title">Preferences</string>
+    <string name="preferences_package_exclusions">Excluded packages</string>
+    <string name="preferences_package_autocomplete">Package to exclude &#8230;</string>
+    <string name="preferences_exclude">Exclude</string>
+    <string name="package_remove">X</string>
 
 </resources>

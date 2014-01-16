@@ -1,5 +1,7 @@
 package com.google.android.apps.pixelperfect;
 
+import com.google.android.apps.pixelperfect.preferences.PreferencesActivity;
+
 import android.accessibilityservice.AccessibilityService;
 import android.accounts.Account;
 import android.accounts.AccountManager;

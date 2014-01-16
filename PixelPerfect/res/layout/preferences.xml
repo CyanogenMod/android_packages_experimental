@@ -1,14 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/preferences_title" >
+        android:text="@string/preferences_title"
+        android:textSize="@dimen/preferences_title" >
     </TextView>
 
-</LinearLayout>
+    <!--
+    Use a relative layout to position the list of excluded packages on top of the autocomplete
+    textfield.
+    -->
 
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <!-- Autocomplete widget for package selection. -->
+
+        <LinearLayout
+            android:id="@+id/packageAutoComplete"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_below="@+id/excludedContainer"
+            android:orientation="horizontal" >
+
+            <AutoCompleteTextView
+                android:id="@+id/packageSearch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:completionThreshold="1"
+                android:hint="@string/preferences_package_autocomplete"
+                android:maxLines="1"
+                android:singleLine="true" >
+            </AutoCompleteTextView>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onExclude"
+                android:text="@string/preferences_exclude" >
+            </Button>
+        </LinearLayout>
+
+        <!-- List of excluded packages. -->
+
+        <LinearLayout
+            android:id="@+id/excludedContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="@dimen/excluded_apps_margin"
+            android:orientation="vertical" >
+
+            <View style="@style/Divider" />
+
+            <TextView
+                android:id="@+id/autocompleteTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingBottom="@dimen/autocomplete_padding"
+                android:paddingTop="@dimen/autocomplete_padding"
+                android:text="@string/preferences_package_exclusions"
+                android:textSize="@dimen/preferences_subtitle" >
+            </TextView>
+
+            <View style="@style/Divider" />
+
+            <ListView
+                android:id="@+id/excludedList"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:divider="#b5b5b5"
+                android:dividerHeight="1dp" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</LinearLayout>

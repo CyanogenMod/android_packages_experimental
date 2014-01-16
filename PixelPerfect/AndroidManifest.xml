@@ -29,7 +29,7 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
         <activity
-            android:name=".PreferencesActivity"
+            android:name="com.google.android.apps.pixelperfect.preferences.PreferencesActivity"
             android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
