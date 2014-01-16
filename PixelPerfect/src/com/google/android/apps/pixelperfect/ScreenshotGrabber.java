@@ -10,7 +10,7 @@ import android.view.Display;
 import android.view.Surface;
 import android.view.SurfaceControl;
 
-import com.android.internal.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.io.File;
 import java.io.FileNotFoundException;

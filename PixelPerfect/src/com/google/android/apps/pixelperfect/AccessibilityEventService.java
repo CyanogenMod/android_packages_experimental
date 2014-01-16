@@ -9,10 +9,9 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
-import android.os.IBinder;
 import android.util.Log;
 
-import com.android.internal.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Listens to {@link AccessibilityEvent}s triggered when there's a state

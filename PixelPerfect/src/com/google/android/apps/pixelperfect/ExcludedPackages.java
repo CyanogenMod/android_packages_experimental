@@ -1,6 +1,6 @@
 package com.google.android.apps.pixelperfect;
 
-import com.android.internal.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.HashSet;
 import java.util.Set;
