@@ -3,6 +3,8 @@ package com.google.android.apps.pixelperfect;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
+import com.google.common.logging.RecordedEvent.RecordedUpdate;
+
 /**
  * Processes {@link AccessibilityEvent}s:
  * <ul>
@@ -36,5 +38,8 @@ public class AccessibilityEventProcessor {
 
         Log.v(TAG, "Including package " + event.getPackageName()
                 + " --> " + event.getEventType());
+
+        // TODO(dprothro,stlafon): fill in the update proto and send to clearcut.
+        RecordedUpdate update = new RecordedUpdate();
     }
 }

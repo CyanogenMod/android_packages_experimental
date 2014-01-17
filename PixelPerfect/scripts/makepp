@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Utility script for compiling and testing the app.
+#
+# Must be called from the top of compile tree.
+#
+# Example to build and install:
+#
+# $ makepp bi
+#
+# For a full list of options run without arguments.
+#
+
+while [[ $PWD != "/" ]]; do
+  if [[ -d ".repo" ]]; then
+    break
+  else
+    cd ..
+  fi
+done
+
+if [[ ! -d ".repo" ]]; then
+  echo "Must execute this script in checked-out repo tree" >&2
+  exit 1
+fi
+
+echo "Running in ${PWD}"
+. build/envsetup.sh;
+
+if [[ $# == 0 ]]; then
+  echo "usage: makepp [b] [i] [t] [T] [u] [m]" >&2
+  echo "  b = build" >&2
+  echo "  i = adb install" >&2
+  echo "  t = test" >&2
+  echo "  T = uninstall tests" >&2
+  echo "  u = adb uninstall (before install)" >&2
+  echo "  m = make mockito" >&2
+  exit 0
+fi
+
+build=
+install=
+uninstall=
+runtests=
+uninstall_tests=
+make_mockito=
+
+# Explode the command line params in case they are all jammed together in
+# one parameter.
+
+[[ $* =~ m ]] && make_mockito=1 && echo Making mockito
+[[ $* =~ b ]] && build=1 && echo Building
+[[ $* =~ u ]] && uninstall=1 && echo Uninstalling
+[[ $* =~ T ]] && uninstall_tests=1 && echo Uninstall Tests
+[[ $* =~ i ]] && install=1 && echo Installing
+[[ $* =~ t ]] && runtests=1 && echo Testing
+
+set -e
+
+[[ -n "$make_mockito" ]] && make mockito-target
+[[ -n "$build" ]] && mmm packages/experimental/PixelPerfect
+[[ -n "$uninstall" ]] && bash -xc "adb uninstall com.google.android.apps.pixelperfect"
+[[ -n "$uninstall_tests" ]] && bash -xc "adb uninstall com.google.android.apps.pixelperfect.tests"
+[[ -n "$install" ]] && bash -xc "adb install -r out/target/product/mako/system/app/PixelPerfect.apk"
+[[ -n "$runtests" ]] && runtest --path packages/experimental/PixelPerfect
+

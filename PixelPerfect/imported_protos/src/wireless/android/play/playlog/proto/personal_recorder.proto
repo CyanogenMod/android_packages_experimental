@@ -1,0 +1,107 @@
+// Copyright 2013 Google Inc. All Rights Reserved.
+// Author: alasdair@google.com (Alasdair Mackintosh)
+//
+// Interaction data captured by the PixelPerfect PersonalRecorder app. Records
+// how a user interacts with installed applications on their Android device.
+
+syntax = "proto2";
+
+option java_package = "com.google.common.logging";
+option java_outer_classname = "RecordedEvent";
+
+package wireless_android_play_playlog;
+
+// The data contained in an android.graphics.Rect object
+message RecordedRect {
+  optional int32 bottom = 1;
+  optional int32 left = 2;
+  optional int32 right = 3;
+  optional int32 top = 4;
+}
+
+message RecordedTypes {
+  // Represents the type of an Android screen widget.
+  enum WidgetType {
+    CUSTOM = 0;  // Not a predefined Android type
+    APP_WIDGET_HOST_VIEW = 1;  // android.appwidget.AppWidgetHostView
+    VIEW = 2;  // android.view.View
+    WEB_VIEW = 3;  // android.webkit.WebView
+    BUTTON = 4;  // android.widget.Button
+    CHECK_BOX = 5;  // android.widget.CheckBox
+    CHECKED_TEXT_VIEW = 6;  // android.widget.CheckedTextView
+    EDIT_TEXT = 7;  // android.widget.EditText
+    FRAME_LAYOUT = 8;  // android.widget.FrameLayout
+    HORIZONTAL_SCROLL_VIEW = 9;  // android.widget.HorizontalScrollView
+    IMAGE_BUTTON = 10;  // android.widget.ImageButton
+    IMAGE_VIEW = 11;  // android.widget.ImageView
+    LINEAR_LAYOUT = 12;  // android.widget.LinearLayout
+    LIST_VIEW = 13;  // android.widget.ListView
+    MULTI_AUTO_COMPLETE_TEXT_VIEW = 14;  // android.widget.MultiAutoCompleteTextView
+    PROGRESS_BAR = 15;  // android.widget.ProgressBar
+    RELATIVE_LAYOUT = 16;  // android.widget.RelativeLayout
+    SCROLL_VIEW = 17;  // android.widget.ScrollView
+    SPINNER = 18;  // android.widget.Spinner
+    SWITCH = 19;  // android.widget.Switch
+    TAB_HOST = 20;  // android.widget.TabHost
+    TAB_WIDGET = 21;  // android.widget.TabWidget
+    TEXT_VIEW = 22;  // android.widget.TextView
+    VIEW_SWITCHER = 23;  // android.widget.ViewSwitcher
+  }
+}
+
+// Represents an Android UI element, and optionally its children.
+message UIElement {
+  // The type of the element. If the type is CUSTOM, the class_name will be set to
+  // the full class name of the element's widget type. Otherwise the class name will
+  // be empty. (We use this to avoid transmitting unnecessary string data.)
+  optional RecordedTypes.WidgetType class_type = 1 [default = CUSTOM];
+  optional string class_name = 2;
+
+  // The name of the Android UI resource. (The "android:id" property defined in
+  // the app's layout XML file.)
+  optional string resource_name = 3;
+
+  // The android:contentDescription of this view item, if specified.
+  optional string description = 4;
+
+  // The text content of this item, if any.
+  optional string content = 5;
+
+  // The boundary of this element, relative to its parent. See 
+  // http://developer.android.com/reference/android/view/accessibility/
+  // AccessibilityNodeInfo.html#getBoundsInParent(android.graphics.Rect)
+  optional RecordedRect rect = 6;
+
+  // Children of this element.
+  repeated UIElement child = 7;
+}
+
+// Represents an update to the user's application, either caused by a direct
+// user action (pressing a button, entering text) or by the application
+// performing a screen update.
+message RecordedUpdate {
+  // The type of the update. Corresponds to the types defined in
+  // android.view.accessibility.AccessibilityEvent.
+  enum Type {
+    TYPE_NOTIFICATION_STATE_CHANGED = 3;
+    TYPE_VIEW_CLICKED = 10;
+    TYPE_VIEW_FOCUSED = 11;
+    TYPE_VIEW_LONG_CLICKED = 14;
+    TYPE_VIEW_SCROLLED = 15;
+    TYPE_VIEW_SELECTED = 16;
+    TYPE_VIEW_TEXT_CHANGED = 17;
+    TYPE_VIEW_TEXT_SELECTION_CHANGED = 18;
+    TYPE_WINDOW_CONTENT_CHANGED = 20;
+  }
+  optional Type type = 1;
+
+  // The UIElement that this update applies to. If the type is
+  // TYPE_WINDOW_CONTENT_CHANGED, then the element represents the root window,
+  // and its children will be recursively populated. Otherwise it represents the
+  // UI element where the event took place (e.g. the item that was clicked on)
+  // and the children will not be populated.
+  optional UIElement element = 2;
+
+  // The version of the recorder application that published this udpate.
+  optional string version = 3;
+}

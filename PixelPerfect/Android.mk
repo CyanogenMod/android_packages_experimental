@@ -1,5 +1,30 @@
-LOCAL_PATH:= $(call my-dir)
 
+#sdk_version := 19
+
+########
+# Step 1 : Build all protobufs in our tree into a separate
+# static java library. Useful for IDEs etc. since the generated
+# source folder can be excluded if required.
+
+LOCAL_PATH:= $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(call all-proto-files-under, imported_protos/src)
+
+LOCAL_PROTOC_OPTIMIZE_TYPE := micro
+LOCAL_PROTOC_FLAGS := --proto_path=$(LOCAL_PATH)/imported_protos/src
+
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := libpixelperfect-protos
+LOCAL_CERTIFICATE := platform
+LOCAL_SDK_VERSION := $(sdk_version)
+include $(BUILD_STATIC_JAVA_LIBRARY)
+
+
+########
+# Step 2 : Build the app
+
+$(LOCAL_PATH) := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
@@ -16,6 +41,17 @@ LOCAL_PROGUARD_ENABLED := full
 LOCAL_PROGUARD_FLAG_FILES := proguard.tests.flags
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
+
+LOCAL_STATIC_JAVA_LIBRARIES := \
+        android-support-v13 \
+        guava \
+        libpixelperfect-protos
+
+LOCAL_MANIFEST_FILE := AndroidManifest.xml
+
+LOCAL_PROTOC_OPTIMIZE_TYPE := micro
+
+LOCAL_SDK_VERSION := $(sdk_version)
 
 # Include GMS Core's client library.
 # The exact version is controlled by res/values/version.xml
