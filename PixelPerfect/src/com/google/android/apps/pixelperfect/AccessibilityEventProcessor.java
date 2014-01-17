@@ -40,6 +40,6 @@ public class AccessibilityEventProcessor {
                 + " --> " + event.getEventType());
 
         // TODO(dprothro,stlafon): fill in the update proto and send to clearcut.
-        RecordedUpdate update = new RecordedUpdate();
+        RecordedUpdate update = RecordedUpdate.newBuilder().build();
     }
 }

@@ -11,7 +11,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-proto-files-under, imported_protos/src)
 
-LOCAL_PROTOC_OPTIMIZE_TYPE := micro
+LOCAL_PROTOC_OPTIMIZE_TYPE := lite
 LOCAL_PROTOC_FLAGS := --proto_path=$(LOCAL_PATH)/imported_protos/src
 
 LOCAL_MODULE_TAGS := optional
@@ -49,7 +49,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
 
 LOCAL_MANIFEST_FILE := AndroidManifest.xml
 
-LOCAL_PROTOC_OPTIMIZE_TYPE := micro
+LOCAL_PROTOC_OPTIMIZE_TYPE := lite
 
 LOCAL_SDK_VERSION := $(sdk_version)
 

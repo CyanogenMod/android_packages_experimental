@@ -9,6 +9,8 @@ syntax = "proto2";
 option java_package = "com.google.common.logging";
 option java_outer_classname = "RecordedEvent";
 
+option optimize_for = LITE_RUNTIME;
+
 package wireless_android_play_playlog;
 
 // The data contained in an android.graphics.Rect object

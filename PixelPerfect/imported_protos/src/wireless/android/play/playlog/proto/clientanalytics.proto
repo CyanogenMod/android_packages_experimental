@@ -1,0 +1,323 @@
+// Copyright 2012 Google Inc. All Rights Reserved.
+// Author: neel@google.com (Neel Parekh)
+//         jme@google.com (Big Tex Ellington)
+//
+// Protos by which Play clients communicate logging events to the Playlog
+// server.  Do not update this file without understanding the implications --
+// e.g. android clients are built against Java generated from this proto.
+
+syntax = "proto2";
+
+package wireless_android_play_playlog;
+
+option java_package = "com.google.wireless.android.play.playlog.proto";
+option java_outer_classname = "ClientAnalytics";
+
+option optimize_for = LITE_RUNTIME;
+
+import "wireless/android/play/playlog/proto/play_games_client.proto";
+import "wireless/android/play/playlog/proto/play_store_client.proto";
+
+// Semi-arbitrary key-value pairs describing the event. Common entries
+// will be extracted into strongly typed fields in the GWS log records.
+message LogEventKeyValues {
+  optional string key = 1;
+  optional string value = 2;
+}
+
+// The set of currently active experiments for a given LogEvent.
+//
+// Next tag: 4
+message ActiveExperiments {
+  // The list of IDs of client-behavior-altering experiments that are on.
+  repeated string client_altering_experiment = 1;
+
+  // The list of IDs of other experiments that are on. The client must not
+  // change its hehavior in response to these experiments.
+  repeated string other_experiment = 2;
+
+  // The list of GWS experiments that are on. These are not targeted by Playlog.
+  repeated int32 gws_experiment = 3;
+}
+
+// Next tag: 11
+message LogEvent {
+  // Epoch time in milliseconds.
+  optional int64 event_time_ms = 1;
+
+  // Type of event, could be “CLICK” or “PAGE_VIEW” or “DOWNLOAD_STATUS”.
+  // There will be a common repository of cross-vertical events that should be
+  // used, but any individual app would be free to define their own tags.
+  optional string tag = 2;
+
+  // Whether this event was initiated by the user at the time of the event or
+  // shortly before (vs. a background event like upgrading a database after the
+  // app was automatically updated).
+  optional bool is_user_initiated = 10;
+
+  // These might contain PII and will not be stored for more than 8 days.
+  // If possible, please create a named field in the protos below instead.
+  repeated LogEventKeyValues value = 3;
+
+  // TODO: Deprecate/Remove. Use source_extension instead.
+  //
+  // Extension for Play Store app logs.
+  optional PlayStoreLogEvent store = 4;
+
+  // TODO: Deprecate/Remove. Use source_extension instead.
+  //
+  // Extension for Play Games app logs
+  optional PlayGamesLogEvent games = 5;
+
+  // First-party app usage tracking. Used only when log_source = APP_USAGE_1P.
+  optional AppUsage1pLogEvent app_usage_1p = 9;
+
+  // A source specific extension (typically a serialized proto). The type of
+  // this data is determined by the log_source of the enclosing LogRequest.
+  optional bytes source_extension = 6;
+
+  // A JsProto version of source_extension, using array serialization format.
+  optional bytes source_extension_js = 8;
+
+  // The set of currently active experiments. If missing, then the server will
+  // assume that experiment on/off status has not changed since the previous
+  // LogEvent message in the same LogRequest proto. If missing in the very first
+  // LogEveent of a LogRequest, then the server will assume that all experiments
+  // are off.
+  optional ActiveExperiments exp = 7;
+}
+
+// Atributes specific to Android clients.
+//
+// Next tag: 17
+message AndroidClientInfo {
+  // "Gservices" android ID.  Considered PII.  Never logged in archival logs.
+  optional int64 android_id = 1;
+
+  // Pseudonymous, random id (sticky) per device.  Never logged in temp logs.
+  optional string logging_id = 2;
+
+  // This comes from android.os.Build.VERSION.SDK_INT.
+  optional int32 sdk_version = 3;
+
+  // Textual description of the client platform.  e.g., "Nexus 4".
+  // This comes from android.os.Build.MODEL.
+  optional string model = 4;
+
+  // The name of the overall product. e.g., "occam".
+  // This comes from android.os.Build.Product.
+  optional string product = 5;
+
+  // The name of the hardware (from the kernel command line or /proc).
+  // This comes from android.os.Build.Hardware.  e.g., "mako".
+  optional string hardware = 8;
+
+  // The name of the industrial design.  e.g., "mako".
+  // This comes from android.os.Build.Device.
+  optional string device = 9;
+
+  // This comes from android.os.Build.ID.  e.g., something like "JRN54F".
+  optional string os_build = 6;
+
+  // The client application version. The java int version in the android package
+  // converted to string.
+  optional string application_build = 7;
+
+  // The mobile country code / mobile network code (MCC/MNC).
+  // e.g., 310004 for Verizon USA.
+  optional string mcc_mnc = 10;
+
+  // The chosen locale from the client. e.g., "en_US", "ko_KR", "en_GB".
+  optional string locale = 11;
+
+  // The chosen country from the client. e.g., "US", "KR", "JP".
+  optional string country = 12;
+
+  // The manufacturer of the hardware.
+  // This comes from android.os.Build.MANUFACTURER
+  optional string manufacturer = 13;
+
+  // The brand the software is customized for, if any.  Often a carrier name.
+  // e.g. "google"
+  // from http://developer.android.com/reference/android/os/Build.html#BRAND
+  optional string brand = 14;
+
+  // The name of the underlying board
+  // e.g. "tuna"
+  // from http://developer.android.com/reference/android/os/Build.html#BOARD
+  optional string board = 15;
+
+  // Radio version as reported by device, if available at reporting time
+  // e.g. "I9250XXLJ1"
+  // from http://developer.android.com/reference/android/os/Build.html#getRadioVersion()
+  optional string radio_version = 16;
+}
+
+// Atributes specific to desktop clients.
+//
+// Next tag: 7
+message DesktopClientInfo {
+  // Sticky ID that should be considered PII.
+  optional string client_id = 1;
+
+  // Pseudonymous, random id (sticky) per device.  Never logged in temp logs.
+  optional string logging_id = 2;
+
+  // e.g., "mac", "windows", "linux"
+  optional string os = 3;
+
+  // e.g., "10.7", "Vista", "Win7"
+  optional string os_major_version = 4;
+
+  // e.g., "10.7.3", "Win7 SP1"
+  optional string os_full_version = 5;
+
+  // The client application version.
+  optional string application_build = 6;
+}
+
+// Attributes specific to iOS clients.
+//
+// Next tag: 6
+message IosClientInfo {
+  // Sticky ID that should be considered PII.
+  optional string client_id = 1;
+
+  // Pseudonymous, random id (sticky) per device.  Never logged in temp logs.
+  optional string logging_id = 2;
+
+  optional string os_major_version = 3;
+
+  optional string os_full_version = 4;
+
+  // The client application version.
+  optional string application_build = 5;
+}
+
+// Next tag: 5
+message ClientInfo {
+  // The type of client that made this request.
+  // Next enum tag: 5
+  enum ClientType {
+    UNKNOWN = 0;
+    JS = 1;
+    DESKTOP = 2;
+    IOS = 3;
+    ANDROID = 4;
+  }
+
+  optional ClientType client_type = 1 [default = UNKNOWN];
+
+  // Only one of the following *_client_info fields will exist in any request.
+  optional AndroidClientInfo android_client_info = 2;
+  optional DesktopClientInfo desktop_client_info = 3;
+  optional IosClientInfo ios_client_info = 4;
+}
+
+// The list of IDs of experiments that are currently on for this client. All
+// other experiments are off.
+//
+// Next tag: 2
+message ExperimentIdList {
+  // IDs are sorted and do not contain duplicates.
+  repeated string id = 1;
+}
+
+// First party app usage log event extension.
+// Used only when log_source = APP_USAGE_1P.
+//
+// Next tag: 18
+message AppUsage1pLogEvent {
+  enum AppType {
+    UNKNOWN = 0;
+    GOOGLE_SEARCH = 1;
+    GOOGLE_CALENDAR = 2;
+    GOOGLE_PLUS = 3;
+    GMAIL = 4;
+    GOOGLE_PLAY_STORE = 5;
+    GOOGLE_PLAY_MUSIC = 6;
+    GOOGLE_PLAY_BOOKS = 7;
+    GOOGLE_PLAY_VIDEO = 8;
+    GOOGLE_PLAY_MAGAZINES = 9;
+    GOOGLE_PLAY_GAMES = 10;
+    GMS_CORE = 11;
+    ANDROID_IDE = 12;
+    ANDROID_TV = 13;
+    LE = 14; // Location Engine within GMSCore, potentially with PII data
+    GOOGLE_MAPS = 15;
+    GOOGLE_CAMERA = 16;
+    YOUTUBE = 17;
+  }
+  optional AppType app_type = 1;
+
+  // Package name of the app (on Android).
+  optional string android_package_name = 2;
+
+  // Version of the app.
+  optional string version = 3;
+}
+
+// A LogRequest represents a batched collection of loggable events, each
+// event to be persited in a GWS log entry by the Playlog server.
+//
+// Next tag: 6
+message LogRequest {
+  // Next enum tag: 27
+  enum LogSource {
+    UNKNOWN = -1;
+
+    STORE = 0;
+    MUSIC = 1;
+    BOOKS = 2;
+    VIDEO = 3;
+    MAGAZINES = 4;
+    GAMES = 5;
+    LB_A = 6;   // for collecting app usage stats (Lockbox project)
+    ANDROID_IDE = 7;  // Android IDE (go/android-diamond)
+    LB_P = 8;  // for collecting phone call events and stats (Lockbox project)
+    LB_S = 9;  // for collecting SMS events and stats (Lockbox project)
+    GMS_CORE = 10;  // Usage of GMS Core itself and its internal stats
+    APP_USAGE_1P = 11;  // First-party app usage tracking.
+    ICING = 12;  // Icing stats (AppDataSearch go/icing)
+    HERREVAD = 13;  // for collecting Nova Network quality data
+    ANDROID_TV = 14;  // Android TV, not Eureka.
+    EDU_STORE = 15;  // for collecting stats on Play for Education
+    GMS_CORE_PEOPLE = 16;  // GMS core people (aka menagerie)
+    LE = 17;  // Location Engine statistics
+    GOOGLE_ANALYTICS = 18;  // Google Analytics SDK health monitoring
+    LB_D = 19;  // for collecting device state changes (Lockbox project)
+    ANDROID_GSA = 20;  // Android GSA (Google Search App) stats
+    LB_T = 21;  // for collecting Android RunningTaskInfo (Lockbox project)
+    PERSONAL_LOGGER = 22;  // PixelPerfect activity logger
+    GMS_CORE_WALLET_MERCHANT_ERROR = 23;  // GMS core wallet merchant errors
+    LB_C = 24; // Android contacts going from Now to Moonshine.
+    ANDROID_AUTH = 25;  // for collecting GMS core android auth data
+    ANDROID_CAMERA = 26; // Android camera usage statistics
+  }
+
+  // "Now", in milliseconds, according to the same clock that was used to set
+  // 'event_time_ms' values in the LogEvent protos below.
+  optional int64 request_time_ms = 4;
+
+  optional ClientInfo client_info = 1;
+  optional LogSource log_source = 2 [default = UNKNOWN];
+  repeated LogEvent log_event = 3;
+
+  // Can be used instead of 'log_event' in order to save battery in cases where
+  // LogEvent protos are already serialized, and deserializing is undesirable.
+  // If used, this is a collection of byte streams each produced using a
+  // CodedOutputStream.
+  repeated bytes serialized_log_events = 5;
+}
+
+// Next tag: 3
+message LogResponse {
+  // Client should wait for next_request_wait_millis before sending the next log
+  // request.
+  optional int64 next_request_wait_millis = 1 [default = -1];
+
+  // If present, this is the new set of enabled experiments for this client.
+  // Otherwise, the client should assume that there has been no change in the
+  // set of enabled experiments.
+  optional ExperimentIdList experiments = 2;
+}
