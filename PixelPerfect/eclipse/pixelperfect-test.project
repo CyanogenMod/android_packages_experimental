@@ -24,6 +24,7 @@ files = [
   JavaLibrarySource('mockito', 'external/mockito/src'),
   Create('default.properties', contents='target=android-19\n'),
   Mkdir('gen'),
+  Link('res', src='tests/res'),
 ]
 
 classpath = [
