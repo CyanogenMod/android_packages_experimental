@@ -60,11 +60,12 @@ public class AccessibilityEventService extends AccessibilityService {
 
         // The publishing of accessibility events in Clearcut is only enabled
         // if the device has a Google corp account.
-        if (getCorpAccountName() != null) {
+        String accountName = getCorpAccountName();
+        if (accountName != null) {
             // No need to synchronize this as the #onCreate method will only be
             // called when the service is enabled in the settings, so it should
             // be safe from concurrency issues.
-            mProcessor = new AccessibilityEventProcessor(new ExcludedPackages());
+            mProcessor = new AccessibilityEventProcessor(this, accountName, new ExcludedPackages());
             mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             setIsPaused(false);
             showToast(R.string.pixelperfect_running);

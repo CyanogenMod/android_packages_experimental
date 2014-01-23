@@ -9,7 +9,6 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link ScreenshotGrabber}.
  */
-// TODO(stlafon): Increase coverage once we know how to import mockito.
 @SmallTest
 public class ScreenshotGrabberTest extends TestCase {
 
