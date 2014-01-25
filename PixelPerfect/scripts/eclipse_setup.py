@@ -24,7 +24,7 @@ def list_callback(option, opt, value, parser):
 
 def main(args):
   parser = optparse.OptionParser()
-  parser.set_defaults(projects=('pixelperfect','pixelperfect-test'))
+  parser.set_defaults(projects=('pixelperfect','pixelperfect-test','gcore-fp'))
   parser.add_option('--platform_src',
                     help='Location of the android platform source tree')
 
