@@ -22,11 +22,11 @@ files = [
   CreateProperlyNamedLibLink('libpixelperfect-protos'),
   CreateProperlyNamedLibLink('guava'),
   CreateProperlyNamedLibLink('android-support-v13'),
+  CreateProperlyNamedLibLink('prebuilt-google-play-services-first-party'),
   Link('libsrcs/libpixelperfect-protos', src='../../../out/target/common/obj/JAVA_LIBRARIES/libpixelperfect-protos_intermediates/src/proto/src/'),
   Link('libsrcs/android-support-v13', src='../../../frameworks/support/v13/java'),
   Link('libsrcs/guava', src='../../../external/guava/guava/src/'),
-  Create('project.properties', contents='android.library.reference.1=../' + AppendSuffix('gcore-fp')
-      + '\ntarget=android-19\n'),
+  Create('project.properties', contents='target=android-19\n'),
   Mkdir('.settings'),
   Create('.settings/com.google.eclipse.protobuf.Protobuf.prefs',
       'eclipse.preferences.version=1\n'
@@ -44,6 +44,7 @@ classpath = [
   Lib('liblinks/libpixelperfect-protos.jar', sourcepath='libsrcs/libpixelperfect-protos'),
   Lib('liblinks/guava.jar', sourcepath='libsrcs/guava'),
   Lib('liblinks/android-support-v13.jar', sourcepath='libsrcs/android-support-v13'),
+  Lib('liblinks/prebuilt-google-play-services-first-party.jar'),
   AndroidFramework(),
   Output('bin'),
 ]
