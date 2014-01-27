@@ -4,8 +4,8 @@
     The various releases and their schedules can be found at http://go/gmscore-schedule
     The number below must match the value in
     vendor/unbundled_google/packages/PrebuiltGmsCore/res/values/version.xml
-    We are currently using the Gouda version as this what is specified in .repo/manifest.xml.
+    We are currently using the Iberico version as this what is specified in .repo/manifest.xml.
     This can be changed by modifying the "vendor/unbundled_google/packages/PrebuiltGmsCore" entry
     in that file. -->
-    <integer name="google_play_services_version">4023500</integer>
+    <integer name="google_play_services_version">4229000</integer>
 </resources>
