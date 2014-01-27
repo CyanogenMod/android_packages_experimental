@@ -25,13 +25,14 @@ files = [
   Link('libsrcs/libpixelperfect-protos', src='../../../out/target/common/obj/JAVA_LIBRARIES/libpixelperfect-protos_intermediates/src/proto/src/'),
   Link('libsrcs/android-support-v13', src='../../../frameworks/support/v13/java'),
   Link('libsrcs/guava', src='../../../external/guava/guava/src/'),
-  Create('project.properties', contents='target=android-19\n'),
+  Create('project.properties', contents='android.library.reference.1=../' + AppendSuffix('gcore-fp')
+      + '\ntarget=android-19\n'),
   Mkdir('.settings'),
   Create('.settings/com.google.eclipse.protobuf.Protobuf.prefs',
-    'eclipse.preferences.version=1\n'
-    'paths.directoryPaths=${workspace_loc\:/${project}/imported_protos/src},${workspace_loc\:/${project}/src}\n'
-    'paths.filesInMultipleDirectories=true\n'
-    'paths.filesInOneDirectoryOnly=false\n'),
+      'eclipse.preferences.version=1\n'
+      'paths.directoryPaths=${workspace_loc\:/${project}/imported_protos/src},${workspace_loc\:/${project}/src}\n'
+      'paths.filesInMultipleDirectories=true\n'
+      'paths.filesInOneDirectoryOnly=false\n'),
   Mkdir('gen'),
 ]
 
