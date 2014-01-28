@@ -39,6 +39,25 @@ if [[ $# == 0 ]]; then
   exit 0
 fi
 
+# Convert TARGET_PRODUCT to TARGET_DEVICE. If a product isn't listed below,
+# you can add the associated device for it from this list of devices:
+# https://sites.google.com/a/google.com/android/development/codebook
+# NOTE: for hammerhead, device == target.
+device=$TARGET_PRODUCT
+if [[ $product =~ occam ]]; then
+  device=mako
+elif [[ $product == nakasi ]]; then
+  device=grouper
+elif [[ $product == nakasig ]]; then
+  device=tilapia
+elif [[ $product == razor ]]; then
+  device=flo
+elif [[ $product == razorg ]]; then
+  device=deb
+elif [[ $product == mantaray ]]; then
+  device=manta
+fi
+
 build=
 install=
 uninstall=
@@ -65,6 +84,6 @@ set -e
 [[ -n "$build" ]] && mmm packages/experimental/PixelPerfect
 [[ -n "$uninstall" ]] && bash -xc "adb uninstall com.google.android.apps.pixelperfect"
 [[ -n "$uninstall_tests" ]] && bash -xc "adb uninstall com.google.android.apps.pixelperfect.tests"
-[[ -n "$install" ]] && bash -xc "adb install -r out/target/product/$TARGET_PRODUCT/system/app/PixelPerfect.apk"
+[[ -n "$install" ]] && bash -xc "adb install -r out/target/product/$device/system/app/PixelPerfect.apk"
 [[ -n "$runtests" ]] && runtest --path packages/experimental/PixelPerfect
 
