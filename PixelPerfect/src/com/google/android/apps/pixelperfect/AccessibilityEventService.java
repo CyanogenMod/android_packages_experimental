@@ -67,7 +67,19 @@ public class AccessibilityEventService extends AccessibilityService {
             // No need to synchronize this as the #onCreate method will only be
             // called when the service is enabled in the settings, so it should
             // be safe from concurrency issues.
-            mProcessor = new AccessibilityEventProcessor(this, accountName, new ExcludedPackages());
+            try {
+                mProcessor = new AccessibilityEventProcessor(
+                        this, accountName, new ExcludedPackages());
+            } catch (Exception e) {
+                int msgId = ((e instanceof IllegalStateException)
+                        && e.getMessage().contains("com.google.android.gms.version"))
+                                ? R.string.gmscore_version_error
+                                : R.string.initialization_error;
+                Log.e(TAG, "Failed to initialize PixelPerfect", e);
+                showToast(msgId);
+                stopSelf();
+                return;
+            }
             mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             setIsPaused(false);
             showToast(R.string.pixelperfect_running);

@@ -7,5 +7,5 @@
     We are currently using the Iberico version as this what is specified in .repo/manifest.xml.
     This can be changed by modifying the "vendor/unbundled_google/packages/PrebuiltGmsCore" entry
     in that file. -->
-    <integer name="google_play_services_version">4229000</integer>
+    <integer name="google_play_services_version">4234000</integer>
 </resources>
