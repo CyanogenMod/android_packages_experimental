@@ -16,6 +16,9 @@ LOCAL_PROTOC_FLAGS := --proto_path=$(LOCAL_PATH)/imported_protos/src
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libpixelperfect-protos
+# Use Google certificate instead of platform certificate since GmsCore
+# only allows usage from apps signed with the Google certificate.
+#LOCAL_CERTIFICATE := platform
 LOCAL_CERTIFICATE := vendor/unbundled_google/libraries/certs/app
 LOCAL_SDK_VERSION := $(sdk_version)
 include $(BUILD_STATIC_JAVA_LIBRARY)
@@ -29,7 +32,9 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
 
-# To sign the app with the platform certificate.
+# Use Google certificate instead of platform certificate since GmsCore
+# only allows usage from apps signed with the Google certificate.
+#LOCAL_CERTIFICATE := platform
 LOCAL_CERTIFICATE := vendor/unbundled_google/libraries/certs/app
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
