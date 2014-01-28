@@ -8,7 +8,6 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.google.android.gms.playlog.PlayLogger;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.logging.RecordedEvent.RecordedRect;
 import com.google.common.logging.RecordedEvent.RecordedTypes.WidgetType;
@@ -21,6 +20,8 @@ import com.google.wireless.android.play.playlog.proto.ClientAnalytics;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 /**
  * Processes {@link AccessibilityEvent}s:
@@ -49,12 +50,13 @@ public class AccessibilityEventProcessor {
 
         private final PlayLogger mPlayLogger;
 
-        ClearcutLogger(Context context, int logSource, String accountName) {
+        ClearcutLogger(Context context, int logSource, String accountName,
+                @Nullable PlayLogger.LoggerCallbacks loggerCallbacks) {
             mPlayLogger = new PlayLogger(
                     context,
                     logSource,
                     accountName,
-                    null  /* No callback */ );
+                    loggerCallbacks);
         }
 
         public void start() {
@@ -85,12 +87,13 @@ public class AccessibilityEventProcessor {
     /** The UIElement corresponding to the last AccessibilityEvent we received. */
     private UIElement mLastElement = UIElement.newBuilder().build();
 
-    public AccessibilityEventProcessor(Context context,
-            String accountName, ExcludedPackages excludedPackages) {
+    public AccessibilityEventProcessor(Context context, String accountName,
+            ExcludedPackages excludedPackages,
+            @Nullable PlayLogger.LoggerCallbacks loggerCallbacks) {
         this(excludedPackages, new ClearcutLogger(
                 context,
                 ClientAnalytics.LogRequest.LogSource.PERSONAL_LOGGER.getNumber(),
-                accountName));
+                accountName, loggerCallbacks));
     }
 
     @VisibleForTesting
@@ -174,7 +177,6 @@ public class AccessibilityEventProcessor {
         }
         RecordedUpdate update = createUpdate(event, createUIElement(node, false));
         if (update != null) {
-            printUIElement("", update.getElement());
             publishUpdate(update);
         }
         node.recycle();

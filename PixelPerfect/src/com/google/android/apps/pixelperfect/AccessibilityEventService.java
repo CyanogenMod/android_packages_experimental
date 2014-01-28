@@ -1,6 +1,7 @@
 package com.google.android.apps.pixelperfect;
 
 import com.google.android.apps.pixelperfect.preferences.PreferencesActivity;
+import com.google.android.gms.playlog.PlayLogger;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accounts.Account;
@@ -19,7 +20,8 @@ import com.google.common.annotations.VisibleForTesting;
  * Listens to {@link AccessibilityEvent}s triggered when there's a state
  * transition in the UI.
  */
-public class AccessibilityEventService extends AccessibilityService {
+public class AccessibilityEventService extends AccessibilityService
+        implements PlayLogger.LoggerCallbacks {
 
     private static final String TAG = "PixelPerfect.AccessibilityEventService";
 
@@ -69,7 +71,7 @@ public class AccessibilityEventService extends AccessibilityService {
             // be safe from concurrency issues.
             try {
                 mProcessor = new AccessibilityEventProcessor(
-                        this, accountName, new ExcludedPackages());
+                        this, accountName, new ExcludedPackages(), this);
             } catch (Exception e) {
                 int msgId = ((e instanceof IllegalStateException)
                         && e.getMessage().contains("com.google.android.gms.version"))
@@ -236,5 +238,26 @@ public class AccessibilityEventService extends AccessibilityService {
             mToast.setText(msgId);
         }
         mToast.show();
+    }
+
+    @Override
+    public void onLoggerConnected() {
+        Log.v(TAG, "PlayLogger connected");
+    }
+
+    @Override
+    public void onLoggerFailedConnectionWithResolution(PendingIntent resolutionIntent) {
+        // TODO(dprothro): call the PendingIntent to see if the user will approve
+        // usage of the PlayLogger.
+        Log.e(TAG, "Failed to initialize PixelPerfect - loggerFailedConnectionWithResolution");
+        showToast(R.string.initialization_error);
+        stopSelf();
+    }
+
+    @Override
+    public void onLoggerFailedConnection() {
+        Log.e(TAG, "Failed to initialize PixelPerfect - loggerFailedConnection");
+        showToast(R.string.initialization_error);
+        stopSelf();
     }
 }
