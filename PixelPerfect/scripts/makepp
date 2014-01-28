@@ -28,13 +28,14 @@ echo "Running in ${PWD}"
 . build/envsetup.sh;
 
 if [[ $# == 0 ]]; then
-  echo "usage: makepp [b] [i] [t] [T] [u] [m]" >&2
+  echo "usage: makepp [b] [i] [t] [T] [u] [m] [c]" >&2
   echo "  b = build" >&2
   echo "  i = adb install" >&2
   echo "  t = test" >&2
   echo "  T = uninstall tests" >&2
   echo "  u = adb uninstall (before install)" >&2
   echo "  m = make mockito" >&2
+  echo "  c = clean" >&2
   exit 0
 fi
 
@@ -44,10 +45,12 @@ uninstall=
 runtests=
 uninstall_tests=
 make_mockito=
+clean=
 
 # Explode the command line params in case they are all jammed together in
 # one parameter.
 
+[[ $* =~ c ]] && clean=1 && echo Clean
 [[ $* =~ m ]] && make_mockito=1 && echo Making mockito
 [[ $* =~ b ]] && build=1 && echo Building
 [[ $* =~ u ]] && uninstall=1 && echo Uninstalling
@@ -57,10 +60,11 @@ make_mockito=
 
 set -e
 
+[[ -n "$clean" ]] && bash -xc "rm -rf out/target/common/obj/APPS/PixelPerfect_intermediates/; rm -rf out/target/common/obj/JAVA_LIBRARIES/libpixelperfect-protos_intermediates/"
 [[ -n "$make_mockito" ]] && make mockito-target
 [[ -n "$build" ]] && mmm packages/experimental/PixelPerfect
 [[ -n "$uninstall" ]] && bash -xc "adb uninstall com.google.android.apps.pixelperfect"
 [[ -n "$uninstall_tests" ]] && bash -xc "adb uninstall com.google.android.apps.pixelperfect.tests"
-[[ -n "$install" ]] && bash -xc "adb install -r out/target/product/mako/system/app/PixelPerfect.apk"
+[[ -n "$install" ]] && bash -xc "adb install -r out/target/product/$TARGET_PRODUCT/system/app/PixelPerfect.apk"
 [[ -n "$runtests" ]] && runtest --path packages/experimental/PixelPerfect
 
