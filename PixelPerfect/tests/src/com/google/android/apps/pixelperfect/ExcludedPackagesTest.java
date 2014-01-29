@@ -1,20 +1,25 @@
 package com.google.android.apps.pixelperfect;
 
-import android.test.ActivityInstrumentationTestCase2;
+import android.content.Context;
+import android.test.AndroidTestCase;
+import android.test.MoreAsserts;
+import android.test.suitebuilder.annotation.SmallTest;
 
-import junit.framework.TestCase;
+import com.google.common.annotations.VisibleForTesting;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.HashSet;
 import java.util.Set;
-import android.test.suitebuilder.annotation.SmallTest;
 
 /**
  * Tests for {@link ExcludedPackages}.
  */
 @SmallTest
-public class ExcludedPackagesTest extends TestCase {
+public class ExcludedPackagesTest extends AndroidTestCase {
 
     private static final String GMAIL = "com.google.gmail";
+    private static final String MAPS = "com.google.maps";
     private static final String NOW = "com.google.now";
     private static final String YOUTUBE = "com.google.youtube";
 
@@ -24,12 +29,20 @@ public class ExcludedPackagesTest extends TestCase {
         HARDCODED_PACKAGES.add(NOW);
     }
 
+    private static final String FILENAME = "excluded_packages_tests.csv";
+
     private ExcludedPackages mExcludedPackages;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        mExcludedPackages = new ExcludedPackages(HARDCODED_PACKAGES);
+        cleanUpStorageFile();
+        mExcludedPackages = getNewInstance();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        cleanUpStorageFile();
     }
 
     public void testExclusion() {
@@ -39,7 +52,7 @@ public class ExcludedPackagesTest extends TestCase {
         assertNotExcluded("com.ggggggle.now");
         assertNotExcluded(YOUTUBE);
 
-        mExcludedPackages.addCustom(YOUTUBE);
+        assertTrue(mExcludedPackages.addCustom(YOUTUBE));
         assertExcluded(YOUTUBE);
 
         assertTrue(mExcludedPackages.removeCustom(YOUTUBE));
@@ -48,11 +61,33 @@ public class ExcludedPackagesTest extends TestCase {
         assertFalse(mExcludedPackages.removeCustom(GMAIL));
     }
 
+    public void testReadFile() throws Exception {
+        FileOutputStream outputStream;
+        String output = MAPS + "," + YOUTUBE;
+        outputStream = mContext.openFileOutput(FILENAME, Context.MODE_PRIVATE);
+        outputStream.write(output.getBytes());
+        outputStream.close();
+
+        mExcludedPackages = getNewInstance();
+        MoreAsserts.assertContentsInAnyOrder(mExcludedPackages.getCustomExcludedPackages(),
+                MAPS, YOUTUBE);
+    }
+
     private void assertExcluded(String packageName) {
         assertTrue(mExcludedPackages.isExcluded(packageName));
     }
 
     private void assertNotExcluded(String packageName) {
         assertTrue(!mExcludedPackages.isExcluded(packageName));
+    }
+
+    private void cleanUpStorageFile() throws Exception {
+        File dir = mContext.getFilesDir();
+        File file = new File(dir, FILENAME);
+        file.delete();
+    }
+
+    private ExcludedPackages getNewInstance() {
+        return new ExcludedPackages(HARDCODED_PACKAGES, getContext(), FILENAME);
     }
 }

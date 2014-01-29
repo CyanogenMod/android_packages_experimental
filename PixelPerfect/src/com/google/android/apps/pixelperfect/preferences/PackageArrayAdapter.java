@@ -1,11 +1,11 @@
 package com.google.android.apps.pixelperfect.preferences;
 
 import com.google.android.apps.pixelperfect.R;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -20,12 +20,14 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * {@link ArrayAdapter} for displaying and selecting packages. It is used in two contexts:
  * <ul>
  *   <li> The autocomplete drop-down used for selecting a package to exclude. In that case, package
  *   icon, package name and application name are shown.
- *   <li> The list of packages excluded. In that case, the same information as above is shown, plus
+ *   <li> The custom exclusion list. In that case, the same information as above is shown, plus
  *   a button to remove the package from the list of excluded ones.
  * </ul>
  */
@@ -47,9 +49,27 @@ public class PackageArrayAdapter extends ArrayAdapter<PackageItem> implements Fi
     /** Filter that's used for the autocomplete drop-down. */
     private final PackageFilter mFilter;
 
-    public PackageArrayAdapter(Context context, int textViewResourceId, List<PackageItem> items,
-            boolean forDropDown) {
-        super(context, textViewResourceId, items);
+    /** Callback used for removing a package name from the list of excluded packages. */
+    private final ReIncludePackageCallback mReIncludePackageCallback;
+
+    /**
+     * Constructs a {@link PackageArrayAdapter}.
+     *
+     * @param context the {@link Context}
+     * @param resourceId the resource ID for a layout file containing a layout to use when
+     *     instantiating views
+     * @param items the {@link PackageItem}s
+     * @param forDropDown if true, this {@link ArrayAdapter} is for the package selection drop-down,
+     *     otherwise, it's for rendering the list of excluded packages
+     * @param reIncludePackageCallback this callback is called when the user wants to
+     *     remove a given package name from the list of excluded packages. It must be
+     *     non-{@code null} if and only if {@code forDropDown} is false
+     */
+    public PackageArrayAdapter(Context context, int resourceId, List<PackageItem> items,
+            boolean forDropDown, @Nullable ReIncludePackageCallback reIncludePackageCallback) {
+        super(context, resourceId, items);
+        // reIncludePackageCallback is null iff forDropDown is true
+        Preconditions.checkArgument(forDropDown != (reIncludePackageCallback != null));
         mAllItems = items;
         mForDropDown = forDropDown;
         // Note, the filter is only exercised for the drop-down.
@@ -57,6 +77,7 @@ public class PackageArrayAdapter extends ArrayAdapter<PackageItem> implements Fi
         // For the drop-down, start with nothing in the list of items. For the list case, start with
         // all the items (and that won't change since filtering never occurs).
         mItems = forDropDown ? null : mAllItems;
+        mReIncludePackageCallback = reIncludePackageCallback;
     }
 
     @Override
@@ -81,20 +102,8 @@ public class PackageArrayAdapter extends ArrayAdapter<PackageItem> implements Fi
         LayoutInflater inflater = LayoutInflater.from(getContext());
 
         final PackageItem item = getItem(position);
-
         if (row == null) {
             row = inflater.inflate(R.layout.package_item, parent, false);
-            // Don't show the trash button if in the drop-down.
-            ImageButton button = (ImageButton) row.findViewById(R.id.button);
-            button.setVisibility(mForDropDown ? View.GONE : View.VISIBLE);
-            if (!mForDropDown) {
-                button.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Log.v(TAG, "Remove package: " + item);
-                    }
-                });
-            }
         }
 
         TextView applicationNameView = (TextView) row.findViewById(R.id.applicationName);
@@ -106,6 +115,18 @@ public class PackageArrayAdapter extends ArrayAdapter<PackageItem> implements Fi
         if (item.getIcon() != null) {
             ImageView icon = (ImageView) row.findViewById(R.id.icon);
             icon.setImageDrawable(item.getIcon());
+        }
+
+        // Don't show the trash button if in the drop-down.
+        ImageButton button = (ImageButton) row.findViewById(R.id.button);
+        button.setVisibility(mForDropDown ? View.GONE : View.VISIBLE);
+        if (!mForDropDown) {
+            button.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mReIncludePackageCallback.onReIncludePackage(item.getPackageName());
+                }
+            });
         }
 
         return row;

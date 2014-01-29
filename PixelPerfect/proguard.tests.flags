@@ -6,8 +6,6 @@
   float getDegreesForRotation(int);
 }
 
-# TODO(stlafon): Remove those when we start using the ExcludedPackages methods.
 -keepclassmember class com.google.android.apps.pixelperfect.ExcludedPackages {
-  public void addCustom(java.lang.String);
-  public boolean removeCustom(java.lang.String);
+  static ExcludedPackages getInstanceForTests(android.content.Context, java.util.Set);
 }

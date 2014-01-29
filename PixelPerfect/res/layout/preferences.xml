@@ -45,7 +45,7 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:onClick="onExclude"
+                android:onClick="onExcludePackage"
                 android:text="@string/preferences_exclude" >
             </Button>
         </LinearLayout>

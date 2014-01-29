@@ -30,7 +30,8 @@ import javax.annotation.Nullable;
  *   <li> Publishes the surviving events.
  * </ul>
  *
- * <p>This class is state-less and thread safe.
+ * <p>This class is state-less and thread safe. It is used as a singleton, because it is
+ * instantiated only in one place, namely AccessibilityEventService, which itself is a singleton.
  */
 public class AccessibilityEventProcessor {
 
