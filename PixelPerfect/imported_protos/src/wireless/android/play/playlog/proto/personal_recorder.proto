@@ -52,6 +52,7 @@ message RecordedTypes {
 }
 
 // Represents an Android UI element, and optionally its children.
+// Next available id = 9
 message UIElement {
   // The type of the element. If the type is CUSTOM, the class_name will be set to
   // the full class name of the element's widget type. Otherwise the class name will
@@ -69,7 +70,11 @@ message UIElement {
   // The text content of this item, if any.
   optional string content = 5;
 
-  // The boundary of this element, relative to its parent. See 
+  // Whether the content of the UIElement are intentionally elided.
+  // This happens for sensitive fields, such as passwords.
+  optional bool content_elided = 8 [default = false];
+
+  // The boundary of this element, relative to its parent. See
   // http://developer.android.com/reference/android/view/accessibility/
   // AccessibilityNodeInfo.html#getBoundsInParent(android.graphics.Rect)
   optional RecordedRect rect = 6;

@@ -234,6 +234,22 @@ public class AccessibilityEventProcessor {
     }
 
     /**
+     * Returns true if the content of the {@link AccessibilityNodeInfo} should
+     * be elided. This is desirable for sensitive UIElements, such as passwords.
+     *
+     * Note: this function is mostly heuristics; there is no guarantee that this
+     * removes all sensitive information.
+     *
+     * @param node the input {@link AccessibilityNodeInfo}
+     * @return true if content should be elided.
+     */
+    @VisibleForTesting
+    boolean shouldElideContent(AccessibilityNodeInfo node) {
+        // for now, only thing we check for is whether the node is a password node.
+        return node.isPassword();
+    }
+
+    /**
      * Creates a {@link UIElement} message from an {@link AccessibilityNodeInfo}. Creates child
      * nodes if {@code andChildren} is true. Note that many of the fields in
      * {@link AccessibilityNodeInfo} can be null, so check before we set them.
@@ -257,9 +273,17 @@ public class AccessibilityEventProcessor {
         if (node.getContentDescription() != null) {
             elementBuilder.setDescription(node.getContentDescription().toString());
         }
-        if (node.getText() != null) {
+
+        final boolean elideContent = shouldElideContent(node);
+
+        if (elideContent) {
+            elementBuilder.setContentElided(true);
+        }
+
+        if (node.getText() != null && !elideContent) {
             elementBuilder.setContent(node.getText().toString());
         }
+
         Rect rect = new Rect();
         node.getBoundsInParent(rect);
         RecordedRect recordedRect = RecordedRect.newBuilder()
@@ -290,7 +314,12 @@ public class AccessibilityEventProcessor {
         String className = (node.getClassType() == WidgetType.CUSTOM
                 ? node.getClassName() : "" + node.getClassType());
         Log.v(TAG, indent + className + " (" + node.getResourceName() + ") "
-                + node.getDescription() + " = " + node.getContent());
+                + node.getDescription()
+                // Do not print if content is null
+                + (node.getContent() == null ? "" : " = " + node.getContent())
+                // If content was elided print that it was elided so that
+                // the reader is not confused.
+                + (node.getContentElided() ? "<Content Elided>" : ""));
         for (UIElement child : node.getChildList()) {
             printUIElement(indent + "  ", child);
         }
