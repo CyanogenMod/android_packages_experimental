@@ -42,9 +42,11 @@ fi
 # Convert TARGET_PRODUCT to TARGET_DEVICE. If a product isn't listed below,
 # you can add the associated device for it from this list of devices:
 # https://sites.google.com/a/google.com/android/development/codebook
-# NOTE: for hammerhead, device == target.
-device=$TARGET_PRODUCT
-if [[ $product =~ occam ]]; then
+product=$TARGET_PRODUCT
+
+if [[ $product == hammerhead ]]; then
+  device=hammerhead
+elif [[ $product == occam ]]; then
   device=mako
 elif [[ $product == nakasi ]]; then
   device=grouper
@@ -56,6 +58,9 @@ elif [[ $product == razorg ]]; then
   device=deb
 elif [[ $product == mantaray ]]; then
   device=manta
+else
+  echo "Unknown product:"$product
+  exit 1;
 fi
 
 build=
