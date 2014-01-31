@@ -36,17 +36,17 @@ public class AccessibilityEventService extends AccessibilityService
     /** Type used to identify a Google corp account. */
     private static final String CORP_ACCOUNT_TYPE = "com.google";
 
-    /** The unique id for the sitcky notification. */
+    /** The unique id for the sticky notification. */
     private static final int NOTIFICATION_ID = 0;
 
     /**
      * If true, then we don't record anything (screenshots, accessibility events...). This allows
      * users to go enter the incognito mode.
      */
-    private static boolean mIsPaused;
+    private static boolean sIsPaused;
 
     /** A {@link Toast} shown when the service is paused or resumed. */
-    private static Toast mToast;
+    private static Toast sToast;
 
     /**
      * The event processor. If the device doesn't have a Google corp account,
@@ -54,6 +54,9 @@ public class AccessibilityEventService extends AccessibilityService
      * will occur.
      */
     private AccessibilityEventProcessor mProcessor;
+
+    /** The excluded packages. */
+    private ExcludedPackages mExcludedPackages;
 
     /** Used to create the sticky notification. */
     private NotificationManager mNotificationManager;
@@ -70,8 +73,9 @@ public class AccessibilityEventService extends AccessibilityService
             // called when the service is enabled in the settings, so it should
             // be safe from concurrency issues.
             try {
-                mProcessor = new AccessibilityEventProcessor(
-                        this, accountName, new ExcludedPackages(), this);
+                mExcludedPackages = ExcludedPackages.getInstance(this);
+                mProcessor = new AccessibilityEventProcessor(this, accountName, mExcludedPackages,
+                    this);
             } catch (Exception e) {
                 int msgId = ((e instanceof IllegalStateException)
                         && e.getMessage().contains("com.google.android.gms.version"))
@@ -101,6 +105,7 @@ public class AccessibilityEventService extends AccessibilityService
             mNotificationManager.cancel(NOTIFICATION_ID);
         }
 
+        // Inform the user that PixelPerfect is no longer running.
         showToast(R.string.pixelperfect_not_running);
     }
 
@@ -147,7 +152,7 @@ public class AccessibilityEventService extends AccessibilityService
     /**
      * Atomically:
      * <ul>
-     *   <li> sets the value of {@link #mIsPaused},
+     *   <li> sets the value of {@link #sIsPaused},
      *   <li> updates the sticky notification,
      *   <li> shows a toast informing the user of the new state.
      * </ul>
@@ -160,16 +165,16 @@ public class AccessibilityEventService extends AccessibilityService
      */
     @VisibleForTesting
     synchronized void setIsPaused(boolean isPaused){
-        mIsPaused = isPaused;
-        mNotificationManager.notify(NOTIFICATION_ID, createNotification(mIsPaused));
+        sIsPaused = isPaused;
+        mNotificationManager.notify(NOTIFICATION_ID, createNotification(sIsPaused));
 
-        int msgId = mIsPaused ? R.string.user_in_incognito : R.string.user_not_incognito;
+        int msgId = sIsPaused ? R.string.user_in_incognito : R.string.user_not_incognito;
         showToast(msgId);
     }
 
     @VisibleForTesting
     synchronized boolean getIsPaused() {
-        return mIsPaused;
+        return sIsPaused;
     }
 
     /**
@@ -232,12 +237,12 @@ public class AccessibilityEventService extends AccessibilityService
 
     /** Shows a {@link Toast}. */
     private void showToast(int msgId) {
-        if (mToast == null) {
-            mToast = Toast.makeText(this, msgId, Toast.LENGTH_SHORT);
+        if (sToast == null) {
+            sToast = Toast.makeText(this, msgId, Toast.LENGTH_SHORT);
         } else {
-            mToast.setText(msgId);
+            sToast.setText(msgId);
         }
-        mToast.show();
+        sToast.show();
     }
 
     @Override

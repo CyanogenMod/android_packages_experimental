@@ -1,5 +1,6 @@
 package com.google.android.apps.pixelperfect.preferences;
 
+import com.google.android.apps.pixelperfect.ExcludedPackages;
 import com.google.android.apps.pixelperfect.R;
 import com.google.common.collect.Lists;
 
@@ -20,11 +21,11 @@ import java.util.Map;
 /**
  * Preferences class. Allows to pause/resume, and also blacklist certain apps.
  *
- * <p>Users can exclude packages by adding them to the list of excluded packages.
+ * <p>Users can exclude packages by adding them to the set of excluded packages.
+ *
+ * <p>NOTE(stlafon): This class is the only one that mutates the set of excluded packages.
  */
-// TODO(stlafon): Connect this class with the AccessibilityEventService class. In particular, we
-// need this class to notify the service when packages get excluded or re-included.
-public class PreferencesActivity extends Activity {
+public class PreferencesActivity extends Activity implements ReIncludePackageCallback {
 
     @SuppressWarnings("unused")
     private static final String TAG = "PixelPerfect.PreferencesActivity";
@@ -34,41 +35,68 @@ public class PreferencesActivity extends Activity {
     /** Maps a package name to the corresponding {@link PackageItem}. */
     private Map<String, PackageItem> mPackageMap;
 
+    /**
+     * Instance of {@link ExcludedPackages}. It is the only instance of that class, in the entire
+     * application, that mutates the file containing the list of excluded packages.
+     */
+    private ExcludedPackages mExcludedPackages;
+
+    private PackageArrayAdapter mDropDownAdapter;
+    private PackageArrayAdapter mExcludedListAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.preferences);
 
         // Get the list of all installed packages.
+        mExcludedPackages = ExcludedPackages.getInstance(this);
         mPackageMap = getInstalledApplications();
+
+        // Take that list, and remove the packages that have already been excluded.
         List<PackageItem> items = Lists.newArrayListWithCapacity(mPackageMap.size());
         items.addAll(mPackageMap.values());
+        items.removeAll(getExcludedPackages());
 
         // Populate the autocomplete adapter with that list.
-        PackageArrayAdapter dropDownAdapter = new PackageArrayAdapter(this,
-                android.R.layout.simple_dropdown_item_1line, items, true);
+        mDropDownAdapter = new PackageArrayAdapter(this,
+                android.R.layout.simple_dropdown_item_1line, items, true, null);
         mPackageExcludeTextView = (AutoCompleteTextView) findViewById(R.id.packageSearch);
-        mPackageExcludeTextView.setAdapter(dropDownAdapter);
+        mPackageExcludeTextView.setAdapter(mDropDownAdapter);
 
         // Set up the list of excluded packages.
         ListView excludedList = (ListView) findViewById(R.id.excludedList);
-        PackageArrayAdapter excludedListAdapter = new PackageArrayAdapter(this,
-                android.R.layout.simple_list_item_1, getExcludedPackages(), false);
-        excludedList.setAdapter(excludedListAdapter);
+        mExcludedListAdapter = new PackageArrayAdapter(this,
+                android.R.layout.simple_list_item_1, getExcludedPackages(), false, this);
+        excludedList.setAdapter(mExcludedListAdapter);
     }
 
     /**
-     * Called when the "Exclude" button is touched.
+     * Called when the "Exclude" button is clicked. Adds the corresponding package name to the set
+     * of excluded packages.
      */
-    public void onExclude(@SuppressWarnings("unused") View view) {
+    public void onExcludePackage(@SuppressWarnings("unused") View view) {
         String value = PackageItem.getNormalizedString(
                 mPackageExcludeTextView.getText().toString());
-        // TODO(stlafon): Update the list of excluded packages.
         if (mPackageMap.containsKey(value)) {
             PackageItem item = mPackageMap.get(value);
             Log.v(TAG, "Excluding " + item);
-        } else {
-            Log.v(TAG, "No match");
+            // If the package was successfully added to the exclusion list, reflect it in the UI.
+            if (mExcludedPackages.addCustom(item.getPackageName())) {
+                mExcludedListAdapter.add(item);
+                mDropDownAdapter.remove(item);
+                mPackageExcludeTextView.setText("");
+            }
+        }
+    }
+
+    @Override
+    public void onReIncludePackage(String packageName) {
+        // If the package was successfully removed from the exclusion list, reflect it in the UI.
+        if (mExcludedPackages.removeCustom(packageName)) {
+            PackageItem item = getPackageItem(packageName);
+            mExcludedListAdapter.remove(item);
+            mDropDownAdapter.add(item);
         }
     }
 
@@ -96,9 +124,27 @@ public class PreferencesActivity extends Activity {
      * Creates and returns the list of excluded packages.
      */
     private List<PackageItem> getExcludedPackages() {
-        // TODO(stlafon): I'm currently returning all installed packages to populate the list with
-        // something. Stop doing that. Instead, maintain the list of excluded packages from
-        // an ExcludedPackages object.
-        return Lists.newArrayList(mPackageMap.values());
+        List<PackageItem> excluded = Lists.newArrayList();
+        for (String packageName : mExcludedPackages.getCustomExcludedPackages()) {
+            excluded.add(getPackageItem(packageName));
+        }
+        return excluded;
+    }
+
+    /**
+     * Looks up a {@link PackageItem} for a given package name in the list of installed packages,
+     * or returns a new one if it can't be found on this device.
+     */
+    private PackageItem getPackageItem(String packageName) {
+        if (mPackageMap.containsKey(packageName)) {
+            return mPackageMap.get(packageName);
+        } else {
+            // No such package in the list of packages installed on this device. This could happen
+            // if the package was un-installed, since we last created the list of installed
+            // packages. Or, in the future, if we save the excluded packages in the cloud, this
+            // could happen because the package was installed on a different device.
+            // In that case, create a new {@code PackageItem}.
+            return new PackageItem(packageName, null, null);
+        }
     }
 }
