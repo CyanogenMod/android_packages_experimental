@@ -15,6 +15,12 @@ import android.widget.Toast;
 import android.util.Log;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+
+import java.util.Locale;
+import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * Listens to {@link AccessibilityEvent}s triggered when there's a state
@@ -32,9 +38,6 @@ public class AccessibilityEventService extends AccessibilityService
     /** Action for resuming the recording. */
     @VisibleForTesting
     static final String ACTION_RESUME = "com.google.android.apps.pixelperfect.RESUME";
-
-    /** Type used to identify a Google corp account. */
-    private static final String CORP_ACCOUNT_TYPE = "com.google";
 
     /** The unique id for the sticky notification. */
     private static final int NOTIFICATION_ID = 0;
@@ -61,13 +64,63 @@ public class AccessibilityEventService extends AccessibilityService
     /** Used to create the sticky notification. */
     private NotificationManager mNotificationManager;
 
+    /**
+     * Whitelist of usernames allowed to use the app. Should be kept sorted alphabetically.
+     * This list is a snapshot of users in the pixel-perfect@google.com group.
+     * TODO(dprothro): enforce this constraint using gservices and a google group.
+     */
+    private static final Set<String> USERNAME_WHITELIST = Sets.newHashSet(
+            "aayushkumar@google.com",
+            "ababu@google.com",
+            "abednego@google.com",
+            "adzic@google.com",
+            "agoyal@google.com",
+            "alasdair@google.com",
+            "alpha@google.com",
+            "andys@google.com",
+            "aoun@google.com",
+            "aparnacd@google.com",
+            "bhorling@google.com",
+            "chsnow@google.com",
+            "davidmonsees@google.com",
+            "dbailey@google.com",
+            "divye@google.com",
+            "djmarcin@google.com",
+            "dmauro@google.com",
+            "dprothro@google.com",
+            "dramage@google.com",
+            "ertoz@google.com",
+            "etaropa@google.com",
+            "girirao@google.com",
+            "levesque@google.com",
+            "lynnc@google.com",
+            "maureen@google.com",
+            "meliss@google.com",
+            "mukarram@google.com",
+            "nowreminders9@gmail.com",  // test account for stlafon
+            "panda@google.com",
+            "purui@google.com",
+            "rajan@google.com",
+            "ram@google.com",
+            "riteshg@google.com",
+            "sidds@google.com",
+            "smyang@google.com",
+            "stlafon@google.com",
+            "venkataraman@google.com",
+            "wei@google.com",
+            "wenjieli@google.com",
+            "wisam@google.com",
+            "xban@google.com",
+            "yantao@google.com",
+            "yezhao@google.com");
+
     @Override
     public void onCreate() {
         Log.v(TAG, "onCreate");
 
         // The publishing of accessibility events in Clearcut is only enabled
-        // if the device has a Google corp account.
-        String accountName = getCorpAccountName();
+        // if the device has a whitelisted account.
+        String accountName = getAccountName();
         if (accountName != null) {
             // No need to synchronize this as the #onCreate method will only be
             // called when the service is enabled in the settings, so it should
@@ -89,6 +142,8 @@ public class AccessibilityEventService extends AccessibilityService
             mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             setIsPaused(false);
             showToast(R.string.pixelperfect_running);
+        } else {
+            showToast(R.string.unauthorized);
         }
     }
 
@@ -178,21 +233,21 @@ public class AccessibilityEventService extends AccessibilityService
     }
 
     /**
-     * If a Google Corp account is linked to this device, returns the account name. Otherwise,
+     * If a whitelisted account is linked to this device, returns the account name. Otherwise,
      * returns {@code null}.
      */
-    private String getCorpAccountName() {
+    @Nullable private String getAccountName() {
         AccountManager manager = AccountManager.get(this);
-        return getCorpAccountNameImpl(manager.getAccounts());
+        return getAccountNameImpl(manager.getAccounts());
     }
 
-    /** Same as {@link #getCorpAccountName()}, but acts on an array of {@link Account}s. */
+    /** Same as {@link #getAccountName()}, but acts on an array of {@link Account}s. */
     @VisibleForTesting
-    String getCorpAccountNameImpl(Account[] accounts) {
+    @Nullable String getAccountNameImpl(Account[] accounts) {
         String accountName = null;
         for (Account account : accounts) {
-            if (CORP_ACCOUNT_TYPE.equals(account.type)) {
-                accountName = account.name;
+            if (USERNAME_WHITELIST.contains(account.name.toLowerCase(Locale.ENGLISH))) {
+                return account.name;
             }
         }
         return accountName;

@@ -12,7 +12,7 @@ import android.test.ServiceTestCase;
  */
 public class AccessibilityEventServiceTest extends ServiceTestCase<AccessibilityEventService> {
 
-    private static final String ACCOUNT_NAME = "John Doe";
+    private static final String ACCOUNT_NAME = "stlafon@google.com";
 
     public AccessibilityEventServiceTest() {
         super(AccessibilityEventService.class);
@@ -53,13 +53,12 @@ public class AccessibilityEventServiceTest extends ServiceTestCase<Accessibility
 
     public void testGetCorpAccountNameImpl() {
         Account googleCorp = new Account(ACCOUNT_NAME, "com.google");
-        Account gmail = new Account("Alexander Hamilton", "com.gmail");
-        Account someOther = new Account("Bob Dylan", "com.mystuff.doesnt.exist");
+        Account gmail = new Account("foo@gmail.com", "com.gmail");
 
-        Account[] accountsNoCorp = { gmail, someOther };
-        assertNull(getService().getCorpAccountNameImpl(accountsNoCorp));
+        Account[] accountsNoCorp = { gmail };
+        assertNull(getService().getAccountNameImpl(accountsNoCorp));
 
-        Account[] accountsHasCorp = { googleCorp, gmail, someOther };
-        assertEquals(ACCOUNT_NAME, getService().getCorpAccountNameImpl(accountsHasCorp));
+        Account[] accountsHasCorp = { googleCorp, gmail };
+        assertEquals(ACCOUNT_NAME, getService().getAccountNameImpl(accountsHasCorp));
     }
 }

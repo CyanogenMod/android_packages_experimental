@@ -22,6 +22,7 @@
         Please install the correct version of Google Play Services
     </string>
     <string name="initialization_error">Failed to start PixelPerfect</string>
+    <string name="unauthorized">You are not authorized to use PixelPerfect</string>
 
 
 </resources>
