@@ -24,5 +24,7 @@
     <string name="initialization_error">Failed to start PixelPerfect</string>
     <string name="unauthorized">You are not authorized to use PixelPerfect</string>
 
-
+    <!-- TODO(mukarram) Revisit and remove strings that are not needed. -->
+    <string name="platform_app_name">PixelPerfectPlatform</string>
+    <string name="platform_notification_title">PixelPerfectPlatform</string>
 </resources>
