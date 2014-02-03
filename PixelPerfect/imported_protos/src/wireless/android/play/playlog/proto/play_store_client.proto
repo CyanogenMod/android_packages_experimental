@@ -9,13 +9,12 @@
 
 syntax = "proto2";
 
+option optimize_for = LITE_RUNTIME;
 
 package wireless_android_play_playlog;
 
 option java_package = "com.google.wireless.android.play.playlog.proto";
 option java_outer_classname = "PlayStore";
-
-option optimize_for = LITE_RUNTIME;
 
 // Client-generated information that accompanies a PlayStoreUiElement.
 message PlayStoreUiElementInfo {
@@ -34,7 +33,7 @@ message PlayStoreUiElementInfo {
   // Serialized finsky.Docid(e.g. "["MUSIC",2,2]"), for web front end only,
   // that is associated with the node such as Page, DocList, or Document.
   // This field is deprecated. Instead set the docid in server_logs_cookie.
-  optional string serial_docid = 2 [ deprecated = true ];
+  optional string serial_docid = 2;
 
   // Host name of server used for a WebViewChallenge.  Never the full URL.
   optional string host = 3;
@@ -239,6 +238,8 @@ message PlayStoreUiElement {
     CIRCLES_BUTTON = 280;
     // A button that leads to a person's G+ profile in the G+ app
     VIEW_GPLUS_PROFILE_BUTTON = 281;
+    // A slightly-hidden "self update" button
+    SELF_UPDATE_BUTTON = 282;
 
     // Dialogs and overlays.
     PASSWORD_PROMPT_DIALOG = 300;
@@ -654,6 +655,15 @@ message PlayStoreBackgroundActionEvent {
     // https://sites.google.com/a/google.com/universal-store/documentation
     //     /android-client/download-error-codes
     RESTORE_FETCH_APP_LIST = 118;
+    // Report the result of a self-update check
+    // app_data will contain the old (currently installed) version, and the new
+    // version if the server provided one. exception_type will be set if there
+    // was an error during the RPC.
+    SELF_UPDATE_CHECK = 119;
+    // Report success/failure of this endpoint call.  We log it because it is
+    // in the self-update path, so failures here are 'interesting'.  If there
+    // is an error during the RPC, exception_type will be set.
+    DEVICE_CONFIGURATION_UPLOAD = 120;
 
     // Tickles
     TICKLE_PURCHASE_DECLINED = 200;
@@ -1047,7 +1057,7 @@ message NlpRepairStatus {
     // The NLP package is disabled
     PACKAGE_DISABLED = 9;
   }
-  optional RepairStatus repair_status = 1 [ default = UNKNOWN ];
+  optional RepairStatus repair_status = 1 [default = UNKNOWN];
 
   // The package flags of the currently-installed NLP (if found)
   optional int32 flags = 2;

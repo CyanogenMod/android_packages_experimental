@@ -1,7 +1,3 @@
-// The proto buffer has been modified by a script
-// by replacing extension with optional fields
-
-
 // Copyright 2007 Google Inc.  All rights reserved.
 // Author: kenton@google.com (Kenton Varda)
 //
@@ -28,7 +24,7 @@
 //   MessageSet mset;
 //   Foo* foo = mset.get_mutable<Foo>();
 // becomes this proto2 code:
-//   google::protobuf::bridge::MessageSet mset;
+//   proto2::bridge::MessageSet mset;
 //   Foo* foo = mset.MutableExtension(Foo::message_set_extension);
 //
 // Of course, new code that doesn't have backwards-compatibility requirements
@@ -36,18 +32,14 @@
 
 syntax = "proto2";
 
-package proto2.bridge;
-
-// The script found java_outer_classname and it did not add one
-
-option java_outer_classname = "MessageSetProtos";
-
 option optimize_for = LITE_RUNTIME;
 
+package proto2.bridge;
+
+option java_outer_classname = "MessageSetProtos";
+option java_multiple_files = true;
 
 message MessageSet {
   option message_set_wire_format = true;
   extensions 4 to max;
 }
-
-
