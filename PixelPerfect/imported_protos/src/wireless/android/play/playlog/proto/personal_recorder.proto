@@ -159,6 +159,11 @@ message RecordedUpdate {
   }
   optional Type type = 1;
 
+  // The name of the package that triggered this event. Taken from the
+  // getPackageName() method in android.view.accessibility.AccessibilityEvent.
+  // E.g. "com.android.launcher" or "com.google.android.youtube".
+  optional string package_name = 4;
+
   // The UIElement that this update applies to. If the type is
   // TYPE_WINDOW_CONTENT_CHANGED, then the element represents the root window,
   // and its children will be recursively populated. Otherwise it represents the

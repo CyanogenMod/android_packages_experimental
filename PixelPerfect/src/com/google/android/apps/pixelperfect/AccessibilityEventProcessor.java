@@ -158,11 +158,16 @@ public class AccessibilityEventProcessor {
 
         Log.v(TAG, "RecordedUpdate with " + event.getEventType() + " --> " + eventType);
 
-        return RecordedUpdate.newBuilder()
+        RecordedUpdate.Builder updateBuilder = RecordedUpdate.newBuilder()
                 .setType(eventType)
                 .setElement(element)
-                .setVersion(VERSION)
-                .build();
+                .setVersion(VERSION);
+
+        if (event.getPackageName() != null) {
+            updateBuilder.setPackageName(event.getPackageName().toString());
+        }
+
+        return updateBuilder.build();
     }
 
     /**
