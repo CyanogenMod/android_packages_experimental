@@ -1,10 +1,13 @@
-package com.google.android.apps.pixelperfect;
+package com.google.android.apps.pixelperfect.platform;
 
+import android.app.Service;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.hardware.display.DisplayManagerGlobal;
 import android.os.Environment;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
@@ -26,10 +29,16 @@ import java.io.OutputStream;
 /**
  * Takes screenshots of the device and saves them as JPG files.
  */
-public class ScreenshotGrabber {
+public class ScreenshotGrabber extends Service {
 
     private static final int JPEG_QUALITY = 90;
     private static final String TAG = "PixelPerfect.ScreenshotGrabber";
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     /**
      * Takes a screenshot of the screen.

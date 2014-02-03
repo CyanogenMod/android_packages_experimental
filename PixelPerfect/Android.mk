@@ -1,6 +1,3 @@
-
-#sdk_version := 19
-
 ########
 # Step 1 : Build all protobufs in our tree into a separate
 # static java library. Useful for IDEs etc. since the generated
@@ -18,9 +15,8 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libpixelperfect-protos
 # Use Google certificate instead of platform certificate since GmsCore
 # only allows usage from apps signed with the Google certificate.
-#LOCAL_CERTIFICATE := platform
 LOCAL_CERTIFICATE := vendor/unbundled_google/libraries/certs/app
-LOCAL_SDK_VERSION := $(sdk_version)
+LOCAL_SDK_VERSION := current
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 
@@ -34,7 +30,6 @@ LOCAL_MODULE_TAGS := optional
 
 # Use Google certificate instead of platform certificate since GmsCore
 # only allows usage from apps signed with the Google certificate.
-#LOCAL_CERTIFICATE := platform
 LOCAL_CERTIFICATE := vendor/unbundled_google/libraries/certs/app
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
@@ -56,11 +51,11 @@ LOCAL_MANIFEST_FILE := AndroidManifest.xml
 
 LOCAL_PROTOC_OPTIMIZE_TYPE := lite
 
-LOCAL_SDK_VERSION := $(sdk_version)
-
 # Include GMS Core's client library.
 # The exact version is controlled by res/values/version.xml
 include vendor/unbundled_google/packages/PrebuiltGmsCore/google-play-services-first-party.mk
+
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_PACKAGE)
 

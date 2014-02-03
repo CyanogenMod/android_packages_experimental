@@ -8,17 +8,15 @@ LOCAL_STATIC_JAVA_LIBRARIES := mockito-target
 
 LOCAL_JAVA_LIBRARIES := android.test.runner
 
-# Use Google certificate instead of platform certificate since GmsCore
-# only allows usage from apps signed with the Google certificate.
 # Note: the cert here and in ../Android.mk should match.
-LOCAL_CERTIFICATE := vendor/unbundled_google/libraries/certs/app
+LOCAL_CERTIFICATE := platform
 
 # Include all test java files.
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
-LOCAL_PACKAGE_NAME := PixelPerfectTests
+LOCAL_PACKAGE_NAME := PixelPerfectPlatformTests
 
-LOCAL_INSTRUMENTATION_FOR := PixelPerfect
+LOCAL_INSTRUMENTATION_FOR := PixelPerfectPlatform
 
 LOCAL_SDK_VERSION := current
 

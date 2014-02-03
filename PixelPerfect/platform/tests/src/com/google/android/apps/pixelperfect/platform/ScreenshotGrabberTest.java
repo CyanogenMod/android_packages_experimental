@@ -1,10 +1,11 @@
-package com.google.android.apps.pixelperfect;
+package com.google.android.apps.pixelperfect.platform;
 
 import android.test.suitebuilder.annotation.SmallTest;
 import android.view.Surface;
 
 import com.google.common.logging.RecordedEvent;
 import com.google.common.logging.RecordedEvent.Screenshot;
+import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
@@ -48,7 +49,7 @@ public class ScreenshotGrabberTest extends TestCase {
                 RecordedEvent.Bitmap.CompressionConfig.CompressFormat.JPEG,
                 quality);
 
-        assertEquals(bytes, screenshot.getBitmap().getBitmap());
+        assertEquals(ByteString.copyFrom(bytes), screenshot.getBitmap().getBitmap());
         assertEquals(height, screenshot.getBitmap().getHeight());
         assertEquals(width, screenshot.getBitmap().getWidth());
         assertEquals(rotation, screenshot.getRotation());

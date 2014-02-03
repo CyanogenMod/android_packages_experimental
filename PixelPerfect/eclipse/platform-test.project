@@ -1,0 +1,51 @@
+# -*- mode: python; -*-
+
+name = 'platform-test'
+
+def CreateProperlyNamedLibLink(name):
+  return Link(
+      'liblinks/%s.jar' % name,
+      src='../../../out/target/common/obj/JAVA_LIBRARIES/'
+          '%s_intermediates/javalib.jar' % name)
+
+def JavaLibrarySource(name, path):
+  return Link(
+      'libsrcs/%s-src' % name,
+      src='../../../%s' % path)
+
+files = [
+  Link('Android.mk', src='platform/tests/Android.mk'),
+  Link('AndroidManifest.xml', src='platform/tests/AndroidManifest.xml'),
+  Link('src', src='platform/tests/src'),
+  CreateProperlyNamedLibLink('junit4-target'),
+  CreateProperlyNamedLibLink('mockito-api'),
+  JavaLibrarySource('junit4-target/junit', 'external/junit/src'),
+  JavaLibrarySource('mockito', 'external/mockito/src'),
+  Create('default.properties', contents='target=android-19\n'),
+  Mkdir('gen'),
+  Link('res', src='platform/tests/res'),
+]
+
+classpath = [
+  Src('src'),
+  Src('gen'),
+  Lib('liblinks/junit4-target.jar', sourcepath='libsrcs/junit4-target'),
+  Lib('liblinks/mockito-api.jar', sourcepath='libsrcs/mockito-src'),
+  Project('platform'),
+  AndroidFramework(),
+  Output('bin'),
+]
+
+project = AndroidProject(
+  name=name,
+  builders=[
+    AndroidResourceManager(),
+    AndroidPreCompiler(),
+    JavaBuilder(),
+    AndroidApkBuilder(),
+  ]
+)
+
+formatting = 'eclipse/formatting.prefs'
+templates = 'eclipse/template.prefs'
+
