@@ -43,7 +43,8 @@ public class ScreenshotGrabberTest extends TestCase {
 
         ByteArrayOutputStream output = new ByteArrayOutputStream(bytes.length);
         output.write(bytes, 0, bytes.length);
-        Screenshot screenshot = ScreenshotGrabber.fillScreenshotProto(
+        ScreenshotGrabber grabber = new ScreenshotGrabber();
+        Screenshot screenshot = grabber.fillScreenshotProto(
                 output, height, width, rotation,
                 RecordedEvent.Bitmap.BitmapConfig.Config.ARGB_8888,
                 RecordedEvent.Bitmap.CompressionConfig.CompressFormat.JPEG,

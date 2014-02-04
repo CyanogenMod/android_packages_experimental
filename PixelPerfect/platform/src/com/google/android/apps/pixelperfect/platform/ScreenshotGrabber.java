@@ -1,23 +1,19 @@
 package com.google.android.apps.pixelperfect.platform;
 
-import android.app.Service;
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Point;
 import android.hardware.display.DisplayManagerGlobal;
 import android.os.Environment;
-import android.os.IBinder;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Display;
 import android.view.Surface;
 import android.view.SurfaceControl;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import com.google.protobuf.ByteString;
-import com.google.common.logging.RecordedEvent.Screenshot;
 import com.google.common.logging.RecordedEvent;
+import com.google.common.logging.RecordedEvent.Screenshot;
+import com.google.protobuf.ByteString;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -26,30 +22,32 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import javax.annotation.Nullable;
+
 /**
- * Takes screenshots of the device and saves them as JPG files.
+ * Takes screenshots of the device and saves them as JPG files or to protocol buffers.
+ *
+ * Usage:
+ *      ScreenshotGrabber grabber = new ScreenshotGrabber();
+ *      Pair<Bitmap, Integer> capture = grabber.takeScreenshot();
+ *      Screenshot screenshotProto = grabber.makeScreenshotProto(capture);
  */
-public class ScreenshotGrabber extends Service {
+public class ScreenshotGrabber {
 
     private static final int JPEG_QUALITY = 90;
-    private static final String TAG = "PixelPerfect.ScreenshotGrabber";
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    private static final String TAG = "PixelPerfectPlatform.ScreenshotGrabber";
 
     /**
-     * Takes a screenshot of the screen.
+     * Takes a screenshot of the screen and returns the bitmap and screen rotation.
      *
-     * @return the {@link Bitmap} containing the screenshot, or {@code null} if
-     *         one couldn't take the screenshot
+     * @return an instance of ScreenshotCapture that contains the bitmap and
+     *         rotation of screen at the time of capture. The function may
+     *         return null if taking screenshot was not successfully.
+     *         @throws IllegalStateException if for some reason rotation value
+     *         obtained is invalid.
      */
-    public Bitmap takeScreenshot() {
-
-        Log.e(TAG, "takeScreenshot()");
-
+    @Nullable public Pair<Bitmap, Integer> takeScreenshot() throws IllegalStateException {
+        Log.v(TAG, "takeScreenshot()");
         Display display = DisplayManagerGlobal.getInstance()
                 .getRealDisplay(Display.DEFAULT_DISPLAY);
 
@@ -74,53 +72,45 @@ public class ScreenshotGrabber extends Service {
                 screenshotHeight = displayWidth;
                 break;
             default:
-                throw new IllegalArgumentException("Invalid rotation: " + rotation);
+                throw new IllegalStateException("Invalid rotation: " + rotation);
         }
 
         // Take the screenshot
-        Bitmap screenShot = SurfaceControl.screenshot((int) screenshotWidth,
+        Bitmap bitmap = SurfaceControl.screenshot((int) screenshotWidth,
                 (int) screenshotHeight);
-        if (screenShot == null) {
+        if (bitmap == null) {
             return null;
         }
 
-        // Rotate the screenshot to the current orientation
-        if (rotation != Surface.ROTATION_0) {
-            Bitmap unrotatedScreenShot = Bitmap.createBitmap(displayWidth, displayHeight,
-                    Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(unrotatedScreenShot);
-            canvas.translate(unrotatedScreenShot.getWidth() / 2,
-                    unrotatedScreenShot.getHeight() / 2);
-            canvas.rotate(getDegreesForRotation(rotation));
-            canvas.translate(-screenshotWidth / 2, -screenshotHeight / 2);
-            canvas.drawBitmap(screenShot, 0, 0, null);
-            canvas.setBitmap(null);
-            screenShot = unrotatedScreenShot;
-        }
-
         // Optimization
-        screenShot.setHasAlpha(false);
-        return screenShot;
+        bitmap.setHasAlpha(false);
+        return new Pair<Bitmap, Integer>(bitmap, rotation);
     }
 
     /**
      * Makes a Screenshot proto from the provided {@link Bitmap} and
      * {@code rotation}. Also performs compression, and saves compression
      * parameters in the proto.
-     *
-     * @param bitmap the {@link Bitmap} that is to be copied to protocol buffer.
-     * @param rotation of the screen when bitmap captured the screenshot.
-     * @return the {@link Screenshot} proto which contains the bitmap.
+     * @param capture the {@link Pair<Bitmap, Integer>} instance that is
+     *            to be compressed and copied to protocol buffer.
+     * @return the {@link Screenshot} proto which contains the bitmap. The
+     *         function returns null if the provided capture param is null.
      */
-    static Screenshot makeScreenshotProto(Bitmap bitmap, int rotation) {
+    @Nullable public Screenshot makeScreenshotProto(
+            @Nullable Pair<Bitmap, Integer> capture) {
+        if (capture == null || capture.first == null) {
+            return null;
+        }
+
         // TODO(mukarram) Can we make following more efficient? Currently we
         // are writing to in in-memory output stream, then copying into the
         // proto. The copy can be eliminated if we could write directly to the
         // proto's byteString; not obvious how to do that.
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, output);
+        capture.first.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, output);
         return fillScreenshotProto(
-                output, bitmap.getHeight(), bitmap.getWidth(), rotation,
+                output, capture.first.getHeight(), capture.first.getWidth(),
+                capture.second,
                 RecordedEvent.Bitmap.BitmapConfig.Config.ARGB_8888,
                 // Following two are hard-wired for now. If we change our
                 // compression methods, we may want to add a map from
@@ -134,7 +124,6 @@ public class ScreenshotGrabber extends Service {
      * provided compressed output stream and additional param about the
      * screenshot. Note: we split the helper to help with testing. Mockito
      * cannot mock graphics.Bitmap (because it is final).
-     *
      * @param compressed the {@link ByteArrayOutputStream} that has the
      *            compressed image.
      * @param height of the image
@@ -151,8 +140,7 @@ public class ScreenshotGrabber extends Service {
      *            used.
      * @return the {@link Screenshot} proto which contains the bitmap.
      */
-    @VisibleForTesting
-    static Screenshot fillScreenshotProto(
+    public Screenshot fillScreenshotProto(
             ByteArrayOutputStream compressed,
             int height, int width, int rotation,
             RecordedEvent.Bitmap.BitmapConfig.Config bitmapConfig,
