@@ -25,7 +25,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_SDK_VERSION := current
 
-LOCAL_PACKAGE_NAME := Calculator
+LOCAL_PACKAGE_NAME := QuantumCalculator
 
 include $(BUILD_PACKAGE)
 ##################################################
