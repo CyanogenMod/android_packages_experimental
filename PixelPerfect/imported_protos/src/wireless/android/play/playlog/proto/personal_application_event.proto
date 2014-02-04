@@ -7,6 +7,8 @@
 
 syntax = "proto2";
 
+option optimize_for = LITE_RUNTIME;
+
 package wireless_android_play_playlog;
 
 import "net/proto2/bridge/proto/message_set.proto";
@@ -15,8 +17,6 @@ import "wireless/android/play/playlog/proto/personal_recorder.proto";
 
 option java_package = "com.google.wireless.android.play.playlog.proto";
 option java_outer_classname = "PersonalApplicationEventProto";
-
-option optimize_for = LITE_RUNTIME;
 
 message PersonalApplicationEvent {
   extend proto2.bridge.MessageSet {

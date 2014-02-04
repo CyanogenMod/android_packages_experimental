@@ -6,13 +6,12 @@
 
 syntax = "proto2";
 
+option optimize_for = LITE_RUNTIME;
 
 package wireless_android_play_playlog;
 
 option java_package = "com.google.wireless.android.play.playlog.proto";
 option java_outer_classname = "PlayGames";
-
-option optimize_for = LITE_RUNTIME;
 
 // DEPRECATED(11/07/2013): sent by old clients. Use GenericNotificationAction
 // Details about a user-visible notification sent from old clients
@@ -584,7 +583,13 @@ message PlayGamesInGameAction {
     // User viewed the request inbox UI
     REQUEST_INBOX = 12;
 
-    // Next index: 13
+    // User viewed the public invitation list UI
+    PUBLIC_INVITATION_LIST = 13;
+
+    // User viewed the public request list UI
+    PUBLIC_REQUEST_LIST = 14;
+
+    // Next index: 15
   }
 
   // The action type
@@ -670,6 +675,29 @@ message PlayGamesModifyCirclesAction {
   // Next index: 3
 }
 
+// Details about an Android sync action
+message PlayGamesAndroidSyncAction {
+
+  // The authority the sync was requested for.
+  optional string authority = 1;
+
+  // Which feed, if any, triggered this sync operation.
+  optional string feed = 2;
+
+  // The duration of the sync operation in milliseconds.
+  optional int64 duration_millis = 3;
+
+  // Whether or not this sync completed successfully.
+  optional bool success = 4;
+
+  // How many errors were encountered during this sync operations. Note that
+  // this may be 0 and still have the success flag set to false if the sync
+  // generated a non-recoverable error.
+  optional int32 num_errors = 5;
+
+  // Next index: 6
+}
+
 // Details about the request
 message PlayGamesRequestInfo {
 
@@ -726,5 +754,8 @@ message PlayGamesLogEvent {
   // Action logged when modifying the state of the user's circles
   optional PlayGamesModifyCirclesAction modify_circles = 8;
 
-  // Next index: 9
+  // Action logged when a device performs a sync
+  optional PlayGamesAndroidSyncAction sync = 9;
+
+  // Next index: 10
 }

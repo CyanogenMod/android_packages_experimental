@@ -8,12 +8,12 @@
 
 syntax = "proto2";
 
+option optimize_for = LITE_RUNTIME;
+
 package wireless_android_play_playlog;
 
 option java_package = "com.google.wireless.android.play.playlog.proto";
 option java_outer_classname = "ClientAnalytics";
-
-option optimize_for = LITE_RUNTIME;
 
 import "wireless/android/play/playlog/proto/play_games_client.proto";
 import "wireless/android/play/playlog/proto/play_store_client.proto";
@@ -40,7 +40,7 @@ message ActiveExperiments {
   repeated int32 gws_experiment = 3;
 }
 
-// Next tag: 11
+// Next tag: 13
 message LogEvent {
   // Epoch time in milliseconds.
   optional int64 event_time_ms = 1;
@@ -48,7 +48,34 @@ message LogEvent {
   // Type of event, could be “CLICK” or “PAGE_VIEW” or “DOWNLOAD_STATUS”.
   // There will be a common repository of cross-vertical events that should be
   // used, but any individual app would be free to define their own tags.
+  //
+  // DISCOURAGED: use event_code instead.
   optional string tag = 2;
+
+  // Type of event. Different kinds of events inside a client app should have
+  // different values of 'event_code'. Different client apps may have
+  // overlapping sets of 'event_code' values; these velues are only meant to
+  // make sense within the context of a single client app, as identified by
+  // the 'log_source' field of LogRequest.
+  //
+  // A typical way to use 'event_code' is to define the enum of possible values
+  // inside of the clientevents/ subdirectory (example: http://cl/58990806).
+  optional int32 event_code = 11;
+
+  // Identifies a group of events that belong to the same flow or session of
+  // user interaction, which is a client-specific concept.
+  //
+  // These IDs are used in the Clearcut/UMA pipeline for computing latencies
+  // between pairs of events, where it is necessary to ensure that both events
+  // belong to the same flow.
+  //
+  // For example, the Google Play team may want to give a unique ID to each
+  // purchase session, including all of the events starting from the initial
+  // search for an app to the eventual purchase and installation of the app.
+  // Another example would be the Search app wanting to tie together search
+  // query events and clicks on search results, especially if several instances
+  // of the app may be active at the same time.
+  optional int32 event_flow_id = 12;
 
   // Whether this event was initiated by the user at the time of the event or
   // shortly before (vs. a background event like upgrading a database after the
@@ -226,7 +253,7 @@ message ExperimentIdList {
 // First party app usage log event extension.
 // Used only when log_source = APP_USAGE_1P.
 //
-// Next tag: 18
+// Next tag: 19
 message AppUsage1pLogEvent {
   enum AppType {
     UNKNOWN = 0;
@@ -247,6 +274,7 @@ message AppUsage1pLogEvent {
     GOOGLE_MAPS = 15;
     GOOGLE_CAMERA = 16;
     YOUTUBE = 17;
+    ANDROID_TIMELY = 18;
   }
   optional AppType app_type = 1;
 
@@ -262,7 +290,7 @@ message AppUsage1pLogEvent {
 //
 // Next tag: 6
 message LogRequest {
-  // Next enum tag: 27
+  // Next enum tag: 28
   enum LogSource {
     UNKNOWN = -1;
 
@@ -293,6 +321,7 @@ message LogRequest {
     LB_C = 24; // Android contacts going from Now to Moonshine.
     ANDROID_AUTH = 25;  // for collecting GMS core android auth data
     ANDROID_CAMERA = 26; // Android camera usage statistics
+    CW = 27;  // Clockwork interaction logs
   }
 
   // "Now", in milliseconds, according to the same clock that was used to set
@@ -321,3 +350,4 @@ message LogResponse {
   // set of enabled experiments.
   optional ExperimentIdList experiments = 2;
 }
+
