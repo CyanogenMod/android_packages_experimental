@@ -7,7 +7,8 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_CERTIFICATE := platform
 
 # Include all test java files.
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
+LOCAL_SRC_FILES := $(call all-java-files-under, src) \
+        $(call all-Iaidl-files-under, src)
 
 LOCAL_PACKAGE_NAME := PixelPerfectPlatform
 

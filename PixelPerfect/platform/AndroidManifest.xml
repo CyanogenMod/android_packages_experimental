@@ -12,8 +12,8 @@
         android:icon="@drawable/ic_cat"
         android:label="@string/platform_app_name" >
         <service
-            android:name=".ScreenshotGrabber"
-            class=".ScreenshotGrabber"
+            android:name=".PixelPerfectPlatform"
+            class=".PixelPerfectPlatform"
             android:enabled="true"
             android:exported="false" >
         </service>
