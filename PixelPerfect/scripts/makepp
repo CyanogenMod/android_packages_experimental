@@ -99,6 +99,5 @@ set -e
 [[ -n "$install" ]] && bash -xc "
   adb install -r out/target/product/$device/system/app/PixelPerfect.apk;
   adb install -r out/target/product/$device/system/app/PixelPerfectPlatform.apk;"
-[[ -n "$runtests" ]] && runtest --path packages/experimental/PixelPerfect && \
-  adb shell am instrument -w 'com.google.android.apps.pixelperfect.platform.tests/android.test.InstrumentationTestRunner'
+[[ -n "$runtests" ]] && runtest --path packages/experimental/PixelPerfect
 
