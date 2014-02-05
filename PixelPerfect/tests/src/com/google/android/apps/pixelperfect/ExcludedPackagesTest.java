@@ -5,8 +5,6 @@ import android.test.AndroidTestCase;
 import android.test.MoreAsserts;
 import android.test.suitebuilder.annotation.SmallTest;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashSet;

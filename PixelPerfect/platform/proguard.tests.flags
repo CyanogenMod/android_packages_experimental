@@ -1,6 +1,0 @@
-# Proguard flags specifically needed for tests.
-
--keep class com.google.android.apps.pixelperfect.ScreenshotGrabber
--keepclassmember class com.google.android.apps.pixelperfect.ScreenshotGrabber {
-  float getDegreesForRotation(int);
-}

@@ -1,7 +1,5 @@
-// IPixelPerfectPlatform.aidl
-// TODO(mukarram) Put aidl files in a common library project that the two apks can share.
-package com.google.android.apps.pixelperfect.platform;
-import com.google.android.apps.pixelperfect.platform.ScreenshotParcel;
+package com.google.android.apps.pixelperfect.api;
+import com.google.android.apps.pixelperfect.api.ScreenshotParcel;
 
 /**
  * PixelPerfectPlatform service interface.  This service allows appropriately

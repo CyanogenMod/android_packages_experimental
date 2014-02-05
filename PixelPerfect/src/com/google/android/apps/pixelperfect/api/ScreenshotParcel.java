@@ -1,4 +1,4 @@
-package com.google.android.apps.pixelperfect.platform;
+package com.google.android.apps.pixelperfect.api;
 
 import android.os.Parcel;
 import android.os.Parcelable;

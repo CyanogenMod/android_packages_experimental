@@ -1,15 +1,12 @@
+package com.google.android.apps.pixelperfect.api;
 
-package com.google.android.apps.pixelperfect.platform;
-
-import android.test.suitebuilder.annotation.SmallTest;
-import android.view.Surface;
 import android.os.Bundle;
 import android.os.Parcel;
-import android.os.Parcelable;
+import android.test.suitebuilder.annotation.SmallTest;
 
+import com.google.android.apps.pixelperfect.platform.ScreenshotGrabber;
 import com.google.common.logging.RecordedEvent;
 import com.google.common.logging.RecordedEvent.Screenshot;
-import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 

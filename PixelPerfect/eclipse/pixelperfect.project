@@ -17,6 +17,7 @@ files = [
   Link('imported_protos'),
   Link('scripts'),
   Link('eclipse'),
+  Link('platform'),
   LinkFramework('framework-core', 'frameworks/base/core/java'),
   LinkFramework('framework-java', 'libcore/luni/src/main/java'),
   CreateProperlyNamedLibLink('libpixelperfect-protos'),

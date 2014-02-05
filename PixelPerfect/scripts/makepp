@@ -85,19 +85,20 @@ clean=
 set -e
 
 [[ -n "$clean" ]] && bash -xc "
-  rm -rf out/target/common/obj/APPS/PixelPerfect_intermediates/;
-  rm -rf out/target/common/obj/APPS/PixelPerfectTests_intermediates/;
-  rm -rf out/target/common/obj/APPS/PixelPerfectPlatform_intermediates/;
-  rm -rf out/target/common/obj/APPS/PixelPerfectPlatformTests_intermediates/;
-  rm -rf out/target/common/obj/JAVA_LIBRARIES/libpixelperfect-protos_intermediates/"
+  rm -rf out/target/common/obj/APPS/PixelPerfect*;
+  rm -rf out/target/common/obj/JAVA_LIBRARIES/*pixelperfect*
+  rm -rf out/target/product/*/data/app/PixelPerfect*"
 [[ -n "$make_mockito" ]] && make mockito-target
 [[ -n "$build" ]] && mmm packages/experimental/PixelPerfect
 [[ -n "$uninstall" ]] && bash -xc "
   adb uninstall com.google.android.apps.pixelperfect;
   adb uninstall com.google.android.apps.pixelperfect.platform;"
-[[ -n "$uninstall_tests" ]] && bash -xc "adb uninstall com.google.android.apps.pixelperfect.tests"
+[[ -n "$uninstall_tests" ]] && bash -xc "
+  adb uninstall com.google.android.apps.pixelperfect.tests;
+  adb uninstall com.google.android.apps.pixelperfect.platform.tests;"
 [[ -n "$install" ]] && bash -xc "
   adb install -r out/target/product/$device/system/app/PixelPerfect.apk;
   adb install -r out/target/product/$device/system/app/PixelPerfectPlatform.apk;"
-[[ -n "$runtests" ]] && runtest --path packages/experimental/PixelPerfect
+[[ -n "$runtests" ]] && runtest --path packages/experimental/PixelPerfect && \
+  adb shell am instrument -w 'com.google.android.apps.pixelperfect.platform.tests/android.test.InstrumentationTestRunner'
 

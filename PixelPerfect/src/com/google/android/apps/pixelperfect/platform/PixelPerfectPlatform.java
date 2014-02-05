@@ -8,6 +8,9 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.util.Pair;
 
+import com.google.android.apps.pixelperfect.api.IPixelPerfectPlatform;
+import com.google.android.apps.pixelperfect.api.ScreenshotParcel;
+
 /**
  * PixelPerfectPlatform service provides binding to IPixelPerfectPlatform.Stub.
  *
