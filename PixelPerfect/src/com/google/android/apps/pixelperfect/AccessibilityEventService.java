@@ -1,5 +1,6 @@
 package com.google.android.apps.pixelperfect;
 
+import com.google.android.apps.pixelperfect.util.RealClock;
 import com.google.android.apps.pixelperfect.preferences.PreferencesActivity;
 import com.google.android.gms.playlog.PlayLogger;
 
@@ -64,6 +65,9 @@ public class AccessibilityEventService extends AccessibilityService
     /** Used to create the sticky notification. */
     private NotificationManager mNotificationManager;
 
+    /** Client for PixelPerfectPlatform service.*/
+    private PlatformServiceClient mPlatformServiceClient;
+
     /**
      * Whitelist of usernames allowed to use the app. Should be kept sorted alphabetically.
      * This list is a snapshot of users in the pixel-perfect@google.com group.
@@ -121,13 +125,15 @@ public class AccessibilityEventService extends AccessibilityService
         // if the device has a whitelisted account.
         String accountName = getAccountName();
         if (accountName != null) {
+            mPlatformServiceClient = new PlatformServiceClient(this, new RealClock());
             // No need to synchronize this as the #onCreate method will only be
             // called when the service is enabled in the settings, so it should
             // be safe from concurrency issues.
             try {
                 mExcludedPackages = ExcludedPackages.getInstance(this);
-                mProcessor = new AccessibilityEventProcessor(this, accountName, mExcludedPackages,
-                    this);
+                mProcessor = new AccessibilityEventProcessor(
+                        this, accountName, mExcludedPackages, mPlatformServiceClient,
+                        this);
             } catch (Exception e) {
                 int msgId = ((e instanceof IllegalStateException)
                         && e.getMessage().contains("com.google.android.gms.version"))

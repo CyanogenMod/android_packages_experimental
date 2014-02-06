@@ -15,7 +15,10 @@
             android:name=".PixelPerfectPlatform"
             class=".PixelPerfectPlatform"
             android:enabled="true"
-            android:exported="false" >
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="com.google.android.apps.pixelperfect.api.IPixelPerfectPlatform" />
+            </intent-filter>
         </service>
     </application>
 </manifest>

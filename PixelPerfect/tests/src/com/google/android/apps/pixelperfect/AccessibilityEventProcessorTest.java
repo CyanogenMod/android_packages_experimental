@@ -60,7 +60,7 @@ public class AccessibilityEventProcessorTest extends AndroidTestCase {
         // see https://code.google.com/p/dexmaker/issues/detail?id=2
         System.setProperty("dexmaker.dexcache", getContext().getCacheDir().toString());
         MockitoAnnotations.initMocks(this);
-        mProcessor = new AccessibilityEventProcessor(mExcludedPackages, mLogger);
+        mProcessor = new AccessibilityEventProcessor(mExcludedPackages, null, mLogger);
     }
 
     public void testCreateUIElement() {
@@ -117,7 +117,8 @@ public class AccessibilityEventProcessorTest extends AndroidTestCase {
         when(mNode.getChild(2)).thenReturn(mSubNodeC);
 
         // Run the test.
-        UIElement element = mProcessor.createUIElement(mNode, true);
+        // TODO(mukarram) add test for Screenshots being set properly.
+        UIElement element = mProcessor.createUIElement(mNode, null, true);
 
         checkElement(element, WidgetType.CHECKED_TEXT_VIEW, VIEW_ID_RESOURCE_NAME_1, TEXT_1, false, RECT);
 
