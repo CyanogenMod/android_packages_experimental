@@ -60,7 +60,7 @@ public class CalculatorViewPager extends ViewPager {
     }
 
     private final PageTransformer mTransformer = new PageTransformer() {
-            @Override
+        @Override
         public void transformPage(View v, float position) {
             final int pageWidth = v.getWidth();
 

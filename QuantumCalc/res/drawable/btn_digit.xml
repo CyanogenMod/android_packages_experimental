@@ -14,9 +14,5 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<reveal xmlns:android="http://schemas.android.com/apk/res/android" >
-
-    <item android:drawable="@android:color/transparent"/>
-    <item android:drawable="@color/gray_50"/>
-
-</reveal>
+<touch-feedback xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/gray_50" />

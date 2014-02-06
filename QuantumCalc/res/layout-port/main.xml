@@ -18,35 +18,26 @@
  */
 -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
 
     <com.android.calculator3.CalculatorDisplay
         android:id="@+id/display"
+        style="@style/display_holder_style"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/panelswitch"
-        android:layout_alignParentTop="true"
-        maxDigits="@integer/max_digits"
-        android:background="@color/gray_80" >
+        maxDigits="@integer/max_digits" >
 
         <com.android.calculator3.CalculatorEditText style="@style/display_style" />
 
         <com.android.calculator3.CalculatorEditText style="@style/display_style" />
     </com.android.calculator3.CalculatorDisplay>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="16dp"
-        android:layout_alignBottom="@+id/display"
-        android:alpha="0.4"
-        android:background="@drawable/shadow_top" />
-
     <com.android.calculator3.CalculatorViewPager
         android:id="@+id/panelswitch"
         android:layout_width="match_parent"
-        android:layout_height="360dp"
-        android:layout_alignParentBottom="true" />
+        android:layout_height="360dp" />
 
-</RelativeLayout>
+</LinearLayout>
