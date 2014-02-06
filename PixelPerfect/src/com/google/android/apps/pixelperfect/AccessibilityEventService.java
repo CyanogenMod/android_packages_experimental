@@ -97,7 +97,6 @@ public class AccessibilityEventService extends AccessibilityService
             "maureen@google.com",
             "meliss@google.com",
             "mukarram@google.com",
-            "nowreminders9@gmail.com",  // test account for stlafon
             "panda@google.com",
             "purui@google.com",
             "rajan@google.com",
@@ -244,13 +243,12 @@ public class AccessibilityEventService extends AccessibilityService
     /** Same as {@link #getAccountName()}, but acts on an array of {@link Account}s. */
     @VisibleForTesting
     @Nullable String getAccountNameImpl(Account[] accounts) {
-        String accountName = null;
         for (Account account : accounts) {
             if (USERNAME_WHITELIST.contains(account.name.toLowerCase(Locale.ENGLISH))) {
                 return account.name;
             }
         }
-        return accountName;
+        return null;
     }
 
     /**
