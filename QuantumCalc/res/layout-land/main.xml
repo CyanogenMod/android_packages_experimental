@@ -30,8 +30,10 @@
 
         <com.android.calculator3.CalculatorDisplay
             android:id="@+id/display"
+            style="@style/display_holder_style"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             maxDigits="@integer/max_digits" >
 
             <com.android.calculator3.CalculatorEditText style="@style/display_style" />

@@ -20,9 +20,9 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/simplePad"
+    style="@style/digit_pad"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/gray_30"
     android:baselineAligned="true"
     android:orientation="horizontal" >
 
@@ -110,10 +110,10 @@
     </LinearLayout>
 
     <LinearLayout
+        style="@style/function_pad"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:background="@color/gray_40"
         android:orientation="vertical" >
 
         <ImageButton

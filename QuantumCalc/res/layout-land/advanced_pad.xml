@@ -19,85 +19,84 @@
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/advancedPad"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:layout_weight="1"
-              android:orientation="vertical"
-              android:layout_gravity="center"
-              >
+    android:id="@+id/advancedPad"
+    style="@style/advanced_pad"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:layout_weight="1"
+    android:orientation="vertical" >
 
     <LinearLayout
-        android:layout_weight="1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        >
+        android:layout_weight="1" >
+
         <Button
             android:id="@+id/sin"
-            android:text="@string/sin"
             style="@style/advanced_button_small"
             android:contentDescription="@string/sinDesc"
-            />
+            android:text="@string/sin" />
+
         <Button
             android:id="@+id/cos"
-            android:text="@string/cos"
             style="@style/advanced_button_small"
             android:contentDescription="@string/cosDesc"
-            />
+            android:text="@string/cos" />
+
         <Button
             android:id="@+id/tan"
-            android:text="@string/tan"
             style="@style/advanced_button_small"
             android:contentDescription="@string/tanDesc"
-            />
+            android:text="@string/tan" />
+
         <Button
             android:id="@+id/pi"
-            android:text="@string/pi"
             style="@style/advanced_button"
             android:contentDescription="@string/piDesc"
-            />
+            android:text="@string/pi" />
+
         <Button
             android:id="@+id/factorial"
-            android:text="@string/factorial"
             style="@style/advanced_button"
             android:contentDescription="@string/factorialDesc"
-            />
+            android:text="@string/factorial" />
     </LinearLayout>
 
     <LinearLayout
-        android:layout_weight="1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        >
+        android:layout_weight="1" >
+
         <Button
             android:id="@+id/ln"
-            android:text="@string/ln"
             style="@style/advanced_button_small"
             android:contentDescription="@string/lnDesc"
-            />
+            android:text="@string/ln" />
+
         <Button
             android:id="@+id/lg"
-            android:text="@string/lg"
             style="@style/advanced_button_small"
             android:contentDescription="@string/lgDesc"
-            />
+            android:text="@string/lg" />
+
         <Button
             android:id="@+id/e"
-            android:text="@string/e"
             style="@style/advanced_button"
             android:contentDescription="@string/eDesc"
-            />
+            android:text="@string/e" />
+
         <Button
             android:id="@+id/power"
-            android:text="@string/power"
             style="@style/advanced_button"
             android:contentDescription="@string/powerDesc"
-            />
+            android:text="@string/power" />
+
         <Button
             android:id="@+id/sqrt"
-            android:text="@string/sqrt"
             style="@style/advanced_button"
             android:contentDescription="@string/sqrtDesc"
-            />
+            android:text="@string/sqrt" />
     </LinearLayout>
+
 </LinearLayout>
