@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 
 import com.google.android.apps.pixelperfect.util.Clock;
@@ -48,20 +49,15 @@ public class PlatformServiceClient {
      * @return {@link Screenshot} proto instance that is returned by the
      * PixelPerfectPlatformService. May return null if the returned parcel is as such.
      */
-    public @Nullable Screenshot obtainScreenshot() {
+    public @Nullable Screenshot obtainScreenshot() throws RemoteException {
         Log.v(TAG, "Attempting getScreenshot()");
         // TODO(mukarram) Consider adding throttling for screenshots.
         // Also consider whether such throttling makes sense here on the platform service itself.
-        try {
           ScreenshotParcel parcel = getPlatformServiceIfAvailable().getScreenshot();
           if (parcel == null) {
               return null;
           }
           return parcel.screenshotProto;
-        } catch (Exception e) {
-            Log.e(TAG, "Exception: " + e);
-            return null;
-        }
     }
 
     private static final String TAG = "PixelPerfect.PlatformServiceClient";

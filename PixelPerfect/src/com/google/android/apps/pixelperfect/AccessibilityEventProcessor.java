@@ -128,6 +128,8 @@ public class AccessibilityEventProcessor {
                 Log.e(TAG, "SecurityException while obtaining screenshot. " + e);
             } catch (IllegalStateException e) {
                 Log.e(TAG, "mPlatformServiceClient is not ready. " + e);
+            } catch (RemoteException e) {
+                Log.e(TAG, "RemoteException: ", e);
             }
         }
         return null;

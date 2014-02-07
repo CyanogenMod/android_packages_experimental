@@ -32,12 +32,12 @@ public class ScreenshotParcel implements Parcelable {
     };
 
     private static final String TAG = "PixelPerfectPlatform.ScreenshotParcel";
-
+    private Exception mException = null;
     public Screenshot screenshotProto = null;
 
     public ScreenshotParcel() {
         screenshotProto = null;
-        exception = null;
+        mException = null;
     }
 
     public ScreenshotParcel(Parcel in) {
@@ -53,7 +53,7 @@ public class ScreenshotParcel implements Parcelable {
      * @param e the {@link Exception} to parcel.
      */
     public void setException(@Nullable Exception e) {
-        this.exception = e;
+        this.mException = e;
     }
 
     // TODO(mukarram) Also add capability to carry any other errors that may
@@ -66,8 +66,8 @@ public class ScreenshotParcel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel out, int flags) {
-        if (exception != null) {
-            out.writeException(exception);
+        if (mException != null) {
+            out.writeException(mException);
         } else {
             out.writeNoException();
         }
@@ -96,6 +96,4 @@ public class ScreenshotParcel implements Parcelable {
             screenshotProto = null;
         }
     }
-
-    private Exception exception = null;
 }

@@ -9,20 +9,10 @@ import com.google.android.apps.pixelperfect.api.ScreenshotParcel;
  */
 interface IPixelPerfectPlatform {
     /**
-     * Determines whether the pixel perfect platform interface is available to
-     * the calling activity. Specifically, we verify that the package of the
-     * calling activity is signed by Google.
-     *
-     * @return true if available, false if not.
-     */
-    boolean isPlatformAvailable() = 0;
-
-    /**
      * Takes a screenshot
      *
-     * @return screenshot {@link ScreenshotParcel} if successful. @throws
-     * RemoteException if not successful, such as because the calling package
-     * is not allowed to make the call or if fails to capture the screens.
+     * @return screenshot {@link ScreenshotParcel} if successful.
+     * Exceptions, such as SecurityException if client is not authorized, are parceled back.
      */
     ScreenshotParcel getScreenshot() = 1;
     // TODO(mukarram) Add an interface that allows obtaining clips of a

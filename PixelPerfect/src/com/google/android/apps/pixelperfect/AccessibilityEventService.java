@@ -164,7 +164,6 @@ public class AccessibilityEventService extends AccessibilityService
         if (mNotificationManager != null) {
             mNotificationManager.cancel(NOTIFICATION_ID);
         }
-
         // Inform the user that PixelPerfect is no longer running.
         showToast(R.string.pixelperfect_not_running);
     }
