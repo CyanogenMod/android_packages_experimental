@@ -2,6 +2,7 @@ package com.google.android.apps.pixelperfect;
 
 import android.content.Context;
 import android.graphics.Rect;
+import android.os.RemoteException;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.accessibility.AccessibilityEvent;
@@ -13,6 +14,7 @@ import com.google.common.logging.RecordedEvent.RecordedRect;
 import com.google.common.logging.RecordedEvent.RecordedTypes.WidgetType;
 import com.google.common.logging.RecordedEvent.RecordedUpdate;
 import com.google.common.logging.RecordedEvent.RecordedUpdate.Type;
+import com.google.common.logging.RecordedEvent.Screenshot;
 import com.google.common.logging.RecordedEvent.UIElement;
 import com.google.protobuf.CodedOutputStream;
 import com.google.wireless.android.play.playlog.proto.ClientAnalytics;
@@ -88,20 +90,47 @@ public class AccessibilityEventProcessor {
     /** The UIElement corresponding to the last AccessibilityEvent we received. */
     private UIElement mLastElement = UIElement.newBuilder().build();
 
+    /** Client for communicating with PixelPerfectPlatform service, e.g., for screenshots.*/
+    private PlatformServiceClient mPlatformServiceClient;
+
     public AccessibilityEventProcessor(Context context, String accountName,
             ExcludedPackages excludedPackages,
+            @Nullable PlatformServiceClient platformServiceClient,
             @Nullable PlayLogger.LoggerCallbacks loggerCallbacks) {
-        this(excludedPackages, new ClearcutLogger(
+        this(excludedPackages, platformServiceClient, new ClearcutLogger(
                 context,
                 ClientAnalytics.LogRequest.LogSource.PERSONAL_LOGGER.getNumber(),
                 accountName, loggerCallbacks));
     }
 
     @VisibleForTesting
-    AccessibilityEventProcessor(ExcludedPackages excludedPackages, ClearcutLogger logger) {
+    AccessibilityEventProcessor(
+            ExcludedPackages excludedPackages,
+            @Nullable PlatformServiceClient platformServiceClient,
+            ClearcutLogger logger) {
         mExcludedPackages = excludedPackages;
+        mPlatformServiceClient = platformServiceClient;
         mLogger = logger;
         mLogger.start();
+    }
+
+    /**
+     * Obtains a screenshot by calling the platform service.
+     * @return captured screenshot proto. {@code null} if screenshot was not captured.
+     */
+    @Nullable
+    private Screenshot obtainScreenshot() {
+        if (mPlatformServiceClient != null) {
+            try {
+               return mPlatformServiceClient.obtainScreenshot();
+            } catch (SecurityException e) {
+                // TODO(mukarram) Should we catch this or let the app crash?
+                Log.e(TAG, "SecurityException while obtaining screenshot. " + e);
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "mPlatformServiceClient is not ready. " + e);
+            }
+        }
+        return null;
     }
 
     /**
@@ -110,14 +139,15 @@ public class AccessibilityEventProcessor {
      * @param event {@link AccessibilityEvent} to process
      */
     public void process(AccessibilityEvent event) {
+        Screenshot screenshot = obtainScreenshot();
         if (excludeEvent(event)) {
             return;
         }
 
         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-            publishWindowChanged(event);
+            publishWindowChanged(event, screenshot);
         } else {
-            publishSingleEvent(event);
+            publishSingleEvent(event, screenshot);
         }
         mLastEventType = event.getEventType();
     }
@@ -145,6 +175,7 @@ public class AccessibilityEventProcessor {
      * Creates and returns a {@link RecordedUpdate}.
      *
      * @param event the {@link AccessibilityEvent}
+     * @param element {@UIElement} in which to fill the update.
      * @return the {@link RecordedUpdate} or null if the event type is unknown.
      */
     private RecordedUpdate createUpdate(AccessibilityEvent event, UIElement element) {
@@ -175,13 +206,16 @@ public class AccessibilityEventProcessor {
      * with a given widget.
      *
      * @param event the {@link AccessibilityEvent} to publish
+     * @param screenshot the {@link Screenshot} to go with this event.
      */
-    private void publishSingleEvent(AccessibilityEvent event) {
+    private void publishSingleEvent(
+            AccessibilityEvent event,
+            @Nullable Screenshot screenshot) {
         AccessibilityNodeInfo node = event.getSource();
         if (node == null) {
             return;
         }
-        RecordedUpdate update = createUpdate(event, createUIElement(node, false));
+        RecordedUpdate update = createUpdate(event, createUIElement(node, screenshot, false));
         if (update != null) {
             publishUpdate(update);
         }
@@ -192,8 +226,11 @@ public class AccessibilityEventProcessor {
      * Publishes an {@link AccessibilityEvent#TYPE_WINDOW_CONTENT_CHANGED}.
      *
      * @param event the {@link AccessibilityEvent} to publish
+     * @param screenshot the {@link Screenshot} to go with this event.
      */
-    private void publishWindowChanged(AccessibilityEvent event) {
+    private void publishWindowChanged(
+            AccessibilityEvent event,
+            @Nullable Screenshot screenshot) {
         AccessibilityNodeInfo node = event.getSource();
         if (node == null) {
             return;
@@ -202,7 +239,8 @@ public class AccessibilityEventProcessor {
         while (parent.getParent() != null) {
             parent = parent.getParent();
         }
-        UIElement newElement = createUIElement(parent, true);
+        UIElement newElement = createUIElement(parent, screenshot, true);
+        // TODO(stlafon, mukarram) Verify that .equals() is a deep comparison.
         if (!newElement.equals(mLastElement)) {
             // We get window-changed events following on from a text changed event. We
             // don't want to process every one of these, so skip printing if the last
@@ -261,11 +299,15 @@ public class AccessibilityEventProcessor {
      * {@link AccessibilityNodeInfo} can be null, so check before we set them.
      *
      * @param node the input {@link AccessibilityNodeInfo}
+     * @param screenshot the {@link Screenshot} to go with this element.
      * @param createChildren whether to create child nodes
      * @return the {@link UIElement}
      */
     @VisibleForTesting
-    UIElement createUIElement(AccessibilityNodeInfo node, boolean createChildren) {
+    UIElement createUIElement(
+            AccessibilityNodeInfo node,
+            @Nullable Screenshot screenshot,
+            boolean createChildren) {
         UIElement.Builder elementBuilder = UIElement.newBuilder();
         if (widgetTypeMap.containsKey(node.getClassName())) {
             elementBuilder.setClassType(widgetTypeMap.get(node.getClassName()));
@@ -290,6 +332,10 @@ public class AccessibilityEventProcessor {
             elementBuilder.setContent(node.getText().toString());
         }
 
+        if (screenshot != null) {
+            elementBuilder.setScreenshot(screenshot);
+        }
+
         Rect rect = new Rect();
         node.getBoundsInParent(rect);
         RecordedRect recordedRect = RecordedRect.newBuilder()
@@ -304,7 +350,9 @@ public class AccessibilityEventProcessor {
             for (int i = 0; i < numChildren; i++) {
                 AccessibilityNodeInfo child = node.getChild(i);
                 if (child != null) {
-                    elementBuilder.addChild(createUIElement(child, true));
+                    // Currently, we set the screenshot only on the root
+                    // UIElement object, hence passing null to the children.
+                    elementBuilder.addChild(createUIElement(child, null, true));
                     child.recycle();
                 } else {
                     // Create an empty element to represent the null child
@@ -325,7 +373,9 @@ public class AccessibilityEventProcessor {
                 + (node.getContent() == null ? "" : " = " + node.getContent())
                 // If content was elided print that it was elided so that
                 // the reader is not confused.
-                + (node.getContentElided() ? "<Content Elided>" : ""));
+                + (node.getContentElided() ? "<Content Elided>" : "")
+                // If the node has screenshot, then print the size in bytes.
+                + (node.hasScreenshot() ? "Screenshot size (bytes): " + node.getScreenshot().getSerializedSize() : ""));
         for (UIElement child : node.getChildList()) {
             printUIElement(indent + "  ", child);
         }

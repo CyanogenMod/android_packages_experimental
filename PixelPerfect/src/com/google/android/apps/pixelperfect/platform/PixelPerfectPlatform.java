@@ -4,51 +4,60 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.util.Log;
 import android.util.Pair;
-
 import com.google.android.apps.pixelperfect.api.IPixelPerfectPlatform;
 import com.google.android.apps.pixelperfect.api.ScreenshotParcel;
 
+import javax.annotation.Nullable;
+
 /**
  * PixelPerfectPlatform service provides binding to IPixelPerfectPlatform.Stub.
- *
- * @see com.google.android.apps.pixelperfect.platform.IPixelPerfectPlatform for
+ * @see com.google.android.apps.pixelperfect.api.IPixelPerfectPlatform for
  *      the interface.
  */
 public class PixelPerfectPlatform extends Service {
+    private final String TAG = "PixelPerfectPlatform.PlatformService";
     public class PixelPerfectPlatformStubImpl extends IPixelPerfectPlatform.Stub {
-
         @Override
-        public boolean isPlatformAvailable() throws RemoteException {
+        public boolean isPlatformAvailable() {
             // TODO(mukarram): verify the certificate of the calling
-            // application.
-            return false;
+            // application.  Coming in follow up CL.
+            return true;
         }
 
         @Override
-        public ScreenshotParcel getScreenshot() throws RemoteException {
+        @Nullable
+        public ScreenshotParcel getScreenshot() {
+            ScreenshotParcel parcel = new ScreenshotParcel();
             Log.v(TAG, "getScreenshot() called.");
             if (!isPlatformAvailable()) {
-                throw new RemoteException("Calling package is not allowed.");
+                Log.e(TAG, "Calling package is not allowed.");
+                parcel.setException(new SecurityException("Calling package is not allowed."));
+                return parcel;
             }
             ScreenshotGrabber grabber = new ScreenshotGrabber();
             Pair<Bitmap, Integer> capture = grabber.takeScreenshot();
             if (capture == null) {
-                throw new RemoteException("Could not capture screenshot.");
+                return parcel;
             }
-            ScreenshotParcel parcel = new ScreenshotParcel();
+
             parcel.screenshotProto = grabber.makeScreenshotProto(capture);
             return parcel;
         }
     }
 
     private final PixelPerfectPlatformStubImpl mBinder = new PixelPerfectPlatformStubImpl();
-    private static final String TAG = "PixelPerfect.PlatformService";
+
+    @Override
+    public void onCreate() {
+        Log.v(TAG, "onCreate");
+        super.onCreate();
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
+        Log.v(TAG, "onBind");
         return mBinder;
     }
 

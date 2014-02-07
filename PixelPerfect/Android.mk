@@ -27,6 +27,7 @@ LOCAL_SDK_VERSION := current
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src/com/google/android/apps/pixelperfect/api) \
         $(call all-Iaidl-files-under, src/com/google/android/apps/pixelperfect/api) \
+        $(call all-java-files-under, src/com/google/android/apps/pixelperfect/util) \
         $(call all-proto-files-under, imported_protos/src)
 
 LOCAL_PROTOC_OPTIMIZE_TYPE := lite

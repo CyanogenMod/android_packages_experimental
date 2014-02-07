@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <integer name="min_time_ms_between_platform_service_reconnect">3000</integer>
+</resources>

@@ -7,6 +7,8 @@ import android.util.Log;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.common.logging.RecordedEvent.Screenshot;
 
+import javax.annotation.Nullable;
+
 /**
  * Screenshot parcel. Simply serializes and de-serializes the Screenshot proto
  * to/from the parcel.
@@ -31,9 +33,11 @@ public class ScreenshotParcel implements Parcelable {
 
     private static final String TAG = "PixelPerfectPlatform.ScreenshotParcel";
 
-    public Screenshot screenshotProto;
+    public Screenshot screenshotProto = null;
 
     public ScreenshotParcel() {
+        screenshotProto = null;
+        exception = null;
     }
 
     public ScreenshotParcel(Parcel in) {
@@ -44,6 +48,17 @@ public class ScreenshotParcel implements Parcelable {
         this.screenshotProto = screenshotProto;
     }
 
+    /**
+     * Set the exception that is to be written to parcel.
+     * @param e the {@link Exception} to parcel.
+     */
+    public void setException(@Nullable Exception e) {
+        this.exception = e;
+    }
+
+    // TODO(mukarram) Also add capability to carry any other errors that may
+    // occur while capturing screenshots.
+
     @Override
     public int describeContents() {
         return 0;
@@ -51,6 +66,12 @@ public class ScreenshotParcel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel out, int flags) {
+        if (exception != null) {
+            out.writeException(exception);
+        } else {
+            out.writeNoException();
+        }
+
         if (screenshotProto == null) {
             out.writeInt(0);
             return;
@@ -62,6 +83,7 @@ public class ScreenshotParcel implements Parcelable {
     }
 
     public void readFromParcel(Parcel in) {
+        in.readException();
         int length = in.readInt();
         byte[] bytes = new byte[length];
         in.readByteArray(bytes);
@@ -75,4 +97,5 @@ public class ScreenshotParcel implements Parcelable {
         }
     }
 
+    private Exception exception = null;
 }

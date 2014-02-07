@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">PixelPerfect</string>
     <string name="accessibility_service_description">This is PixelPerfect</string>
     <string name="notification_title">PixelPerfect</string>
@@ -25,6 +24,7 @@
     <string name="unauthorized">You are not authorized to use PixelPerfect</string>
 
     <!-- TODO(mukarram) Revisit and remove strings that are not needed. -->
-    <string name="platform_app_name">PixelPerfectPlatform</string>
+    <string name="platform_app_name">PixelPerfect-Platform</string>
     <string name="platform_notification_title">PixelPerfectPlatform</string>
+    <string name="pixelperfect_platform_running">PixelPerfect Platform is running</string>
 </resources>
