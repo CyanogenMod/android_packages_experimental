@@ -34,7 +34,8 @@ import javax.annotation.Nullable;
  */
 public class ScreenshotGrabber {
 
-    private static final int JPEG_QUALITY = 90;
+    private static final int JPEG_QUALITY = 50;
+
     private static final String TAG = "PixelPerfectPlatform.ScreenshotGrabber";
 
     /**
