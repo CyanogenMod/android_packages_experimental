@@ -1,6 +1,6 @@
 # -*- mode: python; -*-
 
-name = 'pixelperfect'
+name = 'pixelperfect-platform'
 
 def CreateProperlyNamedLibLink(name):
   return Link(
@@ -14,17 +14,14 @@ files = [
   Link('proguard.tests.flags'),
   Link('res'),
   Link('src'),
-  Link('imported_protos'),
   Link('scripts'),
   Link('eclipse'),
-  Link('platform'),
   LinkFramework('framework-core', 'frameworks/base/core/java'),
   LinkFramework('framework-java', 'libcore/luni/src/main/java'),
-  CreateProperlyNamedLibLink('libpixelperfect-protos'),
+  CreateProperlyNamedLibLink('pixelperfect-api-prebuilt'),
   CreateProperlyNamedLibLink('guava'),
   CreateProperlyNamedLibLink('android-support-v13'),
   CreateProperlyNamedLibLink('prebuilt-google-play-services-first-party'),
-  Link('libsrcs/libpixelperfect-protos', src='../../../out/target/common/obj/JAVA_LIBRARIES/libpixelperfect-protos_intermediates/src/proto/src/'),
   Link('libsrcs/android-support-v13', src='../../../frameworks/support/v13/java'),
   Link('libsrcs/guava', src='../../../external/guava/guava/src/'),
   Create('project.properties', contents='target=android-19\n'),
@@ -42,7 +39,7 @@ classpath = [
   Src('gen'),
   AndroidFrameworkSrc('framework-core'),
   AndroidFrameworkSrc('framework-java'),
-  Lib('liblinks/libpixelperfect-protos.jar', sourcepath='libsrcs/libpixelperfect-protos'),
+  Lib('liblinks/pixelperfect-api-prebuilt.jar'),
   Lib('liblinks/guava.jar', sourcepath='libsrcs/guava'),
   Lib('liblinks/android-support-v13.jar', sourcepath='libsrcs/android-support-v13'),
   Lib('liblinks/prebuilt-google-play-services-first-party.jar'),

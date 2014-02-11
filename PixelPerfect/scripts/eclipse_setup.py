@@ -24,7 +24,7 @@ def list_callback(option, opt, value, parser):
 
 def main(args):
   parser = optparse.OptionParser()
-  parser.set_defaults(projects=('pixelperfect','pixelperfect-test','gcore-fp'))
+  parser.set_defaults(projects=('pixelperfect-platform','pixelperfect-platform-test'))
   parser.add_option('--platform_src',
                     help='Location of the android platform source tree')
 
@@ -44,7 +44,7 @@ def main(args):
   else:
     output_dir = check_path("%s/../eclipse" % android_root, "eclipse folder",
         True)
-  output_dir = check_path(("%s/%s") % (output_dir, "pixelperfect"),
+  output_dir = check_path(("%s/%s") % (output_dir, "pixelperfect/platform"),
       "project subdirectory", True)
   project_root = check_path("%s/.." % scripts_dir, "project root")
   print "project_files_dir: %s" % project_files_dir

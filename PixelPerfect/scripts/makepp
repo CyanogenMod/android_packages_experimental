@@ -34,33 +34,9 @@ if [[ $# == 0 ]]; then
   echo "  t = test" >&2
   echo "  T = uninstall tests" >&2
   echo "  u = adb uninstall (before install)" >&2
-  echo "  m = make mockito" >&2
+  echo "  m = make dependencies" >&2
   echo "  c = clean" >&2
   exit 0
-fi
-
-# Convert TARGET_PRODUCT to TARGET_DEVICE. If a product isn't listed below,
-# you can add the associated device for it from this list of devices:
-# https://sites.google.com/a/google.com/android/development/codebook
-product=$TARGET_PRODUCT
-
-if [[ $product == hammerhead ]]; then
-  device=hammerhead
-elif [[ $product == occam ]]; then
-  device=mako
-elif [[ $product == nakasi ]]; then
-  device=grouper
-elif [[ $product == nakasig ]]; then
-  device=tilapia
-elif [[ $product == razor ]]; then
-  device=flo
-elif [[ $product == razorg ]]; then
-  device=deb
-elif [[ $product == mantaray ]]; then
-  device=manta
-else
-  echo "Unknown product:"$product
-  exit 1;
 fi
 
 build=
@@ -68,14 +44,14 @@ install=
 uninstall=
 runtests=
 uninstall_tests=
-make_mockito=
+make_dependencies=
 clean=
 
 # Explode the command line params in case they are all jammed together in
 # one parameter.
 
 [[ $* =~ c ]] && clean=1 && echo Clean
-[[ $* =~ m ]] && make_mockito=1 && echo Making mockito
+[[ $* =~ m ]] && make_dependencies=1 && echo Making dependencies
 [[ $* =~ b ]] && build=1 && echo Building
 [[ $* =~ u ]] && uninstall=1 && echo Uninstalling
 [[ $* =~ T ]] && uninstall_tests=1 && echo Uninstall Tests
@@ -88,16 +64,13 @@ set -e
   rm -rf out/target/common/obj/APPS/PixelPerfect*;
   rm -rf out/target/common/obj/JAVA_LIBRARIES/*pixelperfect*
   rm -rf out/target/product/*/data/app/PixelPerfect*"
-[[ -n "$make_mockito" ]] && make mockito-target
+[[ -n "$make_dependencies" ]] && mmm external/protobuf:libprotobuf-java-2.3.0-lite &&
+  mmma vendor/unbundled_google/packages/PrebuiltGmsCore &&
+  make mockito-target &&
+  make android-support-test
 [[ -n "$build" ]] && mmm packages/experimental/PixelPerfect
-[[ -n "$uninstall" ]] && bash -xc "
-  adb uninstall com.google.android.apps.pixelperfect;
-  adb uninstall com.google.android.apps.pixelperfect.platform;"
-[[ -n "$uninstall_tests" ]] && bash -xc "
-  adb uninstall com.google.android.apps.pixelperfect.tests;
-  adb uninstall com.google.android.apps.pixelperfect.platform.tests;"
-[[ -n "$install" ]] && bash -xc "
-  adb install -r out/target/product/$device/system/app/PixelPerfect.apk;
-  adb install -r out/target/product/$device/system/app/PixelPerfectPlatform.apk;"
+[[ -n "$uninstall" ]] && bash -xc "adb uninstall com.google.android.apps.pixelperfect.platform"
+[[ -n "$uninstall_tests" ]] && bash -xc "adb uninstall com.google.android.apps.pixelperfect.platform.tests"
+[[ -n "$install" ]] && bash -xc "adb install -r out/target/product/generic/system/app/PixelPerfectPlatform.apk"
 [[ -n "$runtests" ]] && runtest --path packages/experimental/PixelPerfect
 

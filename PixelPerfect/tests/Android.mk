@@ -1,28 +1,21 @@
-LOCAL_PATH:= $(call my-dir)
+LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-# We only want this apk build for tests.
 LOCAL_MODULE_TAGS := tests
 
-LOCAL_STATIC_JAVA_LIBRARIES := mockito-target
+LOCAL_STATIC_JAVA_LIBRARIES := mockito-target \
+        android-support-test
 
-LOCAL_JAVA_LIBRARIES := android.test.runner
+LOCAL_CERTIFICATE := platform
 
-# Use Google certificate instead of platform certificate since GmsCore
-# only allows usage from apps signed with the Google certificate.
-# Note: the cert here and in ../Android.mk should match.
-LOCAL_CERTIFICATE := vendor/unbundled_google/libraries/certs/app
+LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
-# Include all test java files.
-api_source_file_patterns = src/com/google/android/apps/pixelperfect/api/%
-platform_source_file_patterns = src/com/google/android/apps/pixelperfect/platform/%
-LOCAL_SRC_FILES := $(filter-out $(api_source_file_patterns), \
-        $(filter-out $(platform_source_file_patterns), $(call all-java-files-under, src)))
+LOCAL_PACKAGE_NAME := PixelPerfectPlatformTests
 
-LOCAL_PACKAGE_NAME := PixelPerfectTests
+LOCAL_PROGUARD_ENABLED := disabled
 
-LOCAL_INSTRUMENTATION_FOR := PixelPerfect
+LOCAL_INSTRUMENTATION_FOR := PixelPerfectPlatform
 
-LOCAL_SDK_VERSION := current
+LOCAL_SDK_VERSION := 10
 
 include $(BUILD_PACKAGE)

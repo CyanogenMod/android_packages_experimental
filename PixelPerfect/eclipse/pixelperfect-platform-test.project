@@ -1,6 +1,6 @@
 # -*- mode: python; -*-
 
-name = 'pixelperfect-test'
+name = 'pixelperfect-platform-test'
 
 
 def CreateProperlyNamedLibLink(name):
@@ -32,7 +32,7 @@ classpath = [
   Src('gen'),
   Lib('liblinks/junit4-target.jar', sourcepath='libsrcs/junit4-target'),
   Lib('liblinks/mockito-api.jar', sourcepath='libsrcs/mockito-src'),
-  Project('pixelperfect'),
+  Project('pixelperfect-platform'),
   AndroidFramework(),
   Output('bin'),
 ]
