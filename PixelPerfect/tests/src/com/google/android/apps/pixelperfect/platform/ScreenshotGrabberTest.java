@@ -1,7 +1,8 @@
 package com.google.android.apps.pixelperfect.platform;
 
+import android.annotation.SuppressLint;
 import android.test.suitebuilder.annotation.SmallTest;
-import android.view.Surface;
+import android.util.Pair;
 
 import com.google.common.logging.RecordedEvent;
 import com.google.common.logging.RecordedEvent.Screenshot;
@@ -17,21 +18,12 @@ import java.io.ByteArrayOutputStream;
 @SmallTest
 public class ScreenshotGrabberTest extends TestCase {
 
-    private static final float FLOAT_DELTA = 1e-5f;
-
     private ScreenshotGrabber mGrabber;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         mGrabber = new ScreenshotGrabber();
-    }
-
-    public void testGetDegreesForRotation() {
-        assertEquals(0f, mGrabber.getDegreesForRotation(Surface.ROTATION_0), FLOAT_DELTA);
-        assertEquals(270f, mGrabber.getDegreesForRotation(Surface.ROTATION_90), FLOAT_DELTA);
-        assertEquals(180f, mGrabber.getDegreesForRotation(Surface.ROTATION_180), FLOAT_DELTA);
-        assertEquals(90f, mGrabber.getDegreesForRotation(Surface.ROTATION_270), FLOAT_DELTA);
     }
 
     public void testFillScreenshotProto() throws Exception {
@@ -60,5 +52,39 @@ public class ScreenshotGrabberTest extends TestCase {
         assertEquals(RecordedEvent.Bitmap.CompressionConfig.CompressFormat.JPEG,
                 screenshot.getBitmap().getCompressionConfig().getFormat());
         assertEquals(quality, screenshot.getBitmap().getCompressionConfig().getQuality());
+    }
+
+    public void testGetScreenshotDimensions() {
+        // Base dimensions for the test. baseWidth * baseHeight = MAX_SCREENSHOT_NUM_PIXELS
+        float baseWidth = (float) (Math.sqrt(ScreenshotGrabber.MAX_SCREENSHOT_NUM_PIXELS) / 2);
+        float baseHeight = (float) (Math.sqrt(ScreenshotGrabber.MAX_SCREENSHOT_NUM_PIXELS) * 2);
+
+        // Exact limits. No rescaling.
+        assertDimensions(baseWidth, baseHeight, (int) baseWidth, (int) baseHeight);
+        assertDimensions(baseHeight, baseWidth, (int) baseHeight, (int) baseWidth);
+
+        // Under limits. No rescaling.
+        final float under = 0.9f;
+        float width = baseWidth * under;
+        float height = baseHeight * under;
+        assertDimensions(width, height, (int) width, (int) height);
+        assertDimensions(height, width, (int) height, (int) width);
+
+        // Over limits. Rescaling.
+        final float over = 1.1f;
+        width = baseWidth * over;
+        height = baseHeight * over;
+        float ratio = (float) Math.sqrt(
+                ScreenshotGrabber.MAX_SCREENSHOT_NUM_PIXELS / width / height);
+        assertDimensions(width, height, (int) (width * ratio), (int) (height * ratio));
+        assertDimensions(height, width, (int) (height * ratio), (int) (width * ratio));
+    }
+
+    @SuppressLint("NewApi")  // For Pair.
+    private void assertDimensions(float width, float height, int expectedWidth,
+            int expectedHeight) {
+        Pair<Integer, Integer> resolution = mGrabber.getScreenshotDimensions(width, height);
+        assertEquals(expectedWidth, (Object) resolution.first);
+        assertEquals(expectedHeight, (Object) resolution.second);
     }
 }

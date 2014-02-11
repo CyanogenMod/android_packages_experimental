@@ -34,6 +34,9 @@ import javax.annotation.Nullable;
  */
 public class ScreenshotGrabber {
 
+    @VisibleForTesting
+    static final int MAX_SCREENSHOT_NUM_PIXELS = 1280 * 768;
+
     private static final int JPEG_QUALITY = 50;
 
     private static final String TAG = "PixelPerfectPlatform.ScreenshotGrabber";
@@ -45,9 +48,10 @@ public class ScreenshotGrabber {
      *         rotation of screen at the time of capture. The function may
      *         return null if taking screenshot was not successfully.
      *         @throws IllegalStateException if for some reason rotation value
-     *         obtained is invalid.
+     *         obtained is invalid
      */
-    @Nullable public Pair<Bitmap, Integer> takeScreenshot() throws IllegalStateException {
+    @Nullable
+    public Pair<Bitmap, Integer> takeScreenshot() throws IllegalStateException {
         Log.v(TAG, "takeScreenshot()");
         Display display = DisplayManagerGlobal.getInstance()
                 .getRealDisplay(Display.DEFAULT_DISPLAY);
@@ -75,10 +79,12 @@ public class ScreenshotGrabber {
             default:
                 throw new IllegalStateException("Invalid rotation: " + rotation);
         }
+        Pair<Integer, Integer> cappedScreenshotSize = getScreenshotDimensions(screenshotWidth,
+                screenshotHeight);
 
         // Take the screenshot
-        Bitmap bitmap = SurfaceControl.screenshot((int) screenshotWidth,
-                (int) screenshotHeight);
+        Bitmap bitmap = SurfaceControl.screenshot(cappedScreenshotSize.first,
+                cappedScreenshotSize.second);
         if (bitmap == null) {
             return null;
         }
@@ -89,13 +95,13 @@ public class ScreenshotGrabber {
     }
 
     /**
-     * Makes a Screenshot proto from the provided {@link Bitmap} and
-     * {@code rotation}. Also performs compression, and saves compression
-     * parameters in the proto.
-     * @param capture the {@link Pair<Bitmap, Integer>} instance that is
-     *            to be compressed and copied to protocol buffer.
-     * @return the {@link Screenshot} proto which contains the bitmap. The
-     *         function returns null if the provided capture param is null.
+     * Makes a Screenshot proto from the provided {@link Bitmap} and {@code rotation}. Also performs
+     * compression, and saves compression parameters in the proto.
+     *
+     * @param capture the {@link Pair<Bitmap, Integer>} instance that is to be compressed and copied
+     *     to protocol buffer
+     * @return the {@link Screenshot} proto which contains the bitmap. The function returns null if
+     *     the provided capture param is null
      */
     @Nullable public Screenshot makeScreenshotProto(
             @Nullable Pair<Bitmap, Integer> capture) {
@@ -112,7 +118,8 @@ public class ScreenshotGrabber {
         return fillScreenshotProto(
                 output, capture.first.getHeight(), capture.first.getWidth(),
                 capture.second,
-                RecordedEvent.Bitmap.BitmapConfig.Config.ARGB_8888,
+                // TODO(Mukarram): Read from the bitmap's config instead of hardcoding.
+                RecordedEvent.Bitmap.BitmapConfig.Config.ARGB_4444,
                 // Following two are hard-wired for now. If we change our
                 // compression methods, we may want to add a map from
                 // graphics.Bitmap enums to the proto enums.
@@ -121,25 +128,22 @@ public class ScreenshotGrabber {
     }
 
     /**
-     * Helper function that creates and fills a Screenshot proto from the
-     * provided compressed output stream and additional param about the
-     * screenshot. Note: we split the helper to help with testing. Mockito
-     * cannot mock graphics.Bitmap (because it is final).
-     * @param compressed the {@link ByteArrayOutputStream} that has the
-     *            compressed image.
+     * Helper function that creates and fills a Screenshot proto from the provided compressed output
+     * stream and additional param about the screenshot. Note: we split the helper to help with
+     * testing. Mockito cannot mock graphics.Bitmap (because it is final).
+     *
+     * @param compressed the {@link ByteArrayOutputStream} that has the compressed image
      * @param height of the image
      * @param width of the image
      * @param rotation of the screen when the screenshot is taken
      * @param bitmapConfig is an enum from
-     *            {@link RecordedEvent.Bitmap.BitmapConfig.Config} to put in
-     *            proto. Not necessary when image is compressed, but we pass it
-     *            anyway.
+     *     {@link com.google.common.logging.RecordedEvent.Bitmap.BitmapConfig.Config} to put in
+     *     proto. Not necessary when image is compressed, but we pass it anyway
      * @param format is an enum from
-     *            {@link RecordedEvent.Bitmap.CompressionConfig.CompressFormat}
-     *            representing the compression format used on the bitmap.
-     * @param quality is an integer representing the quality of compression
-     *            used.
-     * @return the {@link Screenshot} proto which contains the bitmap.
+     *     {@link com.google.common.logging.RecordedEvent.Bitmap.CompressionConfig.CompressFormat}
+     *     representing the compression format used on the bitmap
+     * @param quality is an integer representing the quality of compression used
+     * @return the {@link Screenshot} proto which contains the bitmap
      */
     public Screenshot fillScreenshotProto(
             ByteArrayOutputStream compressed,
@@ -177,55 +181,21 @@ public class ScreenshotGrabber {
     }
 
     /**
-     * Saves a {@link Bitmap} as a JPG file.
+     * Returns the size to use for screenshots. Size is capped to limit the payload size.
      *
-     * @param bitmap the {@link Bitmap}
-     * @param filepath the file path
+     * @param width the desired width, in pixels, of the screenshot
+     * @param height the desired height, in pixels, of the screenshot
+     * @return a pair of integers representing the width and heigh to use for the screenshot
      */
-    public void saveBitmap(Bitmap bitmap, String filepath) {
-        // NOTE(stlafon): For the sake of debugging, if no file path is passed,
-        // we save the
-        // screenshot on the the external storage, as "screenshot.jpg".
-        // TODO(stlafon): Remove this.
-        if (filepath == null) {
-            filepath = Environment.getExternalStorageDirectory().toString() + "/"
-                    + "screenshot.jpg";
-        }
-
-        Log.v(TAG, "Saving screenshot at " + filepath);
-
-        OutputStream fout = null;
-        File imageFile = new File(filepath);
-        try {
-            fout = new FileOutputStream(imageFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, fout);
-            fout.flush();
-
-            Log.v(TAG, "Screenshot saved");
-        } catch (FileNotFoundException e) {
-            Log.e(TAG, "Unable to save screenshot " + e.getMessage());
-        } catch (IOException e) {
-            Log.e(TAG, "Unable to save screenshot " + e.getMessage());
-        } finally {
-            try {
-                fout.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Unable to save screenshot " + e.getMessage());
-            }
-        }
-    }
-
     @VisibleForTesting
-    float getDegreesForRotation(int value) {
-        switch (value) {
-            case Surface.ROTATION_90:
-                return 360f - 90f;
-            case Surface.ROTATION_180:
-                return 360f - 180f;
-            case Surface.ROTATION_270:
-                return 360f - 270f;
-            default:
-                return 0;
+    Pair<Integer, Integer> getScreenshotDimensions(float width, float height) {
+        float numPixels = width * height;
+        if (numPixels <= MAX_SCREENSHOT_NUM_PIXELS) {
+            // Not rescaling.
+            return new Pair<Integer, Integer>((int) width, (int) height);
         }
+        // Rescaling to achieve the target number of pixels.
+        float ratio = (float) Math.sqrt(MAX_SCREENSHOT_NUM_PIXELS / numPixels);
+        return new Pair<Integer, Integer>((int) (ratio * width), (int) (ratio * height));
     }
 }
