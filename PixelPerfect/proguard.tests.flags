@@ -1,5 +1,0 @@
-# Proguard flags specifically needed for tests.
-
--keepclassmember class com.google.android.apps.pixelperfect.platform.ScreenshotGrabber {
-  android.util.Pair getScreenshotDimensions(float, float);
-}
