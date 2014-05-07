@@ -33,6 +33,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class Listener extends NotificationListenerService {
@@ -58,17 +59,24 @@ public class Listener extends NotificationListenerService {
         return sNotifications;
     }
 
-    private OrderedNotificationsHelper mOrderHelper;
-
     private class Delta {
         final StatusBarNotification mSbn;
-        final String[] mKeys;
+        final Ranking mRanking;
 
-        public Delta(StatusBarNotification sbn, String[] update) {
+        public Delta(StatusBarNotification sbn, Ranking update) {
             mSbn = sbn;
-            mKeys = update;
+            mRanking = update;
         }
     }
+
+    private final Comparator<StatusBarNotification> mRankingComparator =
+            new Comparator<StatusBarNotification>() {
+                @Override
+                public int compare(StatusBarNotification lhs, StatusBarNotification rhs) {
+                    return Integer.compare(mRanking.getIndexOfKey(lhs.getKey()),
+                            mRanking.getIndexOfKey(rhs.getKey()));
+                }
+            };
 
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -86,7 +94,7 @@ public class Listener extends NotificationListenerService {
         }
     };
 
-    Handler mHandler = new Handler() {
+    private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             Delta delta = null;
@@ -97,14 +105,14 @@ public class Listener extends NotificationListenerService {
                 case MSG_NOTIFY:
                     Log.i(TAG, "notify: " + delta.mSbn.getKey());
                     synchronized (sNotifications) {
-                        int position = mOrderHelper.getIndex(delta.mSbn.getKey());
+                        int position = mRanking.getIndexOfKey(delta.mSbn.getKey());
                         if (position == -1) {
                             sNotifications.add(delta.mSbn);
                         } else {
                             sNotifications.set(position, delta.mSbn);
                         }
-                        mOrderHelper.updateKeyOrder(delta.mKeys);
-                        Collections.sort(sNotifications, mOrderHelper);
+                        mRanking = delta.mRanking;
+                        Collections.sort(sNotifications, mRankingComparator);
                         Log.i(TAG, "finish with: " + sNotifications.size());
                     }
                     LocalBroadcastManager.getInstance(Listener.this)
@@ -115,12 +123,12 @@ public class Listener extends NotificationListenerService {
                 case MSG_CANCEL:
                     Log.i(TAG, "remove: " + delta.mSbn.getKey());
                     synchronized (sNotifications) {
-                        int position = mOrderHelper.getIndex(delta.mSbn.getKey());
+                        int position = mRanking.getIndexOfKey(delta.mSbn.getKey());
                         if (position != -1) {
                             sNotifications.remove(position);
                         }
-                        mOrderHelper.updateKeyOrder(delta.mKeys);
-                        Collections.sort(sNotifications, mOrderHelper);
+                        mRanking = delta.mRanking;
+                        Collections.sort(sNotifications, mRankingComparator);
                     }
                     LocalBroadcastManager.getInstance(Listener.this)
                             .sendBroadcast(new Intent(ACTION_REFRESH));
@@ -129,8 +137,8 @@ public class Listener extends NotificationListenerService {
                 case MSG_ORDER:
                     Log.i(TAG, "reorder");
                     synchronized (sNotifications) {
-                        mOrderHelper.updateKeyOrder(delta.mKeys);
-                        Collections.sort(sNotifications, mOrderHelper);
+                        mRanking = delta.mRanking;
+                        Collections.sort(sNotifications, mRankingComparator);
                     }
                     LocalBroadcastManager.getInstance(Listener.this)
                             .sendBroadcast(new Intent(ACTION_REFRESH));
@@ -146,7 +154,7 @@ public class Listener extends NotificationListenerService {
                 case MSG_DISMISS:
                     if (msg.obj instanceof String) {
                         final String key = (String) msg.obj;
-                        StatusBarNotification sbn = sNotifications.get(mOrderHelper.getIndex(key));
+                        StatusBarNotification sbn = sNotifications.get(mRanking.getIndexOfKey(key));
                         if ((sbn.getNotification().flags & Notification.FLAG_AUTO_CANCEL) != 0 &&
                                 sbn.getNotification().contentIntent != null) {
                             try {
@@ -162,7 +170,7 @@ public class Listener extends NotificationListenerService {
                 case MSG_LAUNCH:
                     if (msg.obj instanceof String) {
                         final String key = (String) msg.obj;
-                        StatusBarNotification sbn = sNotifications.get(mOrderHelper.getIndex(key));
+                        StatusBarNotification sbn = sNotifications.get(mRanking.getIndexOfKey(key));
                         if (sbn.getNotification().contentIntent != null) {
                             try {
                                 sbn.getNotification().contentIntent.send();
@@ -178,6 +186,8 @@ public class Listener extends NotificationListenerService {
             }
         }
     };
+
+    private Ranking mRanking;
 
     @Override
     public void onCreate() {
@@ -203,23 +213,24 @@ public class Listener extends NotificationListenerService {
     @Override
     public void onNotificationRankingUpdate() {
         Message.obtain(mHandler, MSG_ORDER,
-                new Delta(null, getCurrentRanking().getOrderedKeys())).sendToTarget();
+                new Delta(null, getCurrentRanking())).sendToTarget();
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         Message.obtain(mHandler, MSG_NOTIFY,
-                new Delta(sbn, getCurrentRanking().getOrderedKeys())).sendToTarget();
+                new Delta(sbn, getCurrentRanking())).sendToTarget();
     }
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
         Message.obtain(mHandler, MSG_CANCEL,
-                new Delta(sbn, getCurrentRanking().getOrderedKeys())).sendToTarget();
+                new Delta(sbn, getCurrentRanking())).sendToTarget();
     }
 
     private void fetchActive() {
-        String[] keys = getActiveNotificationKeys();
+        mRanking = getCurrentRanking();
+        String[] keys = mRanking.getOrderedKeys();
         sNotifications = new ArrayList<StatusBarNotification>();
         sNotifications.clear();
         for (int i = 0; i < keys.length; i += PAGE) {
@@ -231,7 +242,6 @@ public class Listener extends NotificationListenerService {
                 sNotifications.add(sbns[s]);
             }
         }
-        mOrderHelper = new OrderedNotificationsHelper(keys);
-        Collections.sort(sNotifications, mOrderHelper);
+        Collections.sort(sNotifications, mRankingComparator);
     }
 }
