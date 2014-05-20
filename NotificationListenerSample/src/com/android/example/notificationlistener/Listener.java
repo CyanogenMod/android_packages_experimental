@@ -201,25 +201,25 @@ public class Listener extends NotificationListenerService {
     }
 
     @Override
-    public void onNotificationOrderUpdate() {
+    public void onNotificationRankingUpdate() {
         Message.obtain(mHandler, MSG_ORDER,
-                new Delta(null, getOrderedNotificationKeys())).sendToTarget();
+                new Delta(null, getCurrentRanking().getOrderedKeys())).sendToTarget();
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         Message.obtain(mHandler, MSG_NOTIFY,
-                new Delta(sbn, getOrderedNotificationKeys())).sendToTarget();
+                new Delta(sbn, getCurrentRanking().getOrderedKeys())).sendToTarget();
     }
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
         Message.obtain(mHandler, MSG_CANCEL,
-                new Delta(sbn, getOrderedNotificationKeys())).sendToTarget();
+                new Delta(sbn, getCurrentRanking().getOrderedKeys())).sendToTarget();
     }
 
     private void fetchActive() {
-        String[] keys = getOrderedNotificationKeys();
+        String[] keys = getActiveNotificationKeys();
         sNotifications = new ArrayList<StatusBarNotification>();
         sNotifications.clear();
         for (int i = 0; i < keys.length; i += PAGE) {
