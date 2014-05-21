@@ -73,8 +73,8 @@ public class Listener extends NotificationListenerService {
             new Comparator<StatusBarNotification>() {
                 @Override
                 public int compare(StatusBarNotification lhs, StatusBarNotification rhs) {
-                    return Integer.compare(mRanking.getIndexOfKey(lhs.getKey()),
-                            mRanking.getIndexOfKey(rhs.getKey()));
+                    return Integer.compare(mRanking.getRank(lhs.getKey()),
+                            mRanking.getRank(rhs.getKey()));
                 }
             };
 
@@ -105,7 +105,7 @@ public class Listener extends NotificationListenerService {
                 case MSG_NOTIFY:
                     Log.i(TAG, "notify: " + delta.mSbn.getKey());
                     synchronized (sNotifications) {
-                        int position = mRanking.getIndexOfKey(delta.mSbn.getKey());
+                        int position = mRanking.getRank(delta.mSbn.getKey());
                         if (position == -1) {
                             sNotifications.add(delta.mSbn);
                         } else {
@@ -123,7 +123,7 @@ public class Listener extends NotificationListenerService {
                 case MSG_CANCEL:
                     Log.i(TAG, "remove: " + delta.mSbn.getKey());
                     synchronized (sNotifications) {
-                        int position = mRanking.getIndexOfKey(delta.mSbn.getKey());
+                        int position = mRanking.getRank(delta.mSbn.getKey());
                         if (position != -1) {
                             sNotifications.remove(position);
                         }
@@ -154,7 +154,7 @@ public class Listener extends NotificationListenerService {
                 case MSG_DISMISS:
                     if (msg.obj instanceof String) {
                         final String key = (String) msg.obj;
-                        StatusBarNotification sbn = sNotifications.get(mRanking.getIndexOfKey(key));
+                        StatusBarNotification sbn = sNotifications.get(mRanking.getRank(key));
                         if ((sbn.getNotification().flags & Notification.FLAG_AUTO_CANCEL) != 0 &&
                                 sbn.getNotification().contentIntent != null) {
                             try {
@@ -170,7 +170,7 @@ public class Listener extends NotificationListenerService {
                 case MSG_LAUNCH:
                     if (msg.obj instanceof String) {
                         final String key = (String) msg.obj;
-                        StatusBarNotification sbn = sNotifications.get(mRanking.getIndexOfKey(key));
+                        StatusBarNotification sbn = sNotifications.get(mRanking.getRank(key));
                         if (sbn.getNotification().contentIntent != null) {
                             try {
                                 sbn.getNotification().contentIntent.send();
@@ -206,7 +206,7 @@ public class Listener extends NotificationListenerService {
     }
 
     @Override
-    public void onListenerConnected(String[] notificationKeys) {
+    public void onListenerConnected() {
         Message.obtain(mHandler, MSG_STARTUP).sendToTarget();
     }
 
@@ -230,17 +230,9 @@ public class Listener extends NotificationListenerService {
 
     private void fetchActive() {
         mRanking = getCurrentRanking();
-        String[] keys = mRanking.getOrderedKeys();
         sNotifications = new ArrayList<StatusBarNotification>();
-        sNotifications.clear();
-        for (int i = 0; i < keys.length; i += PAGE) {
-            final int j = (i + PAGE < keys.length ? i + PAGE : keys.length);
-            String[] fetchKeys = Arrays.copyOfRange(keys, i, j);
-            StatusBarNotification[] sbns = getActiveNotifications(fetchKeys);
-            for(int s = 0; s < sbns.length; s++) {
-                // unfortunately cloneLight() is hidden
-                sNotifications.add(sbns[s]);
-            }
+        for (StatusBarNotification sbn : getActiveNotifications()) {
+            sNotifications.add(sbn);
         }
         Collections.sort(sNotifications, mRankingComparator);
     }
