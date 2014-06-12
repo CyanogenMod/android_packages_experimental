@@ -60,6 +60,8 @@ public class Listener extends NotificationListenerService {
         return sNotifications;
     }
 
+    private final Ranking mTmpRanking = new Ranking();
+
     private class Delta {
         final StatusBarNotification mSbn;
         final RankingMap mRankingMap;
@@ -72,11 +74,15 @@ public class Listener extends NotificationListenerService {
 
     private final Comparator<StatusBarNotification> mRankingComparator =
             new Comparator<StatusBarNotification>() {
+
+                private final Ranking mLhsRanking = new Ranking();
+                private final Ranking mRhsRanking = new Ranking();
+
                 @Override
                 public int compare(StatusBarNotification lhs, StatusBarNotification rhs) {
-                    Ranking lhsRanking = mRankingMap.getRanking(lhs.getKey());
-                    Ranking rhsRanking = mRankingMap.getRanking(rhs.getKey());
-                    return Integer.compare(lhsRanking.getRank(), rhsRanking.getRank());
+                    mRankingMap.getRanking(lhs.getKey(), mLhsRanking);
+                    mRankingMap.getRanking(rhs.getKey(), mRhsRanking);
+                    return Integer.compare(mLhsRanking.getRank(), mRhsRanking.getRank());
                 }
             };
 
@@ -103,15 +109,16 @@ public class Listener extends NotificationListenerService {
             if (msg.obj instanceof Delta) {
                 delta = (Delta) msg.obj;
             }
+
             switch (msg.what) {
                 case MSG_NOTIFY:
                     Log.i(TAG, "notify: " + delta.mSbn.getKey());
                     synchronized (sNotifications) {
-                        Ranking ranking = mRankingMap.getRanking(delta.mSbn.getKey());
-                        if (ranking == null) {
+                        boolean exists = mRankingMap.getRanking(delta.mSbn.getKey(), mTmpRanking);
+                        if (!exists) {
                             sNotifications.add(delta.mSbn);
                         } else {
-                            int position = ranking.getRank();
+                            int position = mTmpRanking.getRank();
                             sNotifications.set(position, delta.mSbn);
                         }
                         mRankingMap = delta.mRankingMap;
@@ -126,10 +133,9 @@ public class Listener extends NotificationListenerService {
                 case MSG_CANCEL:
                     Log.i(TAG, "remove: " + delta.mSbn.getKey());
                     synchronized (sNotifications) {
-                        Ranking ranking = mRankingMap.getRanking(delta.mSbn.getKey());
-                        int position = ranking.getRank();
-                        if (position != -1) {
-                            sNotifications.remove(position);
+                        boolean exists = mRankingMap.getRanking(delta.mSbn.getKey(), mTmpRanking);
+                        if (exists) {
+                            sNotifications.remove(mTmpRanking.getRank());
                         }
                         mRankingMap = delta.mRankingMap;
                         Collections.sort(sNotifications, mRankingComparator);
@@ -158,8 +164,8 @@ public class Listener extends NotificationListenerService {
                 case MSG_DISMISS:
                     if (msg.obj instanceof String) {
                         final String key = (String) msg.obj;
-                        Ranking ranking = mRankingMap.getRanking(key);
-                        StatusBarNotification sbn = sNotifications.get(ranking.getRank());
+                        mRankingMap.getRanking(key, mTmpRanking);
+                        StatusBarNotification sbn = sNotifications.get(mTmpRanking.getRank());
                         if ((sbn.getNotification().flags & Notification.FLAG_AUTO_CANCEL) != 0 &&
                                 sbn.getNotification().contentIntent != null) {
                             try {
@@ -175,9 +181,8 @@ public class Listener extends NotificationListenerService {
                 case MSG_LAUNCH:
                     if (msg.obj instanceof String) {
                         final String key = (String) msg.obj;
-                        Ranking ranking = mRankingMap.getRanking(delta.mSbn.getKey());
-                        int position = ranking.getRank();
-                        StatusBarNotification sbn = sNotifications.get(position);
+                        mRankingMap.getRanking(key, mTmpRanking);
+                        StatusBarNotification sbn = sNotifications.get(mTmpRanking.getRank());
                         if (sbn.getNotification().contentIntent != null) {
                             try {
                                 sbn.getNotification().contentIntent.send();
