@@ -21,26 +21,28 @@ from xml.dom import minidom
 import SELinux_CTS
 from SELinux_CTS import SELinuxPolicy
 
-usage = "Usage: ./gen_SELinux_CTS.py input_policy_file output_xml_avc_rules_file"
+usage = "Usage: ./gen_SELinux_CTS.py input_policy_file output_xml_avc_rules_file neverallow_only=[t/f]"
 
 if __name__ == "__main__":
     # check usage
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print usage
         exit()
     input_file = sys.argv[1]
     output_file = sys.argv[2]
+    neverallow_only = (sys.argv[3] == "neverallow_only=t")
     policy = SELinuxPolicy()
     policy.from_file_name(input_file) #load data from file
 
     # expand rules into 4-tuples for SELinux.h checkAccess() check
     xml_root = Element('SELinux_AVC_Rules')
-    count = 1
-    for a in policy.allow_rules:
-        expanded_xml = SELinux_CTS.expand_avc_rule_to_xml(policy, a, str(count), 'allow')
-        if len(expanded_xml):
-            xml_root.append(expanded_xml)
-            count += 1
+    if not neverallow_only:
+        count = 1
+        for a in policy.allow_rules:
+            expanded_xml = SELinux_CTS.expand_avc_rule_to_xml(policy, a, str(count), 'allow')
+            if len(expanded_xml):
+                xml_root.append(expanded_xml)
+                count += 1
     count = 1
     for n in policy.neverallow_rules:
         expanded_xml = SELinux_CTS.expand_avc_rule_to_xml(policy, n, str(count), 'neverallow')
