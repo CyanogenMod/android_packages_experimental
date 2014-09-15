@@ -27,8 +27,15 @@ public class AccessibilityNodeInfoHelper {
         }
         final long startTime = SystemClock.uptimeMillis();
         try {
+            File baseDir = new File(Environment.getDataDirectory(), "uidump");
+            if (!baseDir.exists()) {
+                baseDir.mkdir();
+                baseDir.setExecutable(true, false);
+                baseDir.setWritable(true, false);
+                baseDir.setReadable(true, false);
+            }
             FileWriter writer = new FileWriter(
-                    new File(Environment.getExternalStorageDirectory(), "window_dump.xml"));
+                    new File(baseDir, "window_dump.xml"));
             XmlSerializer serializer = Xml.newSerializer();
             StringWriter stringWriter = new StringWriter();
             serializer.setOutput(stringWriter);
