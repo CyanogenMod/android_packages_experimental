@@ -20,17 +20,22 @@ import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.provider.ContactsContract;
 import android.support.v4.app.NotificationCompat;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -73,6 +78,34 @@ public class NotificationService extends IntentService {
 
     public static Notification makeBigTextNotification(Context context, int update, int id,
             long when) {
+        String personUri = null;
+        Cursor c = null;
+        try {
+            String[] projection = new String[] { ContactsContract.Contacts._ID, ContactsContract.Contacts.LOOKUP_KEY };
+            String selections = ContactsContract.Contacts.DISPLAY_NAME + " = 'Mike Cleron'";
+            final ContentResolver contentResolver = context.getContentResolver();
+            c = contentResolver.query(ContactsContract.Contacts.CONTENT_URI,
+                    projection, selections, null, null);
+            if (c != null && c.getCount() > 0) {
+                c.moveToFirst();
+                int lookupIdx = c.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY);
+                int idIdx = c.getColumnIndex(ContactsContract.Contacts._ID);
+                String lookupKey = c.getString(lookupIdx);
+                long contactId = c.getLong(idIdx);
+                Uri lookupUri = ContactsContract.Contacts.getLookupUri(contactId, lookupKey);
+                personUri = lookupUri.toString();
+            }
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+        if (TextUtils.isEmpty(personUri)) {
+            Log.w(TAG, "failed to find contact for Mike Cleron");
+        } else {
+            Log.w(TAG, "Mike Cleron is " + personUri);
+        }
+
         String addendum = update > 0 ? "(updated) " : "";
         String longSmsText = "Hey, looks like\nI'm getting kicked out of this conference" +
                 " room";
@@ -86,7 +119,7 @@ public class NotificationService extends IntentService {
         }
         NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
         bigTextStyle.bigText(addendum + longSmsText);
-        NotificationCompat.Builder bigTextNotification = new NotificationCompat.Builder(context)
+        Notification bigText = new NotificationCompat.Builder(context)
                 .setContentTitle(addendum + "Mike Cleron")
                 .setContentIntent(ToastService.getPendingIntent(context, "Clicked on bigText"))
                 .setContentText(addendum + longSmsText)
@@ -98,8 +131,11 @@ public class NotificationService extends IntentService {
                         "update: " + update,
                         UpdateService.getPendingIntent(context, update + 1, id, when))
                 .setSmallIcon(R.drawable.stat_notify_talk_text)
-                .setStyle(bigTextStyle);
-        return bigTextNotification.build();
+                .setStyle(bigTextStyle)
+                .setDefaults(Notification.DEFAULT_SOUND)
+                .addPerson(personUri)
+                .build();
+        return bigText;
     }
 
     public static Notification makeUploadNotification(Context context, int progress, long when) {
@@ -127,21 +163,23 @@ public class NotificationService extends IntentService {
         long uploadWhen = System.currentTimeMillis();
         mNotifications.add(makeUploadNotification(this, 10, uploadWhen));
 
+        int phoneId = mNotifications.size();
+        final PendingIntent fullscreenIntent = FullScreenActivity.getPendingIntent(this, phoneId);
         Notification phoneCall = new NotificationCompat.Builder(this)
                 .setContentTitle("Incoming call")
                 .setContentText("Matias Duarte")
                 .setLargeIcon(getBitmap(this, R.drawable.matias_hed))
                 .setSmallIcon(R.drawable.stat_sys_phone_call)
-                .setDefaults(Notification.DEFAULT_SOUND)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setContentIntent(ToastService.getPendingIntent(this, "Clicked on Matias"))
+                .setContentIntent(fullscreenIntent)
+                .setFullScreenIntent(fullscreenIntent, true)
                 .addAction(R.drawable.ic_dial_action_call, "Answer",
-                        ToastService.getPendingIntent(this, "call answered"))
+                        PhoneService.getPendingIntent(this, phoneId, PhoneService.ACTION_ANSWER))
                 .addAction(R.drawable.ic_end_call, "Ignore",
-                        ToastService.getPendingIntent(this, "call ignored"))
-                .setAutoCancel(true)
+                        PhoneService.getPendingIntent(this, phoneId, PhoneService.ACTION_IGNORE))
+                .setOngoing(true)
+                .addPerson(Uri.fromParts("tel", "1 (617) 555-1212", null).toString())
                 .build();
-        phoneCall.flags |= Notification.FLAG_INSISTENT;
         mNotifications.add(phoneCall);
 
         mNotifications.add(new NotificationCompat.Builder(this)
