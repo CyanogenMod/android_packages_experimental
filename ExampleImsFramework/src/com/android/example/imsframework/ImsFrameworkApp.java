@@ -28,8 +28,8 @@ import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import com.android.internal.telephony.IccCard;
-import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.IccCardConstants;
+import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.TelephonyIntents;
 
@@ -71,30 +71,30 @@ public class ImsFrameworkApp extends Application {
             Log.d(TAG, "mReceiver received action " + action);
             if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
                 Log.d(TAG, "mReceiver: ACTION_AIRPLANE_MODE_CHANGED");
-                Log.d(TAG, "- state: " + intent.getBooleanExtra(Phone.STATE_KEY, false));
+                Log.d(TAG, "- state: " + intent.getBooleanExtra(PhoneConstants.STATE_KEY, false));
             } else if (action.equals(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED)) {
                 Log.d(TAG, "mReceiver: ACTION_ANY_DATA_CONNECTION_STATE_CHANGED");
-                Log.d(TAG, "- apnName: " + intent.getStringExtra(Phone.DATA_APN_KEY));
-                Log.d(TAG, "- apnType: " + intent.getStringExtra(Phone.DATA_APN_TYPE_KEY));
-                Log.d(TAG, "- state: " + intent.getStringExtra(Phone.STATE_KEY));
-                Log.d(TAG, "- reason: " + intent.getStringExtra(Phone.STATE_CHANGE_REASON_KEY));
+                Log.d(TAG, "- apnName: " + intent.getStringExtra(PhoneConstants.DATA_APN_KEY));
+                Log.d(TAG, "- apnType: " + intent.getStringExtra(PhoneConstants.DATA_APN_TYPE_KEY));
+                Log.d(TAG, "- state: " + intent.getStringExtra(PhoneConstants.STATE_KEY));
+                Log.d(TAG, "- reason: " + intent.getStringExtra(PhoneConstants.STATE_CHANGE_REASON_KEY));
                 Log.d(TAG, "- network unavailable: " +
-                        intent.getBooleanExtra(Phone.NETWORK_UNAVAILABLE_KEY, false));
+                        intent.getBooleanExtra(PhoneConstants.NETWORK_UNAVAILABLE_KEY, false));
                 // demonstrate calling ISIM authentication when data state changes
                 tryIsimAuthentication();
             } else if (action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) {
                 Log.d(TAG, "mReceiver: ACTION_SIM_STATE_CHANGED");
-                Log.d(TAG, "- phoneName: " + intent.getStringExtra(Phone.PHONE_NAME_KEY));
-                String state = intent.getStringExtra(IccCard.INTENT_KEY_ICC_STATE);
+                Log.d(TAG, "- phoneName: " + intent.getStringExtra(PhoneConstants.PHONE_NAME_KEY));
+                String state = intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
                 Log.d(TAG, "- state: " + state);
-                Log.d(TAG, "- reason: " + intent.getStringExtra(Phone.STATE_CHANGE_REASON_KEY));
-                if (IccCard.INTENT_VALUE_ICC_LOADED.equals(state)) {
+                Log.d(TAG, "- reason: " + intent.getStringExtra(PhoneConstants.STATE_CHANGE_REASON_KEY));
+                if (IccCardConstants.INTENT_VALUE_ICC_LOADED.equals(state)) {
                     // all ISIM records are loaded, query them through TelephonyManager
                     handleSimRecordsLoaded();
                 }
             } else if (action.equals(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED)) {
                 Log.d(TAG, "mReceiver: ACTION_RADIO_TECHNOLOGY_CHANGED");
-                Log.d(TAG, "- phoneName: " + intent.getStringExtra(Phone.PHONE_NAME_KEY));
+                Log.d(TAG, "- phoneName: " + intent.getStringExtra(PhoneConstants.PHONE_NAME_KEY));
             } else if (action.equals(TelephonyIntents.ACTION_SERVICE_STATE_CHANGED)) {
                 Log.d(TAG, "mReceiver: ACTION_SERVICE_STATE_CHANGED");
                 ServiceState ss = ServiceState.newFromBundle(intent.getExtras());
