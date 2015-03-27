@@ -5,7 +5,7 @@
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+          http://www.apache.org/licenses/LICENSE-2.0
 
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,12 +15,6 @@
 -->
 
 <resources>
-
-    <string name="app_name">Runtime permissionz2</string>
-    <string name="show_contacts">Contacts</string>
-    <string name="show_events">Events</string>
-    <string name="request_all_perms">Request permissions</string>
-    <string name="list_title">Here is some permission protected stuff</string>
-    <string name="action_prompt">Almost worked\u2026</string>
-
+    <color name="header_background_color">#ff37474f</color>
 </resources>
+

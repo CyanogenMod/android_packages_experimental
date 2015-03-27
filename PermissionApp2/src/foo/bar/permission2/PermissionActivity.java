@@ -26,18 +26,17 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.CalendarContract;
 import android.provider.ContactsContract;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
-import foo.bar.permission.R;
 
 /**
  * Simple sample of how to use the runtime permissions APIs.
  */
-public class PermissionActivity extends Activity implements View.OnClickListener,
-        LoaderManager.LoaderCallbacks<Cursor> {
+public class PermissionActivity extends Activity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     public static final String LOG_TAG = "PermissionActivity";
 
@@ -74,9 +73,6 @@ public class PermissionActivity extends Activity implements View.OnClickListener
     };
 
     private ListView mListView;
-    private Button mContactsButton;
-    private Button mEventsButton;
-    private Button mPermissionsButton;
 
     private CursorAdapter mContactsAdapter;
     private CursorAdapter mEventsAdapter;
@@ -87,28 +83,46 @@ public class PermissionActivity extends Activity implements View.OnClickListener
         bindUi();
     }
 
+
     @Override
-    public void onClick(View view) {
-        if (view == mContactsButton) {
-            showContacts();
-        } else if (view == mEventsButton) {
-            showEvents();
-        } else if (view == mPermissionsButton) {
-            requestPermissions();
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.actions, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.show_contacts: {
+                showContacts();
+                return true;
+            }
+
+            case R.id.show_events: {
+                showEvents();
+                return true;
+            }
+
+            case R.id.request_all_perms: {
+                requestPermissions();
+                return true;
+            }
         }
+
+        return false;
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int loaderId, Bundle args) {
         switch (loaderId) {
             case CONTACTS_LOADER: {
-                return new CursorLoader(PermissionActivity.this,
+                return new CursorLoader(this,
                         ContactsContract.Contacts.CONTENT_URI,
                         CONTACTS_PROJECTION, null, null, null);
             }
 
             case EVENTS_LOADER: {
-                return new CursorLoader(PermissionActivity.this,
+                return new CursorLoader(this,
                         CalendarContract.Events.CONTENT_URI,
                         EVENTS_PROJECTION, null, null, null);
             }
@@ -167,15 +181,8 @@ public class PermissionActivity extends Activity implements View.OnClickListener
         setContentView(R.layout.permission_activity);
 
         mListView = (ListView) findViewById(R.id.list);
-
-        mContactsButton = (Button) findViewById(R.id.show_contacts);
-        mContactsButton.setOnClickListener(this);
-
-        mEventsButton = (Button) findViewById(R.id.show_events);
-        mEventsButton.setOnClickListener(this);
-
-        mPermissionsButton = (Button) findViewById(R.id.request_permissions);
-        mPermissionsButton.setOnClickListener(this);
+        View emptyView = findViewById(R.id.empty_state);
+        mListView.setEmptyView(emptyView);
 
         mContactsAdapter = new SimpleCursorAdapter(this,
                 android.R.layout.simple_list_item_1,
@@ -219,7 +226,7 @@ public class PermissionActivity extends Activity implements View.OnClickListener
                 != PackageManager.PERMISSION_GRANTED
             || checkSelfPermission(Manifest.permission.READ_CONTACTS)
                 != PackageManager.PERMISSION_GRANTED) {
-            String[] permissions = new String[] {
+            String[] permissions = new String[]{
                     Manifest.permission.READ_CONTACTS,
                     Manifest.permission.READ_CALENDAR
             };

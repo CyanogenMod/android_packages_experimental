@@ -1,11 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="foo.bar.permission2"
     android:versionCode="1"
-    android:versionName="1.0"
-    android:sharedUserId="foo.bar.permissionz">
+    android:versionName="1.0">
 
     <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="10000"/>
 
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
 
     <application

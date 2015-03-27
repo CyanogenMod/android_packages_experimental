@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package foo.bar.permission;
+package foo.bar.permission2;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

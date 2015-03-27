@@ -16,9 +16,11 @@
 
 <resources>
 
-    <string name="app_name">Permission</string>
+    <string name="app_name">Runtime permissionz</string>
     <string name="show_contacts">Contacts</string>
-    <string name="show_calls">Events</string>
-    <string name="request_permissions">Permissions</string>
+    <string name="show_events">Events</string>
+    <string name="request_all_perms">Request permissions</string>
+    <string name="list_title">Here is some permission protected stuff</string>
+    <string name="action_prompt">Almost worked\u2026</string>
 
 </resources>
