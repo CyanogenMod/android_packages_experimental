@@ -86,24 +86,24 @@ public class PermissionActivity extends Activity implements LoaderManager.Loader
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(foo.bar.permission2.R.menu.actions, menu);
+        getMenuInflater().inflate(R.menu.actions, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case foo.bar.permission2.R.id.show_contacts: {
+            case R.id.show_contacts: {
                 showContacts();
                 return true;
             }
 
-            case foo.bar.permission2.R.id.show_events: {
+            case R.id.show_events: {
                 showEvents();
                 return true;
             }
 
-            case foo.bar.permission2.R.id.request_all_perms: {
+            case R.id.request_all_perms: {
                 requestPermissions();
                 return true;
             }
@@ -178,10 +178,10 @@ public class PermissionActivity extends Activity implements LoaderManager.Loader
     }
 
     private void bindUi() {
-        setContentView(foo.bar.permission2.R.layout.permission_activity);
+        setContentView(R.layout.permission_activity);
 
-        mListView = (ListView) findViewById(foo.bar.permission2.R.id.list);
-        View emptyView = findViewById(foo.bar.permission2.R.id.empty_state);
+        mListView = (ListView) findViewById(R.id.list);
+        View emptyView = findViewById(R.id.empty_state);
         mListView.setEmptyView(emptyView);
 
         mContactsAdapter = new SimpleCursorAdapter(this,
