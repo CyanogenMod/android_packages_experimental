@@ -26,17 +26,21 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.CalendarContract;
 import android.provider.ContactsContract;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.Toast;
 
 /**
  * Simple sample of how to use the runtime permissions APIs.
  */
-public class PermissionActivity extends Activity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class PermissionActivity extends Activity implements LoaderManager.LoaderCallbacks<Cursor>,
+        ActivityCompat.OnRequestPermissionsResultCallback {
 
     public static final String LOG_TAG = "PermissionActivity";
 
@@ -194,9 +198,14 @@ public class PermissionActivity extends Activity implements LoaderManager.Loader
     }
 
     private void showContacts() {
-        if (checkSelfPermission(Manifest.permission.READ_CONTACTS)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
                 != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] {Manifest.permission.READ_CONTACTS},
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.READ_CONTACTS)) {
+                Toast.makeText(this, "I really need it, dude!", Toast.LENGTH_SHORT).show();
+            }
+            ActivityCompat.requestPermissions(this, new String[]{
+                            Manifest.permission.READ_CONTACTS},
                     PERMISSIONS_REQUEST_READ_CONTACTS);
             return;
         }
@@ -208,9 +217,14 @@ public class PermissionActivity extends Activity implements LoaderManager.Loader
     }
 
     private void showEvents() {
-        if (checkSelfPermission(Manifest.permission.READ_CALENDAR)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR)
                 != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_CALENDAR},
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.READ_CALENDAR)) {
+                Toast.makeText(this, "I really need it, dude!", Toast.LENGTH_SHORT).show();
+            }
+            ActivityCompat.requestPermissions(this, new String[]{
+                            Manifest.permission.READ_CALENDAR},
                     PERMISSIONS_REQUEST_READ_CALENDAR);
             return;
         }
@@ -222,15 +236,16 @@ public class PermissionActivity extends Activity implements LoaderManager.Loader
     }
 
     private void requestPermissions() {
-        if (checkSelfPermission(Manifest.permission.READ_CALENDAR)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR)
                 != PackageManager.PERMISSION_GRANTED
-            || checkSelfPermission(Manifest.permission.READ_CONTACTS)
+            || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
                 != PackageManager.PERMISSION_GRANTED) {
             String[] permissions = new String[]{
                     Manifest.permission.READ_CONTACTS,
                     Manifest.permission.READ_CALENDAR
             };
-            requestPermissions(permissions, PERMISSIONS_REQUEST_ALL_PERMISSIONS);
+            ActivityCompat.requestPermissions(this, permissions,
+                    PERMISSIONS_REQUEST_ALL_PERMISSIONS);
         }
     }
 }

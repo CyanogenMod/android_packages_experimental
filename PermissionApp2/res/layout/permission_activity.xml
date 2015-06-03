@@ -26,14 +26,13 @@
     <FrameLayout
         android:layout_width="fill_parent"
         android:layout_height="?android:attr/actionBarSize"
-        android:background="@drawable/header_background"
-        android:theme="@android:style/Theme.Material.Settings" >
+        android:theme="@android:style/Theme.DeviceDefault" >
 
         <TextView
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_gravity="center"
-            android:textAppearance="@android:style/TextAppearance.Material.Medium"
+            android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@android:color/white"
             android:text="@string/list_title">
         </TextView>
