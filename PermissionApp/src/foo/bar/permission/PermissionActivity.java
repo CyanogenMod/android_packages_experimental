@@ -32,6 +32,11 @@ import android.view.View;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Simple sample of how to use the runtime permissions APIs.
@@ -160,6 +165,11 @@ public class PermissionActivity extends Activity implements LoaderManager.Loader
     }
 
     @Override
+    public void onBackPressed() {
+        requestPermissions();
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[],
             int[] grantResults) {
         switch (requestCode) {
@@ -172,6 +182,23 @@ public class PermissionActivity extends Activity implements LoaderManager.Loader
             case PERMISSIONS_REQUEST_READ_CALENDAR: {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     showEvents();
+                }
+            } break;
+
+            case PERMISSIONS_REQUEST_ALL_PERMISSIONS: {
+                for (int i = 0; i < permissions.length; i++) {
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        switch (permissions[i]) {
+                            case Manifest.permission.READ_CALENDAR: {
+                                Toast.makeText(this, "Granted Calendar!",
+                                        Toast.LENGTH_SHORT).show();
+                            } break;
+
+                            case Manifest.permission.READ_CONTACTS: {
+                                showContacts();
+                            } break;
+                        }
+                    }
                 }
             } break;
         }
@@ -222,15 +249,18 @@ public class PermissionActivity extends Activity implements LoaderManager.Loader
     }
 
     private void requestPermissions() {
+        List<String> permissions = new ArrayList<>();
         if (checkSelfPermission(Manifest.permission.READ_CALENDAR)
-                != PackageManager.PERMISSION_GRANTED
-            || checkSelfPermission(Manifest.permission.READ_CONTACTS)
                 != PackageManager.PERMISSION_GRANTED) {
-            String[] permissions = new String[]{
-                    Manifest.permission.READ_CONTACTS,
-                    Manifest.permission.READ_CALENDAR
-            };
-            requestPermissions(permissions, PERMISSIONS_REQUEST_ALL_PERMISSIONS);
+            permissions.add(Manifest.permission.READ_CALENDAR);
+        }
+        if (checkSelfPermission(Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.READ_CONTACTS);
+        }
+        if (!permissions.isEmpty()) {
+            requestPermissions(permissions.toArray(new String[0]),
+                    PERMISSIONS_REQUEST_ALL_PERMISSIONS);
         }
     }
 }
