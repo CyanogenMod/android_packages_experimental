@@ -252,7 +252,7 @@ public class NotificationService extends IntentService {
                 .setContentText("New mentions")
                 .setContentIntent(ToastService.getPendingIntent(this, "Clicked on Twitter"))
                 .setSmallIcon(R.drawable.twitter_icon)
-                .setNumber(15)
+                .setNumber(1000)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build());
 
