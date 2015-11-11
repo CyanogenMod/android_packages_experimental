@@ -383,7 +383,8 @@ public class MyPrintService extends PrintService {
                         new PrinterCapabilitiesInfo.Builder(printerId)
                     .setMinMargins(new Margins(200, 200, 200, 200))
                     .addMediaSize(MediaSize.ISO_A4, true)
-                    .addMediaSize(MediaSize.ISO_A5, false)
+                    .addMediaSize(MediaSize.NA_GOVT_LETTER, false)
+                    .addMediaSize(MediaSize.JPN_YOU4, false)
                     .addResolution(new Resolution("R1", getString(
                             R.string.resolution_200x200), 200, 200), false)
                     .addResolution(new Resolution("R2", getString(
@@ -391,6 +392,9 @@ public class MyPrintService extends PrintService {
                     .setColorModes(PrintAttributes.COLOR_MODE_COLOR
                             | PrintAttributes.COLOR_MODE_MONOCHROME,
                             PrintAttributes.COLOR_MODE_MONOCHROME)
+                    .setDuplexModes(PrintAttributes.DUPLEX_MODE_LONG_EDGE
+                            | PrintAttributes.DUPLEX_MODE_NONE,
+                            PrintAttributes.DUPLEX_MODE_LONG_EDGE)
                     .build();
 
                 printer = new PrinterInfo.Builder(printer)
