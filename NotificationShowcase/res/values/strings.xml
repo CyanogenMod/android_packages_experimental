@@ -70,6 +70,7 @@
 
     <string name="pref_title_sms">SMS Example</string>
     <string name="pref_summary_sms_enable">Enable the SMS example</string>
+    <string name="pref_title_sms_sound">Ringtone</string>
     <string name="pref_title_sms_noisy">Noise</string>
     <string name="pref_summary_sms_noisy">Allow the SMS example to be noisy</string>
     <string name="pref_title_sms_buzzy">Vibration</string>

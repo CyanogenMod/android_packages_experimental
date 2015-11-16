@@ -41,6 +41,12 @@
             android:summary="@string/pref_summary_sms_noisy"
             android:title="@string/pref_title_sms_noisy"
             android:defaultValue="true" />
+      <RingtonePreference
+            android:persistent="true"
+            android:key="pref_key_sms_sound"
+            android:dependency="pref_key_sms_enable"
+            android:ringtoneType="notification"
+            android:title="@string/pref_title_sms_sound" />
     <CheckBoxPreference
             android:persistent="true"
             android:key="pref_key_sms_buzzy"
