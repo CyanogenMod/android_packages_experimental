@@ -24,6 +24,7 @@ public class SettingsActivity extends Activity {
     public static final String KEY_GLOBAL_FADE = "pref_key_global_fade";
     public static final String KEY_SMS_ENABLE = "pref_key_sms_enable";
     public static final String KEY_SMS_NOISY = "pref_key_sms_noisy";
+    public static final String KEY_SMS_SOUND = "pref_key_sms_sound";
     public static final String KEY_SMS_BUZZY = "pref_key_sms_buzzy";
     public static final String KEY_SMS_PRIORITY = "pref_key_sms_priority";
     public static final String KEY_SMS_PERSON = "pref_key_sms_person";
@@ -44,6 +45,8 @@ public class SettingsActivity extends Activity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.preferences);
         }
+
+        public SettingsFragment() {}
     }
 
     @Override

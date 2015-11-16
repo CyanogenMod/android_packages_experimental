@@ -42,6 +42,8 @@ import android.text.TextUtils;
 import android.text.style.StyleSpan;
 import android.util.Log;
 
+import com.android.example.notificationshowcase.R;
+
 import java.util.ArrayList;
 
 public class NotificationService extends IntentService {
@@ -66,7 +68,7 @@ public class NotificationService extends IntentService {
         intent.setComponent(new ComponentName(context, NotificationService.class));
         return PendingIntent.getService(
                 context, 0, intent,
-                PendingIntent.FLAG_CANCEL_CURRENT);
+                PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private static Bitmap getBitmap(Context context, int resId) {
@@ -151,8 +153,13 @@ public class NotificationService extends IntentService {
         }
 
         int defaults = 0;
-        if(sharedPref.getBoolean(SettingsActivity.KEY_SMS_NOISY, false)) {
-            defaults |= Notification.DEFAULT_SOUND;
+        if(sharedPref.getBoolean(SettingsActivity.KEY_SMS_NOISY, true)) {
+            String uri = sharedPref.getString(SettingsActivity.KEY_SMS_SOUND, null);
+            if(uri == null) {
+                defaults |= Notification.DEFAULT_SOUND;
+            } else {
+                bigText.setSound(Uri.parse(uri));
+            }
         }
         if(sharedPref.getBoolean(SettingsActivity.KEY_SMS_BUZZY, false)) {
             defaults |= Notification.DEFAULT_VIBRATE;
@@ -188,7 +195,7 @@ public class NotificationService extends IntentService {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         ArrayList<Notification> mNotifications = new ArrayList<Notification>();
 
-        if(sharedPref.getBoolean(SettingsActivity.KEY_SMS_ENABLE, false)) {
+        if(sharedPref.getBoolean(SettingsActivity.KEY_SMS_ENABLE, true)) {
             final int id = mNotifications.size();
             mNotifications.add(makeSmsNotification(this, 2, id, System.currentTimeMillis()));
         }
@@ -216,7 +223,7 @@ public class NotificationService extends IntentService {
                     .setCategory(NotificationCompat.CATEGORY_CALL)
                     .setContentIntent(fullscreen)
                     .addAction(R.drawable.ic_dial_action_call, getString(R.string.call_answer), ans)
-                            .addAction(R.drawable.ic_end_call, getString(R.string.call_ignore), ign)
+                    .addAction(R.drawable.ic_end_call, getString(R.string.call_ignore), ign)
                     .setOngoing(true);
 
             if(sharedPref.getBoolean(SettingsActivity.KEY_PHONE_FULLSCREEN, false)) {
@@ -228,7 +235,9 @@ public class NotificationService extends IntentService {
             }
 
             if (sharedPref.getBoolean(SettingsActivity.KEY_PHONE_PERSON, false)) {
-                phoneCall.addPerson(Uri.fromParts("tel", "1 (617) 555-1212", null).toString());
+                phoneCall.addPerson(Uri.fromParts("tel",
+                        "1 (617) 555-1212", null)
+                        .toString());
             }
             mNotifications.add(phoneCall.build());
         }
@@ -317,10 +326,11 @@ public class NotificationService extends IntentService {
             noMa.notify(NOTIFICATION_ID + i, mNotifications.get(i));
         }
 
-        // always create the pending intent, to cancel any previous intent
+        // always cancel any previous alarm
         PendingIntent pendingCancel = makeCancelAllIntent(this);
+        AlarmManager alMa = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alMa.cancel(pendingCancel);
         if(sharedPref.getBoolean(SettingsActivity.KEY_GLOBAL_FADE, false)) {
-            AlarmManager alMa = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             long t = SystemClock.elapsedRealtime() + FADE_TIME_MILLIS;
             alMa.set(AlarmManager.ELAPSED_REALTIME, t, pendingCancel);
         }
