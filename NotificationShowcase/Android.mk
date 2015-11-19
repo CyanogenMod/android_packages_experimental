@@ -29,7 +29,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     android-support-v7-preference
 
 LOCAL_PACKAGE_NAME := NotificationShowcase
-LOCAL_CERTIFICATE := platform
 include $(BUILD_PACKAGE)
 
 include $(call all-makefiles-under,$(LOCAL_PATH))
