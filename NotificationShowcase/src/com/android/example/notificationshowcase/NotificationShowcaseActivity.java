@@ -4,9 +4,12 @@
 package com.android.example.notificationshowcase;
 
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 public class NotificationShowcaseActivity extends Activity {
     private static final String TAG = "NotificationShowcase";
@@ -14,9 +17,23 @@ public class NotificationShowcaseActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+    }
+
+    public void doPost(View v) {
         Intent intent = new Intent(NotificationService.ACTION_CREATE);
         intent.setComponent(new ComponentName(this, NotificationService.class));
         startService(intent);
-        finish();
+    }
+
+    public void doRemove(View v) {
+        Intent intent = new Intent(NotificationService.ACTION_DESTROY);
+        intent.setComponent(new ComponentName(this, NotificationService.class));
+        startService(intent);
+    }
+
+    public void doPrefs(View v) {
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName(this, SettingsActivity.class));
+        startActivity(intent);
     }
 }
