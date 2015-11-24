@@ -16,6 +16,7 @@ public class MyDialogActivity extends ListActivity {
     private static final int ITEM_INDEX_BLOCK_NOW = 4;
     private static final int ITEM_INDEX_BLOCK_DELAYED = 5;
     private static final int ITEM_INDEX_BLOCK_AND_DELAYED_UNBLOCK = 6;
+    private static final int ITEM_INDEX_PRINT_SLOWLY = 7;
 
     private static final int ITEM_INDEX_CANCEL_YES = 0;
 
@@ -77,6 +78,11 @@ public class MyDialogActivity extends ListActivity {
                     case ITEM_INDEX_BLOCK_AND_DELAYED_UNBLOCK: {
                         MyPrintService.peekInstance().handleBlockAndDelayedUnblockPrintJob(
                                 printJobId);
+                        finish();
+                    } break;
+
+                    case ITEM_INDEX_PRINT_SLOWLY: {
+                        MyPrintService.peekInstance().handlePrintJobProgress(printJobId, 0);
                         finish();
                     } break;
 

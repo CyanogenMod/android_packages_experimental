@@ -16,6 +16,7 @@
 
 package foo.bar.printservice;
 
+import android.annotation.NonNull;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -37,6 +38,7 @@ import android.printservice.PrintService;
 import android.printservice.PrinterDiscoverySession;
 import android.util.ArrayMap;
 import android.util.Log;
+import android.widget.ProgressBar;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -213,6 +215,34 @@ public class MyPrintService extends PrintService {
         mHandler.sendMessageDelayed(message, STANDARD_DELAY_MILLIS);
     }
 
+    /**
+     * Pretend that the print job has progressed.
+     *
+     * @param printJobId ID of the print job to progress
+     * @param progress the new value to progress to
+     */
+    void handlePrintJobProgress(@NonNull PrintJobId printJobId, int progress) {
+        final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
+        if (printJob == null) {
+            return;
+        }
+
+        if (printJob.isQueued()) {
+            printJob.start();
+        }
+
+        if (progress == 100) {
+            handleQueuedPrintJob(printJobId);
+        } else {
+            printJob.setProgress((float)progress / 100);
+            printJob.setStatus("Printing progress: " + progress + "%");
+
+            Message message = mHandler.obtainMessage(
+                    MyHandler.MSG_HANDLE_PRINT_JOB_PROGRESS, progress + 10, 0, printJobId);
+            mHandler.sendMessageDelayed(message, 1000);
+        }
+    }
+
     void handleQueuedPrintJob(PrintJobId printJobId) {
         final PrintJob printJob = mProcessedPrintJobs.get(printJobId);
         if (printJob == null) {
@@ -302,6 +332,7 @@ public class MyPrintService extends PrintService {
         public static final int MSG_HANDLE_FAIL_PRINT_JOB = 2;
         public static final int MSG_HANDLE_BLOCK_PRINT_JOB = 3;
         public static final int MSG_HANDLE_UNBLOCK_PRINT_JOB = 4;
+        public static final int MSG_HANDLE_PRINT_JOB_PROGRESS = 5;
 
         public MyHandler(Looper looper) {
             super(looper);
@@ -328,6 +359,11 @@ public class MyPrintService extends PrintService {
                 case MSG_HANDLE_UNBLOCK_PRINT_JOB: {
                     PrintJobId printJobId = (PrintJobId) message.obj;
                     handleUnblockPrintJob(printJobId);
+                } break;
+
+                case MSG_HANDLE_PRINT_JOB_PROGRESS: {
+                    PrintJobId printJobId = (PrintJobId) message.obj;
+                    handlePrintJobProgress(printJobId, message.arg1);
                 } break;
             }
         }

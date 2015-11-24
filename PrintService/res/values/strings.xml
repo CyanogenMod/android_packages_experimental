@@ -22,6 +22,7 @@
     <string name="block_now">Block now</string>
     <string name="block_delayed">Block delayed</string>
     <string name="block_and_delayed_unblock">Block and delayed unblock</string>
+    <string name="print_slowly">Print slowly (showing a progress)</string>
     <string name="cancel_yes">Cancel</string>
     <string name="cancel_no">Don\'t cancel</string>
 
