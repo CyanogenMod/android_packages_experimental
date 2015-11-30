@@ -223,78 +223,82 @@ public class MyPrintService extends PrintService {
             printJob.start();
         }
 
-        final PrintJobInfo info = printJob.getInfo();
-        final File file = new File(getFilesDir(), info.getLabel() + ".pdf");
-
-        mFakePrintTask = new AsyncTask<ParcelFileDescriptor, Void, Void>() {
-            @Override
-            protected Void doInBackground(ParcelFileDescriptor... params) {
-                InputStream in = new BufferedInputStream(new FileInputStream(
-                        params[0].getFileDescriptor()));
-                OutputStream out = null;
-                try {
-                    out = new BufferedOutputStream(new FileOutputStream(file));
-                    final byte[] buffer = new byte[8192];
-                    while (true) {
+        try {
+            final File file = File.createTempFile(this.getClass().getSimpleName(), ".pdf",
+                    getFilesDir());
+            mFakePrintTask = new AsyncTask<ParcelFileDescriptor, Void, Void>() {
+                @Override
+                protected Void doInBackground(ParcelFileDescriptor... params) {
+                    InputStream in = new BufferedInputStream(new FileInputStream(
+                            params[0].getFileDescriptor()));
+                    OutputStream out = null;
+                    try {
+                        out = new BufferedOutputStream(new FileOutputStream(file));
+                        final byte[] buffer = new byte[8192];
+                        while (true) {
+                            if (isCancelled()) {
+                                break;
+                            }
+                            final int readByteCount = in.read(buffer);
+                            if (readByteCount < 0) {
+                                break;
+                            }
+                            out.write(buffer, 0, readByteCount);
+                        }
+                    } catch (IOException ioe) {
+                        throw new RuntimeException(ioe);
+                    } finally {
+                        if (in != null) {
+                            try {
+                                in.close();
+                            } catch (IOException ioe) {
+                                /* ignore */
+                            }
+                        }
+                        if (out != null) {
+                            try {
+                                out.close();
+                            } catch (IOException ioe) {
+                                /* ignore */
+                            }
+                        }
                         if (isCancelled()) {
-                            break;
-                        }
-                        final int readByteCount = in.read(buffer);
-                        if (readByteCount < 0) {
-                            break;
-                        }
-                        out.write(buffer, 0, readByteCount);
-                    }
-                } catch (IOException ioe) {
-                    throw new RuntimeException(ioe);
-                } finally {
-                    if (in != null) {
-                        try {
-                            in.close();
-                        } catch (IOException ioe) {
-                            /* ignore */
+                            file.delete();
                         }
                     }
-                    if (out != null) {
-                        try {
-                            out.close();
-                        } catch (IOException ioe) {
-                            /* ignore */
-                        }
-                    }
-                    if (isCancelled()) {
-                        file.delete();
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void result) {
-                if (printJob.isStarted()) {
-                    printJob.complete();
+                    return null;
                 }
 
-                file.setReadable(true, false);
+                @Override
+                protected void onPostExecute(Void result) {
+                    if (printJob.isStarted()) {
+                        printJob.complete();
+                    }
 
-                // Quick and dirty to show the file - use a content provider instead.
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.fromFile(file), "application/pdf");
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent, null);
+                    file.setReadable(true, false);
 
-                mFakePrintTask = null;
-            }
+                    // Quick and dirty to show the file - use a content provider instead.
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.fromFile(file), "application/pdf");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent, null);
 
-            @Override
-            protected void onCancelled(Void result) {
-                if (printJob.isStarted()) {
-                    printJob.cancel();
+                    mFakePrintTask = null;
                 }
-            }
-        };
-        mFakePrintTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,
-                printJob.getDocument().getData());
+
+                @Override
+                protected void onCancelled(Void result) {
+                    if (printJob.isStarted()) {
+                        printJob.cancel();
+                    }
+                }
+            };
+            mFakePrintTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,
+                    printJob.getDocument().getData());
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Could not create temporary file: %s", e);
+            return;
+        }
     }
 
     private final class MyHandler extends Handler {
