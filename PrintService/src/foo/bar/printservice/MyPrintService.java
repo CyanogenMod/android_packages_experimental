@@ -17,7 +17,10 @@
 package foo.bar.printservice;
 
 import android.annotation.NonNull;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -29,16 +32,15 @@ import android.print.PrintAttributes.Margins;
 import android.print.PrintAttributes.MediaSize;
 import android.print.PrintAttributes.Resolution;
 import android.print.PrintJobId;
-import android.print.PrintJobInfo;
 import android.print.PrinterCapabilitiesInfo;
 import android.print.PrinterId;
 import android.print.PrinterInfo;
+import android.printservice.CustomPrinterIconCallback;
 import android.printservice.PrintJob;
 import android.printservice.PrintService;
 import android.printservice.PrinterDiscoverySession;
 import android.util.ArrayMap;
 import android.util.Log;
-import android.widget.ProgressBar;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -379,13 +381,20 @@ public class MyPrintService extends PrintService {
         private final List<PrinterInfo> mFakePrinters = new ArrayList<PrinterInfo>();
 
         public FakePrinterDiscoverySession() {
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 1; i++) {
                 String name = "Printer " + i;
-                PrinterInfo printer = new PrinterInfo
-                        .Builder(generatePrinterId(name), name, (i % 2 == 1)
-                                ? PrinterInfo.STATUS_UNAVAILABLE : PrinterInfo.STATUS_IDLE)
-                        .build();
-                mFakePrinters.add(printer);
+                Intent infoIntent = new Intent(MyPrintService.this, InfoActivity.class);
+                infoIntent.putExtra(InfoActivity.PRINTER_NAME, name);
+                PendingIntent infoPendingIntent = PendingIntent.getActivity(getApplicationContext(),
+                        i, infoIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                PrinterInfo.Builder builder = new PrinterInfo.Builder(generatePrinterId(name), name,
+                        (i % 2 == 1) ? PrinterInfo.STATUS_UNAVAILABLE : PrinterInfo.STATUS_IDLE)
+                        .setDescription("Launch a menu to select behavior.")
+                        .setIconResourceId(R.drawable.printer)
+                        .setHasCustomPrinterIcon()
+                        .setInfoIntent(infoPendingIntent);
+                mFakePrinters.add(builder.build());
             }
         }
 
@@ -393,7 +402,6 @@ public class MyPrintService extends PrintService {
         public void onDestroy() {
             Log.i(LOG_TAG, "FakePrinterDiscoverySession#onDestroy()");
             mSesionHandler.removeMessages(SessionHandler.MSG_ADD_FIRST_BATCH_FAKE_PRINTERS);
-            mSesionHandler.removeMessages(SessionHandler.MSG_ADD_SECOND_BATCH_FAKE_PRINTERS);
         }
 
         @Override
@@ -402,10 +410,6 @@ public class MyPrintService extends PrintService {
             Message message1 = mSesionHandler.obtainMessage(
                     SessionHandler.MSG_ADD_FIRST_BATCH_FAKE_PRINTERS, this);
             mSesionHandler.sendMessageDelayed(message1, 0);
-
-            Message message2 = mSesionHandler.obtainMessage(
-                    SessionHandler.MSG_ADD_SECOND_BATCH_FAKE_PRINTERS, this);
-//            mSesionHandler.sendMessageDelayed(message2, 10000);
         }
 
         @Override
@@ -417,34 +421,58 @@ public class MyPrintService extends PrintService {
         @Override
         public void onStartPrinterStateTracking(PrinterId printerId) {
             Log.i(LOG_TAG, "FakePrinterDiscoverySession#onStartPrinterStateTracking()");
-            PrinterInfo printer = findPrinterInfo(printerId);
-            if (printer != null) {
-                PrinterCapabilitiesInfo capabilities =
-                        new PrinterCapabilitiesInfo.Builder(printerId)
-                    .setMinMargins(new Margins(200, 200, 200, 200))
-                    .addMediaSize(MediaSize.ISO_A4, true)
-                    .addMediaSize(MediaSize.NA_GOVT_LETTER, false)
-                    .addMediaSize(MediaSize.JPN_YOU4, false)
-                    .addResolution(new Resolution("R1", getString(
-                            R.string.resolution_200x200), 200, 200), false)
-                    .addResolution(new Resolution("R2", getString(
-                            R.string.resolution_300x300), 300, 300), true)
-                    .setColorModes(PrintAttributes.COLOR_MODE_COLOR
-                            | PrintAttributes.COLOR_MODE_MONOCHROME,
-                            PrintAttributes.COLOR_MODE_MONOCHROME)
-                    .setDuplexModes(PrintAttributes.DUPLEX_MODE_LONG_EDGE
-                            | PrintAttributes.DUPLEX_MODE_NONE,
-                            PrintAttributes.DUPLEX_MODE_LONG_EDGE)
-                    .build();
 
-                printer = new PrinterInfo.Builder(printer)
-                    .setCapabilities(capabilities)
-                    .build();
+            final int printerCount = mFakePrinters.size();
+            for (int i = printerCount - 1; i >= 0; i--) {
+                PrinterInfo printer = mFakePrinters.remove(i);
 
-                List<PrinterInfo> printers = new ArrayList<PrinterInfo>();
-                printers.add(printer);
-                addPrinters(printers);
+                if (printer.getId().equals(printerId)) {
+                    PrinterCapabilitiesInfo capabilities = new PrinterCapabilitiesInfo.Builder(
+                            printerId)
+                                    .setMinMargins(new Margins(200, 200, 200, 200))
+                                    .addMediaSize(MediaSize.ISO_A4, true)
+                                    .addMediaSize(MediaSize.NA_GOVT_LETTER, false)
+                                    .addMediaSize(MediaSize.JPN_YOU4, false)
+                                    .addResolution(new Resolution("R1", getString(
+                                            R.string.resolution_200x200), 200, 200), false)
+                                    .addResolution(new Resolution("R2", getString(
+                                            R.string.resolution_300x300), 300, 300), true)
+                                    .setColorModes(PrintAttributes.COLOR_MODE_COLOR
+                                            | PrintAttributes.COLOR_MODE_MONOCHROME,
+                                            PrintAttributes.COLOR_MODE_MONOCHROME)
+                                    .setDuplexModes(PrintAttributes.DUPLEX_MODE_LONG_EDGE
+                                            | PrintAttributes.DUPLEX_MODE_NONE,
+                                            PrintAttributes.DUPLEX_MODE_LONG_EDGE)
+                                    .build();
+
+                    printer = new PrinterInfo.Builder(printer)
+                            .setCapabilities(capabilities)
+                            .build();
+                }
+
+                mFakePrinters.add(printer);
             }
+
+            addPrinters(mFakePrinters);
+        }
+
+        @Override
+        public void onRequestCustomPrinterIcon(final PrinterId printerId,
+                final CustomPrinterIconCallback callbacks) {
+            Log.i(LOG_TAG, "FakePrinterDiscoverySession#onRequestCustomPrinterIcon() " + printerId);
+
+            // Pretend the bitmap icon takes 5 seconds to load
+            mSesionHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    final int printerCount = mFakePrinters.size();
+                    for (int i = printerCount - 1; i >= 0; i--) {
+                        PrinterInfo printer = mFakePrinters.get(i);
+                        callbacks.onCustomPrinterIconLoaded(Icon.createWithBitmap(
+                                BitmapFactory.decodeResource(getResources(), R.raw.red_printer)));
+                    }
+                }
+            }, 5000);
         }
 
         @Override
@@ -458,42 +486,16 @@ public class MyPrintService extends PrintService {
         }
 
         private void addFirstBatchFakePrinters() {
-            List<PrinterInfo> printers = mFakePrinters.subList(0, mFakePrinters.size() / 2);
+            List<PrinterInfo> printers = mFakePrinters.subList(0, mFakePrinters.size());
             addPrinters(printers);
-        }
-
-        private void addSecondBatchFakePrinters() {
-            List<PrinterInfo> printers = mFakePrinters.subList(0, mFakePrinters.size() / 2
-                    /* mFakePrinters.size() / 2, mFakePrinters.size()*/);
-            final int printerCount = mFakePrinters.size();
-            for (int i = printerCount - 1; i >= 0; i--) {
-                PrinterInfo printer = new PrinterInfo.Builder(mFakePrinters.get(i))
-                        .setStatus(PrinterInfo.STATUS_UNAVAILABLE).build();
-                printers.add(printer);
-            }
-            addPrinters(printers);
-        }
-
-        private PrinterInfo findPrinterInfo(PrinterId printerId) {
-            List<PrinterInfo> printers = getPrinters();
-            final int printerCount = getPrinters().size();
-            for (int i = 0; i < printerCount; i++) {
-                PrinterInfo printer = printers.get(i);
-                if (printer.getId().equals(printerId)) {
-                    return printer;
-                }
-            }
-            return null;
         }
 
         private void cancellAddingFakePrinters() {
             mSesionHandler.removeMessages(SessionHandler.MSG_ADD_FIRST_BATCH_FAKE_PRINTERS);
-            mSesionHandler.removeMessages(SessionHandler.MSG_ADD_SECOND_BATCH_FAKE_PRINTERS);
         }
 
         final class SessionHandler extends Handler {
             public static final int MSG_ADD_FIRST_BATCH_FAKE_PRINTERS = 1;
-            public static final int MSG_ADD_SECOND_BATCH_FAKE_PRINTERS = 2;
 
             public SessionHandler(Looper looper) {
                 super(looper);
@@ -504,10 +506,6 @@ public class MyPrintService extends PrintService {
                 switch (message.what) {
                     case MSG_ADD_FIRST_BATCH_FAKE_PRINTERS: {
                         addFirstBatchFakePrinters();
-                    } break;
-
-                    case MSG_ADD_SECOND_BATCH_FAKE_PRINTERS: {
-                        addSecondBatchFakePrinters();
                     } break;
                 }
             }
