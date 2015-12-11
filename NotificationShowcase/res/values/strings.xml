@@ -121,4 +121,6 @@
         <item>-1</item>
         <item>-2</item>
     </string-array>
+
+    <string name="hang_up_button_label">hang up</string>
 </resources>
