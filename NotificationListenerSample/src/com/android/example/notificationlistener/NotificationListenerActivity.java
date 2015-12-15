@@ -17,6 +17,7 @@ package com.android.example.notificationlistener;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.Notification;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -217,7 +218,9 @@ public class NotificationListenerActivity extends ListActivity {
             }
             child = mRecycledViews.get(sbn.getKey());
             if (child == null) {
-                child = sbn.getNotification().contentView.apply(mContext, null);
+                Notification.Builder builder =
+                        Notification.Builder.recoverBuilder(mContext, sbn.getNotification());
+                child = builder.makeContentView().apply(mContext, null);
             }
             container.setTag(sbn);
             container.removeAllViews();
