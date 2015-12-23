@@ -467,7 +467,6 @@ public class MyPrintService extends PrintService {
                 public void run() {
                     final int printerCount = mFakePrinters.size();
                     for (int i = printerCount - 1; i >= 0; i--) {
-                        PrinterInfo printer = mFakePrinters.get(i);
                         callbacks.onCustomPrinterIconLoaded(Icon.createWithBitmap(
                                 BitmapFactory.decodeResource(getResources(), R.raw.red_printer)));
                     }
