@@ -47,49 +47,38 @@ public class MyDialogActivity extends ListActivity {
                 switch (position) {
                     case ITEM_INDEX_PRINT_NOW: {
                         MyPrintService.peekInstance().handleQueuedPrintJob(printJobId);
-                        finish();
                     } break;
 
                     case ITEM_INDEX_PRINT_DELAYED: {
                         MyPrintService.peekInstance().handleQueuedPrintJobDelayed(printJobId);
-                        finish();
                     } break;
 
                     case ITEM_INDEX_FAIL_NOW: {
                         MyPrintService.peekInstance().handleFailPrintJob(printJobId);
-                        finish();
                     } break;
 
                     case ITEM_INDEX_FAIL_DELAYED: {
                         MyPrintService.peekInstance().handleFailPrintJobDelayed(printJobId);
-                        finish();
                     } break;
 
                     case ITEM_INDEX_BLOCK_NOW: {
                         MyPrintService.peekInstance().handleBlockPrintJob(printJobId);
-                        finish();
                     } break;
 
                     case ITEM_INDEX_BLOCK_DELAYED: {
                         MyPrintService.peekInstance().handleBlockPrintJobDelayed(printJobId);
-                        finish();
                     } break;
 
                     case ITEM_INDEX_BLOCK_AND_DELAYED_UNBLOCK: {
                         MyPrintService.peekInstance().handleBlockAndDelayedUnblockPrintJob(
                                 printJobId);
-                        finish();
                     } break;
 
                     case ITEM_INDEX_PRINT_SLOWLY: {
                         MyPrintService.peekInstance().handlePrintJobProgress(printJobId, 0);
-                        finish();
-                    } break;
-
-                    default: {
-                        finish();
                     } break;
                 }
+                finishAndRemoveTask();
             }
         });
     }
@@ -105,13 +94,9 @@ public class MyDialogActivity extends ListActivity {
                 switch (position) {
                     case ITEM_INDEX_CANCEL_YES: {
                         MyPrintService.peekInstance().handleRequestCancelPrintJob(printJobId);
-                        finish();
-                    } break;
-
-                    default: {
-                        finish();
                     } break;
                 }
+                finishAndRemoveTask();
             }
         });
     }
