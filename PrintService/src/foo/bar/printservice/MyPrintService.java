@@ -381,19 +381,35 @@ public class MyPrintService extends PrintService {
         private final List<PrinterInfo> mFakePrinters = new ArrayList<PrinterInfo>();
 
         public FakePrinterDiscoverySession() {
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < 6; i++) {
                 String name = "Printer " + i;
-                Intent infoIntent = new Intent(MyPrintService.this, InfoActivity.class);
-                infoIntent.putExtra(InfoActivity.PRINTER_NAME, name);
-                PendingIntent infoPendingIntent = PendingIntent.getActivity(getApplicationContext(),
-                        i, infoIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
                 PrinterInfo.Builder builder = new PrinterInfo.Builder(generatePrinterId(name), name,
-                        (i % 2 == 1) ? PrinterInfo.STATUS_UNAVAILABLE : PrinterInfo.STATUS_IDLE)
-                        .setDescription("Launch a menu to select behavior.")
-                        .setIconResourceId(R.drawable.printer)
-                        .setHasCustomPrinterIcon()
-                        .setInfoIntent(infoPendingIntent);
+                        (i == 1 || i == 2) ? PrinterInfo.STATUS_UNAVAILABLE
+                                : PrinterInfo.STATUS_IDLE);
+
+                if (i != 3) {
+                    builder.setDescription("Launch a menu to select behavior.");
+                }
+
+                if (i != 4) {
+                    builder.setIconResourceId(R.drawable.printer);
+                }
+
+                if (i % 2 == 0) {
+                    Intent infoIntent = new Intent(MyPrintService.this, InfoActivity.class);
+                    infoIntent.putExtra(InfoActivity.PRINTER_NAME, name);
+                    PendingIntent infoPendingIntent = PendingIntent.getActivity(
+                            getApplicationContext(),
+                            i, infoIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                    builder.setInfoIntent(infoPendingIntent);
+                }
+
+                if (i == 5) {
+                    builder.setHasCustomPrinterIcon();
+                }
+
                 mFakePrinters.add(builder.build());
             }
         }
