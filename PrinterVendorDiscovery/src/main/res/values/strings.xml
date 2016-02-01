@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ (c) Copyright 2016 Mopria Alliance, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<resources>
+    <string name="app_name">Printer Discovery Helper</string>
+    <string name="plugin_vendor_name">AOSP</string>
+
+    <string name="plugin_vendor_morpia">Mopria</string>
+    <string name="plugin_vendor_gcp">Cloud Print</string>
+    <plurals name="vendor_printers_found">
+        <item quantity="one">%1$d %2$s printers found</item>
+        <item quantity="other">%1$d %2$s printers found</item>
+    </plurals>
+
+    <string name="dialog_title__enable_service">Print Service Not Enabled</string>
+    <string name="dialog_body__enable_service">The print service must be enabled to use this printer, would you like to enable it now?</string>
+    <string name="dialog_title__install_service">Print Service Not Installed</string>
+    <string name="dialog_body__install_service">A print service must be installed to use this printer, would you like to install it now?</string>
+
+    <string name="toast_system_alert_permission">Go to Settings and enable \"Draw over other apps\" permission.</string>
+</resources>
