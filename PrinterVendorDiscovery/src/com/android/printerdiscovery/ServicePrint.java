@@ -35,6 +35,7 @@ import android.print.PrinterId;
 import android.print.PrinterInfo;
 import android.printservice.PrintJob;
 import android.printservice.PrintService;
+import android.printservice.PrintServiceInfo;
 import android.printservice.PrinterDiscoverySession;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -50,7 +51,6 @@ import com.android.printerdiscovery.servicediscovery.NetworkDiscovery;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -64,8 +64,6 @@ public class ServicePrint extends PrintService {
             "EXTRA_PRINT_SERVICE_COMPONENT_NAME";
 
     private PrintManager mPrintManager;
-    private Method mGetEnabledServices;
-    private Method mGetResolveInfo;
 
     private static final class PrinterHashMap extends HashMap<String, NetworkDevice> {
         public void addPrinter(NetworkDevice device) {
@@ -106,14 +104,6 @@ public class ServicePrint extends PrintService {
     public void onCreate() {
         super.onCreate();
         mPrintManager = (PrintManager)getSystemService(PRINT_SERVICE);
-        try {
-            mGetEnabledServices = mPrintManager.getClass().getMethod("getEnabledPrintServices");
-            Class printServiceInfo = Class.forName("android.printservice.PrintServiceInfo");
-            //noinspection unchecked
-            mGetResolveInfo = printServiceInfo.getMethod("getResolveInfo");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private static final String PDL__PDF = "application/pdf";
@@ -408,7 +398,7 @@ public class ServicePrint extends PrintService {
         @Override
         public void onStartPrinterDiscovery(List<PrinterId> priorityList) {
 
-            List<Object> enabledServices;
+            List<PrintServiceInfo> enabledServices;
 
             removePrinters(priorityList);
             mPluginResolveInfo.clear();
@@ -443,15 +433,10 @@ public class ServicePrint extends PrintService {
                 installedPrintServices = Collections.emptyList();
             }
 
-            try {
-                //noinspection unchecked
-                enabledServices = (List<Object>) mGetEnabledServices.invoke(mPrintManager);
-            } catch (Exception ignored) {
-                enabledServices = Collections.emptyList();
-            }
+            enabledServices = mPrintManager.getEnabledPrintServices();
 
             // process installed services
-            for(ResolveInfo printService : installedPrintServices) {
+            for (ResolveInfo printService : installedPrintServices) {
                 try {
                     String vendorName;
                     // check if we're processing ourselves
@@ -506,20 +491,16 @@ public class ServicePrint extends PrintService {
             }
 
             // process enabled services
-            for(Object printService : enabledServices) {
-                try {
-                    ResolveInfo other = (ResolveInfo) mGetResolveInfo.invoke(printService);
-                    // check if we're processing ourselves
-                    if (TextUtils.equals(ourInfo.serviceInfo.name, other.serviceInfo.name)
-                            && TextUtils.equals(ourInfo.serviceInfo.packageName, other.serviceInfo.packageName)) {
-                        ourServiceRefs.add(printService);
-                        continue;
-                    }
-                    String pluginName = new ComponentName(other.serviceInfo.packageName, other.serviceInfo.name).flattenToString();
-                    mPluginResolveInfo.put(pluginName, other);
-                } catch (Exception e) {
-                    e.printStackTrace();
+            for (PrintServiceInfo printService : enabledServices) {
+                ResolveInfo other = printService.getResolveInfo();
+                // check if we're processing ourselves
+                if (TextUtils.equals(ourInfo.serviceInfo.name, other.serviceInfo.name)
+                        && TextUtils.equals(ourInfo.serviceInfo.packageName, other.serviceInfo.packageName)) {
+                    ourServiceRefs.add(printService);
+                    continue;
                 }
+                String pluginName = new ComponentName(other.serviceInfo.packageName, other.serviceInfo.name).flattenToString();
+                mPluginResolveInfo.put(pluginName, other);
             }
             // remove ourselves from the lists
             for(Object printService : ourServiceRefs) {
