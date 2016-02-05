@@ -417,7 +417,6 @@ public class ServicePrint extends PrintService {
             }
             testArray.recycle();
 
-            List<Object> ourServiceRefs = new ArrayList<>();
             ResolveInfo ourInfo = getPackageManager().resolveService(
                     new Intent(PrintService.SERVICE_INTERFACE)
                         .setPackage(getPackageName()),
@@ -442,7 +441,6 @@ public class ServicePrint extends PrintService {
                     // check if we're processing ourselves
                     if (TextUtils.equals(ourInfo.serviceInfo.name, printService.serviceInfo.name)
                             && TextUtils.equals(ourInfo.serviceInfo.packageName, printService.serviceInfo.packageName)) {
-                        ourServiceRefs.add(printService);
                         continue;
                     }
                     // extract vendor name information if available
@@ -496,17 +494,10 @@ public class ServicePrint extends PrintService {
                 // check if we're processing ourselves
                 if (TextUtils.equals(ourInfo.serviceInfo.name, other.serviceInfo.name)
                         && TextUtils.equals(ourInfo.serviceInfo.packageName, other.serviceInfo.packageName)) {
-                    ourServiceRefs.add(printService);
                     continue;
                 }
                 String pluginName = new ComponentName(other.serviceInfo.packageName, other.serviceInfo.name).flattenToString();
                 mPluginResolveInfo.put(pluginName, other);
-            }
-            // remove ourselves from the lists
-            for(Object printService : ourServiceRefs) {
-                //noinspection SuspiciousMethodCalls
-                installedPrintServices.remove(printService);
-                enabledServices.remove(printService);
             }
 
             mVendorInfoHashMap.put(getString(R.string.plugin_vendor_morpia), mVendorInfoHashMap.get(getResources().getStringArray(R.array.known_print_vendor_info_for_mopria)[1]));
