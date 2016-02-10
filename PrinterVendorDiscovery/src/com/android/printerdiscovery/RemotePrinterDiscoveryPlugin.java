@@ -22,14 +22,14 @@ import android.content.Intent;
 import com.android.internal.util.Preconditions;
 
 /**
- * Wrapper for a {@link IPrinterDiscoveryPlugin}, isolating issues with the plugin as good as
+ * Wrapper for a {@link PrinterDiscoveryPlugin}, isolating issues with the plugin as good as
  * possible from the user.
  */
-class RemotePrinterDiscoveryPlugin implements IPrinterDiscoveryPlugin.PrinterDiscoveryCallback {
+class RemotePrinterDiscoveryPlugin implements PrinterDiscoveryPlugin.PrinterDiscoveryCallback {
     /**
      * Wrapped plugin
      */
-    private final @NonNull IPrinterDiscoveryPlugin mPlugin;
+    private final @NonNull PrinterDiscoveryPlugin mPlugin;
 
     /**
      * The name of the print plugin.
@@ -63,7 +63,7 @@ class RemotePrinterDiscoveryPlugin implements IPrinterDiscoveryPlugin.PrinterDis
      *
      * @throws PluginException If the plugin has issues while caching basic plugin properties
      */
-    public RemotePrinterDiscoveryPlugin(@NonNull IPrinterDiscoveryPlugin plugin,
+    public RemotePrinterDiscoveryPlugin(@NonNull PrinterDiscoveryPlugin plugin,
             @NonNull OnChangedListener listener) throws PluginException {
         mListener = listener;
         mPlugin = plugin;
@@ -162,7 +162,7 @@ class RemotePrinterDiscoveryPlugin implements IPrinterDiscoveryPlugin.PrinterDis
      * Exception thrown if the plugin has any issues.
      */
     public class PluginException extends Exception {
-        private PluginException(IPrinterDiscoveryPlugin plugin, String message, Throwable e) {
+        private PluginException(PrinterDiscoveryPlugin plugin, String message, Throwable e) {
             super(plugin + ": " + message, e);
         }
     }

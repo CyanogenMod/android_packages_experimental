@@ -38,7 +38,7 @@ public class NetworkDiscovery {
     /**
      * Currently active clients of the discovery
      */
-    private static final @NonNull ArrayList<IDiscoveryListener> sListeners = new ArrayList<>();
+    private static final @NonNull ArrayList<DiscoveryListener> sListeners = new ArrayList<>();
 
     /**
      * If the network discovery is running, this stores the instance. There can always be at most
@@ -80,7 +80,7 @@ public class NetworkDiscovery {
      *
      * @throws IOException If the discovery session could not be started
      */
-    public static void onListenerAdded(@NonNull IDiscoveryListener listener,
+    public static void onListenerAdded(@NonNull DiscoveryListener listener,
             @NonNull Context context) throws IOException {
         listener = Preconditions.checkNotNull(listener, "listener");
         context = Preconditions.checkNotNull(context, "context");
@@ -105,7 +105,7 @@ public class NetworkDiscovery {
      * @throws InterruptedException If the thread was interrupted while waiting for the session to
      *                              finish.
      */
-    public static void removeDiscoveryListener(@NonNull IDiscoveryListener listener)
+    public static void removeDiscoveryListener(@NonNull DiscoveryListener listener)
             throws InterruptedException {
         listener = Preconditions.checkNotNull(listener, "listener");
 
@@ -150,7 +150,7 @@ public class NetworkDiscovery {
      *
      * @param listener The listener that was just added.
      */
-    private void onListenerAdded(@NonNull IDiscoveryListener listener) {
+    private void onListenerAdded(@NonNull DiscoveryListener listener) {
         synchronized (mDiscoveredPrinters) {
             for (NetworkDevice device : mDiscoveredPrinters.values()) {
                 listener.onDeviceFound(device);

@@ -150,7 +150,7 @@ public class PrinterDiscovery extends Activity
     }
 
     /**
-     * Initialize all {@link IPrinterDiscoveryPlugin printer discovery plugins}.
+     * Initialize all {@link PrinterDiscoveryPlugin printer discovery plugins}.
      *
      * @return The list of discovered plugins.
      */

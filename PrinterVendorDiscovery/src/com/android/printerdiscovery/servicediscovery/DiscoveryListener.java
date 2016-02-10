@@ -22,7 +22,7 @@ import android.annotation.NonNull;
 /**
  * Listener for discovered network devices
  */
-public interface IDiscoveryListener {
+public interface DiscoveryListener {
     /**
      * Called when a device was removed.
      *

@@ -23,10 +23,10 @@ import android.content.Intent;
 import android.net.Uri;
 import android.text.TextUtils;
 import com.android.internal.util.Preconditions;
-import com.android.printerdiscovery.IPrinterDiscoveryPlugin;
+import com.android.printerdiscovery.PrinterDiscoveryPlugin;
 import com.android.printerdiscovery.R;
 import com.android.printerdiscovery.VendorConfig;
-import com.android.printerdiscovery.servicediscovery.IDiscoveryListener;
+import com.android.printerdiscovery.servicediscovery.DiscoveryListener;
 import com.android.printerdiscovery.servicediscovery.NetworkDevice;
 import com.android.printerdiscovery.servicediscovery.NetworkDiscovery;
 import org.xmlpull.v1.XmlPullParserException;
@@ -39,7 +39,7 @@ import java.util.HashSet;
  * A plugin listening for mDNS results and only adding the ones that are Google Cloud Print
  * printers
  */
-public class GCPPlugin implements IPrinterDiscoveryPlugin, IDiscoveryListener {
+public class GCPPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
     private static final String PRIVET_TYPE_PRITNER = "printer";
 
     private final @NonNull String mName;

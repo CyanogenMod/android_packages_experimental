@@ -21,9 +21,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import com.android.internal.util.Preconditions;
-import com.android.printerdiscovery.IPrinterDiscoveryPlugin;
+import com.android.printerdiscovery.PrinterDiscoveryPlugin;
 import com.android.printerdiscovery.R;
-import com.android.printerdiscovery.servicediscovery.IDiscoveryListener;
+import com.android.printerdiscovery.servicediscovery.DiscoveryListener;
 import com.android.printerdiscovery.servicediscovery.NetworkDevice;
 import com.android.printerdiscovery.servicediscovery.NetworkDiscovery;
 import com.android.printerdiscovery.servicediscovery.mdns.MDNSUtils;
@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * A plugin listening for mDNS results and only adding the ones that match configured list
  */
-public class MDNSFilterPlugin implements IPrinterDiscoveryPlugin, IDiscoveryListener {
+public class MDNSFilterPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
     private final @NonNull String mName;
     private final @NonNull Intent mInstallPackage;
     private final @NonNull HashSet<String> mMDNSNames;

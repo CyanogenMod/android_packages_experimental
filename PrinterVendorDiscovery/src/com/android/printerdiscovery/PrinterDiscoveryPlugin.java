@@ -23,7 +23,7 @@ import android.content.Intent;
 /**
  * Interface to be implemented by each printer discovery plugin.
  */
-public interface IPrinterDiscoveryPlugin {
+public interface PrinterDiscoveryPlugin {
     interface PrinterDiscoveryCallback {
         /**
          * Announce that something changed and the UI for this plugin should be updated.
