@@ -90,7 +90,7 @@ public class BonjourParser implements BonjourServiceParser {
     public String getModel() {
         String model = null;
         try {
-            model = this.getAttribute(MDnsUtils.ATTRIBUTE__TY);
+            model = this.getAttribute(MDNSUtils.ATTRIBUTE__TY);
         } catch (BonjourException ignored) {
         }
         return model;

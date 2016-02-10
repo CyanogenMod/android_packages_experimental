@@ -22,7 +22,7 @@ import android.os.Bundle;
 import com.android.printerdiscovery.servicediscovery.ServiceParser;
 
 @SuppressWarnings("unused")
-public interface BonjourServiceParser extends ServiceParser {
+interface BonjourServiceParser extends ServiceParser {
 
     String getBonjourName();
     String getBonjourServiceName();

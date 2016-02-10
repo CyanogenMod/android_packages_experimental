@@ -19,13 +19,12 @@ package com.android.printerdiscovery.servicediscovery;
 
 import java.net.DatagramPacket;
 import java.net.UnknownHostException;
-import java.util.List;
+import java.util.ArrayList;
 
 public interface IDiscovery {
-
     void clear();
     DatagramPacket[] createQueryPackets() throws UnknownHostException;
-    List<ServiceParser> parseResponse(DatagramPacket reply);
+    ArrayList<ServiceParser> parseResponse(DatagramPacket reply);
     int getPort();
     boolean isFallback();
 }

@@ -21,7 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.util.ArrayList;
 
-public class DnsParser {
+class DnsParser {
 
     private static final int MINIMUM_PACKET_SIZE = 12;
     private static final int BYTE_LENGTH = 8;

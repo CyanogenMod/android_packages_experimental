@@ -174,7 +174,7 @@ public class MDnsDiscovery implements IDiscovery {
     }
 
     @Override
-    public List<ServiceParser> parseResponse(DatagramPacket packet) {
+    public ArrayList<ServiceParser> parseResponse(DatagramPacket packet) {
         ArrayList<ServiceParser> networkDevices = new ArrayList<>();
 
         synchronized (mPrinters) {

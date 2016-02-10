@@ -17,10 +17,23 @@
 
 package com.android.printerdiscovery.servicediscovery;
 
+import android.annotation.NonNull;
+
+/**
+ * Listener for discovered network devices
+ */
 public interface IDiscoveryListener {
-    void onDiscoveryFailed();
-    void onDeviceRemoved(NetworkDevice networkDevice);
-    void onDeviceFound(NetworkDevice networkDevice);
-    void onActiveDiscoveryFinished();
-    void onDiscoveryFinished();
+    /**
+     * Called when a device was removed.
+     *
+     * @param networkDevice The device that was removed
+     */
+    void onDeviceRemoved(@NonNull NetworkDevice networkDevice);
+
+    /**
+     * Called when a device was found.
+     *
+     * @param networkDevice The device that was found
+     */
+    void onDeviceFound(@NonNull NetworkDevice networkDevice);
 }

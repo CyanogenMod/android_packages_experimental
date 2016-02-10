@@ -159,8 +159,8 @@ public final class NetworkDevice implements Parcelable {
         return hashCode;
     }
 
-    public List<NetworkDevice> getAllDiscoveryInstances() {
-        List<NetworkDevice> instances = new ArrayList<>(mOtherInstances.size() + 1);
+    public ArrayList<NetworkDevice> getAllDiscoveryInstances() {
+        ArrayList<NetworkDevice> instances = new ArrayList<>(mOtherInstances.size() + 1);
         instances.add(this);
         instances.addAll(mOtherInstances);
         return instances;

@@ -48,7 +48,7 @@ import java.util.List;
  * </ul>
  */
 @SuppressWarnings("unused")
-public class NetworkUtils {
+class NetworkUtils {
     public static final String TAG = NetworkUtils.class.getSimpleName();
 
     private static final int MULTICAST_TTL = 255;

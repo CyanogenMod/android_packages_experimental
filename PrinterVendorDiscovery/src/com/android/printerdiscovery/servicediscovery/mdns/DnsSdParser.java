@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DnsSdParser {
+class DnsSdParser {
     private static final String TAG = DnsSdParser.class.getSimpleName();
 
     private static final char SEPARATOR = '=';
