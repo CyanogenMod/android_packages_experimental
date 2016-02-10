@@ -18,7 +18,6 @@ package com.android.printerdiscovery;
 
 import android.annotation.IntRange;
 import android.annotation.NonNull;
-import android.content.Context;
 import android.content.Intent;
 
 /**

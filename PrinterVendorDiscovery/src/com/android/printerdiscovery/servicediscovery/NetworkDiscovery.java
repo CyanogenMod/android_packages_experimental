@@ -73,7 +73,7 @@ public class NetworkDiscovery {
 
     /**
      * Register a new listener for network devices. If this is the first listener, this starts a new
-     * {@link NetworkDiscovery discovery session}.
+     * discovery session.
      *
      * @param listener Listener to register.
      * @param context  Context the listener is running in.
@@ -210,7 +210,7 @@ public class NetworkDiscovery {
         @Override
         public void run() {
             while (true) {
-                byte buffer[] = new byte[BUFFER_LENGTH];
+                byte[] buffer = new byte[BUFFER_LENGTH];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
                 try {

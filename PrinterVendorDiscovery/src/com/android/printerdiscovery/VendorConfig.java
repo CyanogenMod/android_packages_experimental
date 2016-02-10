@@ -214,7 +214,7 @@ public class VendorConfig {
      *
      * @param context The content issuing the read
      *
-     * @return An map pointing from vendor name to {@link VendorConfig}
+     * @return An map pointing from vendor name to config
      *
      * @throws IOException
      * @throws XmlPullParserException
@@ -255,7 +255,7 @@ public class VendorConfig {
      * @param tagName The vendor tag
      * @param context Calling context
      *
-     * @return A {@link VendorConfig}
+     * @return A config
      *
      * @throws XmlPullParserException
      * @throws IOException

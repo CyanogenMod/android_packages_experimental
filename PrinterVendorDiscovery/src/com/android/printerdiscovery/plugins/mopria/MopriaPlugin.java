@@ -97,7 +97,7 @@ public class MopriaPlugin implements IPrinterDiscoveryPlugin, IDiscoveryListener
      *
      * @return The list of service names
      */
-    private ArrayList<String> getServicesNames(NetworkDevice networkDevice) {
+    private @NonNull ArrayList<String> getServicesNames(@NonNull NetworkDevice networkDevice) {
         ArrayList<String> mDnsServices = new ArrayList<>();
 
         ArrayList<NetworkDevice> instances = networkDevice.getAllDiscoveryInstances();
@@ -116,7 +116,7 @@ public class MopriaPlugin implements IPrinterDiscoveryPlugin, IDiscoveryListener
      *
      * @return true iff the device is a GCP printer
      */
-    private boolean isMopriaPrinter(NetworkDevice networkDevice) {
+    private boolean isMopriaPrinter(@NonNull NetworkDevice networkDevice) {
         final String ippService = mContext.getString(R.string.mdns_service_ipp);
 
         if (!getServicesNames(networkDevice).contains(ippService)) {

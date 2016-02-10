@@ -16,8 +16,7 @@
   limitations under the License.
   -->
 
-<vendors xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="vendorconfigs_schema.xsd">
+<vendors>
     <vendor>
         <name>@string/plugin_vendor_mopria</name>
         <package>org.mopria.printplugin</package>

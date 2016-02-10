@@ -96,7 +96,7 @@ public class GCPPlugin implements IPrinterDiscoveryPlugin, IDiscoveryListener {
      *
      * @return The list of service names
      */
-    private ArrayList<String> getServicesNames(NetworkDevice networkDevice) {
+    private @NonNull ArrayList<String> getServicesNames(@NonNull NetworkDevice networkDevice) {
         ArrayList<String> mDnsServices = new ArrayList<>();
 
         ArrayList<NetworkDevice> instances = networkDevice.getAllDiscoveryInstances();

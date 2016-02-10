@@ -144,7 +144,7 @@ public class PrinterDiscovery extends Activity
 
             @Override
             public boolean isEmpty() {
-                return mPlugins.size() == 0;
+                return mPlugins.isEmpty();
             }
         });
     }
@@ -172,7 +172,7 @@ public class PrinterDiscovery extends Activity
             if (!config.getMDNSNames().isEmpty()) {
                 try {
                     plugins.add(new RemotePrinterDiscoveryPlugin(
-                            new MDNSFilterPlugin(this.getApplicationContext(), config.getName(),
+                            new MDNSFilterPlugin(getApplicationContext(), config.getName(),
                                     config.getPackageName(), config.getMDNSNames()), this));
                 } catch (Throwable e) {
                     Log.e(LOG_TAG, "Could not create plugin for " + config, e);
@@ -182,7 +182,7 @@ public class PrinterDiscovery extends Activity
 
         try {
             plugins.add(
-                    new RemotePrinterDiscoveryPlugin(new GCPPlugin(this.getApplicationContext()),
+                    new RemotePrinterDiscoveryPlugin(new GCPPlugin(getApplicationContext()),
                             this));
         } catch (Throwable e) {
             Log.e(LOG_TAG, "Could not create GCP plugin", e);
@@ -190,7 +190,7 @@ public class PrinterDiscovery extends Activity
 
         try {
             plugins.add(
-                    new RemotePrinterDiscoveryPlugin(new MopriaPlugin(this.getApplicationContext()),
+                    new RemotePrinterDiscoveryPlugin(new MopriaPlugin(getApplicationContext()),
                             this));
         } catch (Throwable e) {
             Log.e(LOG_TAG, "Could not create mopria plugin", e);
