@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <!--
-  (c) Copyright 2016 Mopria Alliance, Inc.
   (c) Copyright 2016 The Android Open Source Project
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +16,17 @@
   limitations under the License.
 -->
 
-<resources>
-    <string name="app_name">Printer Discovery Helper</string>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".PrinterDiscovery">
 
-    <string name="plugin_vendor_mopria">Mopria</string>
-    <string name="plugin_vendor_gcp">Google Cloud Print</string>
-</resources>
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/discovered_printers">
+
+    </ListView>
+
+</LinearLayout>

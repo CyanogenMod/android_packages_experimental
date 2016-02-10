@@ -19,7 +19,7 @@ package com.android.printerdiscovery.servicediscovery.mdns;
 
 import java.util.Map;
 
-public class DnsService {
+class DnsService {
     private DnsPacket.Name name;
     private DnsPacket.Name serviceNameSuffix;
     private DnsPacket.Name hostname;

@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Locale;
 
 @SuppressWarnings("unused")
-public class DnsPacket {
+class DnsPacket {
 
     public enum ResourceType {
         UNKNOWN(-1),

@@ -18,7 +18,7 @@
 package com.android.printerdiscovery.servicediscovery.mdns;
 
 @SuppressWarnings("serial")
-public class DnsException extends Exception {
+class DnsException extends Exception {
 
     public DnsException(String detailMessage) {
         super(detailMessage);
