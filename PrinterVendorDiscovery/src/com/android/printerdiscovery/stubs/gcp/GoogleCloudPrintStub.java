@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-package com.android.printerdiscovery.plugins.gcp;
+package com.android.printerdiscovery.stubs.gcp;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 import com.android.internal.util.Preconditions;
-import com.android.printerdiscovery.PrinterDiscoveryPlugin;
+import com.android.printerdiscovery.PrintServiceStub;
 import com.android.printerdiscovery.R;
 import com.android.printerdiscovery.VendorConfig;
 import com.android.printerdiscovery.servicediscovery.DiscoveryListener;
@@ -36,40 +36,49 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
- * A plugin listening for mDNS results and only adding the ones that are Google Cloud Print
- * printers
+ * A stub listening for mDNS results and only adding the ones that are Google Cloud Print printers
  */
-public class GCPPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
-    private static final String PRIVET_TYPE_PRITNER = "printer";
+public class GoogleCloudPrintStub implements PrintServiceStub, DiscoveryListener {
+    private static final String LOG_TAG = "GoogleCloudPrintStub";
+    private static final String PRIVET_TYPE_PRINTER = "printer";
 
-    private final @NonNull String mName;
-    private final @NonNull Intent mInstallPackage;
+    /**
+     * Printer identifiers of the printers found.
+     */
     private final @NonNull HashSet<String> printers;
+
+    /**
+     * Context of the user of this stub
+     */
     private final @NonNull Context mContext;
+
+    /**
+     * Call backs to report the number of printers found.
+     */
     private PrinterDiscoveryCallback mCallback;
 
     /**
-     * Create new plugin that finds all Google Cloud Print printers.
+     * Create new stub that finds all Google Cloud Print printers.
      *
      * @param context The context the plugin runs in
-     *
-     * @throws IOException            If the configuration file cannot be read
-     * @throws XmlPullParserException If the configuration file is corrupt
      */
-    public GCPPlugin(@NonNull Context context) throws IOException, XmlPullParserException {
+    public GoogleCloudPrintStub(@NonNull Context context) {
         mContext = Preconditions.checkNotNull(context, "context");
-
-        mName = context.getString(R.string.plugin_vendor_gcp);
-        VendorConfig config = VendorConfig.getConfig(context, mName);
-        mInstallPackage = new Intent(Intent.ACTION_VIEW).setData(Uri.parse(
-                context.getString(R.string.uri_package_details, config.getPackageName())));
 
         printers = new HashSet<>();
     }
 
     @Override
-    public @NonNull Intent getAction() {
-        return mInstallPackage;
+    public @NonNull Uri getInstallUri() {
+        VendorConfig config = null;
+        try {
+            config = VendorConfig.getConfig(mContext,
+                    mContext.getString(R.string.plugin_vendor_gcp));
+        } catch (IOException | XmlPullParserException e) {
+            Log.e(LOG_TAG, "Error reading vendor config", e);
+        }
+        return Uri.parse(mContext.getString(R.string.uri_package_details,
+                config.getPackageName()));
     }
 
     @Override
@@ -81,7 +90,7 @@ public class GCPPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
 
     @Override
     public @NonNull String getName() {
-        return mName;
+        return mContext.getString(R.string.plugin_vendor_gcp);
     }
 
     @Override
@@ -90,7 +99,7 @@ public class GCPPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
     }
 
     /**
-     * Get all service names for the device
+     * Get all service names for the device.
      *
      * @param networkDevice The device
      *
@@ -109,7 +118,7 @@ public class GCPPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
     }
 
     /**
-     * Check if a network device is a GCP printer
+     * Check if a network device is a GCP printer.
      *
      * @param networkDevice The device that might be a GCP printer
      *
@@ -124,7 +133,7 @@ public class GCPPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
 
         String type = networkDevice.getTxtAttributes(privetService).getString("type");
 
-        return !TextUtils.isEmpty(type) && (type.contains(PRIVET_TYPE_PRITNER));
+        return !TextUtils.isEmpty(type) && (type.contains(PRIVET_TYPE_PRINTER));
     }
 
     @Override

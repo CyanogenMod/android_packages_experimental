@@ -328,9 +328,9 @@ public class VendorConfig {
     }
 
     /**
-     * Get the package name of the print plugin of the vendor.
+     * Get the package name of the print service of the vendor.
      *
-     * @return The package name of the print plugin
+     * @return The package name of the print service
      */
     public String getPackageName() {
         return mPackageName;

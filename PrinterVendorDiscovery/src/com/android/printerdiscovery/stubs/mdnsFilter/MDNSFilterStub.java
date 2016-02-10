@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.printerdiscovery.plugins.mdnsFilter;
+package com.android.printerdiscovery.stubs.mdnsFilter;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import com.android.internal.util.Preconditions;
-import com.android.printerdiscovery.PrinterDiscoveryPlugin;
+import com.android.printerdiscovery.PrintServiceStub;
 import com.android.printerdiscovery.R;
 import com.android.printerdiscovery.servicediscovery.DiscoveryListener;
 import com.android.printerdiscovery.servicediscovery.NetworkDevice;
@@ -32,18 +31,42 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * A plugin listening for mDNS results and only adding the ones that match configured list
+ * A stub listening for mDNS results and only adding the ones that {@link MDNSUtils#isVendorPrinter
+ * match} configured list
  */
-public class MDNSFilterPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
+public class MDNSFilterStub implements PrintServiceStub, DiscoveryListener {
+    /**
+     * Name of the print service this stub is for
+     */
     private final @NonNull String mName;
-    private final @NonNull Intent mInstallPackage;
+
+    /**
+     * Uri to install the print service this stub is for
+     */
+    private final @NonNull Uri mInstallPackage;
+
+    /**
+     * mDNS names handled by the print service this stub is for
+     */
     private final @NonNull HashSet<String> mMDNSNames;
+
+    /**
+     * Printer identifiers of the printers found.
+     */
     private final @NonNull HashSet<String> printers;
+
+    /**
+     * Context of the user of this stub
+     */
     private final @NonNull Context mContext;
+
+    /**
+     * Call backs to report the number of printers found.
+     */
     private PrinterDiscoveryCallback mCallback;
 
     /**
-     * Create new plugin that assumes that a print service can be used to print on all printers
+     * Create new stub that assumes that a print service can be used to print on all printers
      * matching some mDNS names.
      *
      * @param context     The context the plugin runs in
@@ -51,13 +74,12 @@ public class MDNSFilterPlugin implements PrinterDiscoveryPlugin, DiscoveryListen
      * @param packageName The package name of the print service
      * @param mDNSNames   The mDNS names of the printer.
      */
-    public MDNSFilterPlugin(@NonNull Context context, @NonNull String name,
+    public MDNSFilterStub(@NonNull Context context, @NonNull String name,
             @NonNull String packageName, @NonNull List<String> mDNSNames) {
         mContext = Preconditions.checkNotNull(context, "context");
         mName = Preconditions.checkNotNull(name, "name");
-        mInstallPackage = new Intent(Intent.ACTION_VIEW).setData(Uri.parse(
-                context.getString(R.string.uri_package_details,
-                        Preconditions.checkNotNull(packageName, "packageName"))));
+        mInstallPackage = Uri.parse(context.getString(R.string.uri_package_details,
+                Preconditions.checkNotNull(packageName, "packageName")));
         mMDNSNames = new HashSet<>(Preconditions
                 .checkCollectionNotEmpty(Preconditions.checkCollectionElementsNotNull(mDNSNames,
                         "mDNSNames"), "mDNSNames"));
@@ -66,7 +88,7 @@ public class MDNSFilterPlugin implements PrinterDiscoveryPlugin, DiscoveryListen
     }
 
     @Override
-    public @NonNull Intent getAction() {
+    public @NonNull Uri getInstallUri() {
         return mInstallPackage;
     }
 

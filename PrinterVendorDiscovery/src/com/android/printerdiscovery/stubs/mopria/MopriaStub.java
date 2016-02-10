@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-package com.android.printerdiscovery.plugins.mopria;
+package com.android.printerdiscovery.stubs.mopria;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 import com.android.internal.util.Preconditions;
-import com.android.printerdiscovery.PrinterDiscoveryPlugin;
+import com.android.printerdiscovery.PrintServiceStub;
 import com.android.printerdiscovery.R;
 import com.android.printerdiscovery.VendorConfig;
 import com.android.printerdiscovery.servicediscovery.DiscoveryListener;
@@ -36,41 +36,50 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
- * A plugin listening for mDNS results and only adding the ones that are Mopria printers
+ * A stub listening for mDNS results and only adding the ones that are Mopria printers
  */
-public class MopriaPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
+public class MopriaStub implements PrintServiceStub, DiscoveryListener {
     private static final String PDL__PDF = "application/pdf";
     private static final String PDL__PCLM = "application/PCLm";
     private static final String PDL__PWG_RASTER = "image/pwg-raster";
+    private static final String LOG_TAG = "MopriaStub";
 
-    private final @NonNull String mName;
-    private final @NonNull Intent mInstallPackage;
+    /**
+     * Printer identifiers of the printers found.
+     */
     private final @NonNull HashSet<String> printers;
+
+    /**
+     * Context of the user of this stub
+     */
     private final @NonNull Context mContext;
+
+    /**
+     * Call backs to report the number of printers found.
+     */
     private PrinterDiscoveryCallback mCallback;
 
     /**
-     * Create new plugin that finds all Mopria printers.
+     * Create new stub that finds all Mopria printers.
      *
      * @param context The context the plugin runs in
-     *
-     * @throws IOException            If the configuration file cannot be read
-     * @throws XmlPullParserException If the configuration file is corrupt
      */
-    public MopriaPlugin(@NonNull Context context) throws IOException, XmlPullParserException {
+    public MopriaStub(@NonNull Context context) {
         mContext = Preconditions.checkNotNull(context, "context");
-
-        mName = context.getString(R.string.plugin_vendor_mopria);
-        VendorConfig config = VendorConfig.getConfig(context, mName);
-        mInstallPackage = new Intent(Intent.ACTION_VIEW).setData(Uri.parse(
-                context.getString(R.string.uri_package_details, config.getPackageName())));
 
         printers = new HashSet<>();
     }
 
     @Override
-    public @NonNull Intent getAction() {
-        return mInstallPackage;
+    public @NonNull Uri getInstallUri() {
+        VendorConfig config = null;
+        try {
+            config = VendorConfig.getConfig(mContext,
+                    mContext.getString(R.string.plugin_vendor_mopria));
+        } catch (IOException | XmlPullParserException e) {
+            Log.e(LOG_TAG, "Error reading vendor config", e);
+        }
+        return Uri.parse(mContext.getString(R.string.uri_package_details, config.getPackageName()));
     }
 
     @Override
@@ -82,7 +91,7 @@ public class MopriaPlugin implements PrinterDiscoveryPlugin, DiscoveryListener {
 
     @Override
     public @NonNull String getName() {
-        return mName;
+        return mContext.getString(R.string.plugin_vendor_mopria);
     }
 
     @Override
