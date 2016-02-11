@@ -38,7 +38,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 
 /**
- * Discovers devices on the network and notifies the listeners about those devices.
+ * Discovers devices on the network and notifies the listeners about those devices. The session is
+ * automatically started and stopped if listeners come and go. For the first {@value
+ * QueryThread#FAST_QUERY_PERIOD_MS} ms the printers are queried eagerly, after wards with much
+ * lower priority. To make the querying eager again, call {@link #reactivate()}.
  */
 public class NetworkDiscovery {
     private static final String LOG_TAG = "NetworkDiscovery";
