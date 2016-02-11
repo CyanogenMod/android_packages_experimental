@@ -10,6 +10,7 @@ import android.database.*;
 import android.net.Uri;
 import android.util.Log;
 import com.android.internal.util.Preconditions;
+import com.android.printservicestubs.servicediscovery.NetworkDiscovery;
 import com.android.printservicestubs.stubs.gcp.GoogleCloudPrintStub;
 import com.android.printservicestubs.stubs.mdnsFilter.MDNSFilterStub;
 import com.android.printservicestubs.stubs.mopria.MopriaStub;
@@ -129,6 +130,9 @@ public class PrintServiceStubProvider extends ContentProvider
         Preconditions.checkArgument(selectionArgs == null);
         Preconditions.checkArgument(
                 PrintServiceStubContract.PrintServiceStubs.DEFAULT_SORT_ORDER.equals(sortOrder));
+
+        // There is a user of this provider, hence juice up the printer discovery
+        NetworkDiscovery.reactivate();
 
         MatrixCursor c = new MatrixCursor(new String[] {
                 PrintServiceStubContract.PrintServiceStubs.NAME,

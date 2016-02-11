@@ -19,7 +19,13 @@ package com.android.printservicestubs.servicediscovery;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.util.Log;
 import com.android.internal.util.Preconditions;
 import com.android.printservicestubs.R;
 import com.android.printservicestubs.servicediscovery.mdns.MDnsDiscovery;
@@ -35,14 +41,17 @@ import java.util.LinkedHashMap;
  * Discovers devices on the network and notifies the listeners about those devices.
  */
 public class NetworkDiscovery {
+    private static final String LOG_TAG = "NetworkDiscovery";
+
     /**
-     * Currently active clients of the discovery
+     * Currently active clients of the discovery session.
      */
     private static final @NonNull ArrayList<DiscoveryListener> sListeners = new ArrayList<>();
 
     /**
      * If the network discovery is running, this stores the instance. There can always be at most
-     * once instance running.
+     * once instance running. The instance is automatically created when the first {@link
+     * #sListeners listener} is added and destroyed once the last one is removed.
      */
     private static @Nullable NetworkDiscovery sInstance = null;
 
@@ -52,24 +61,67 @@ public class NetworkDiscovery {
     private final @NonNull MDnsDiscovery mDiscoveryMethod;
 
     /**
-     * List of discovered printers sorted by device identifier
+     * List of discovered printers indexed by device identifier
      */
     private final @NonNull LinkedHashMap<String, NetworkDevice> mDiscoveredPrinters;
 
     /**
-     * Socket used to discover devices (both query and listen).
+     * The context the discovery session runs in
      */
-    private @NonNull MulticastSocket mSocket;
+    private final Context mContext;
 
     /**
      * Thread sending the broadcasts that should make the device announce them self
      */
-    private @NonNull QueryThread mQueryThread;
+    private final @NonNull QueryThread mQueryThread;
 
     /**
      * Thread that receives the announcements of new devices and processes them
      */
-    private @NonNull ListenerThread mListenerThread;
+    private final @NonNull ListenerThread mListenerThread;
+
+    /**
+     * Socket used to discover devices (both query and listen) if the discovery session is active.
+     */
+    private @NonNull MulticastSocket mSocket;
+
+    /**
+     * Create and start a new network discovery session.
+     *
+     * @param context The context requesting the start of the session.
+     *
+     * @throws IOException If the discovery session could not be started
+     */
+    private NetworkDiscovery(@NonNull Context context) throws IOException {
+        mContext = context;
+        mDiscoveredPrinters = new LinkedHashMap<>();
+
+        mDiscoveryMethod = new MDnsDiscovery(
+                context.getResources().getStringArray(R.array.mdns_services));
+
+        mListenerThread = new ListenerThread();
+        mQueryThread = new QueryThread();
+
+        startDiscovery();
+
+        // Stop or start session when network connection changes
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                try {
+                    stopDiscovery();
+                } catch (InterruptedException e) {
+                    // We cannot recover for this
+                    throw new RuntimeException("Cannot stop session", e);
+                }
+
+                startDiscovery();
+            }
+        };
+
+        context.registerReceiver(receiver,
+                new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    }
 
     /**
      * Register a new listener for network devices. If this is the first listener, this starts a new
@@ -113,35 +165,87 @@ public class NetworkDiscovery {
             sListeners.remove(listener);
 
             if (sListeners.isEmpty()) {
-                sInstance.close();
+                sInstance.stopDiscovery();
                 sInstance = null;
             }
         }
     }
 
     /**
-     * Create and start a new network discovery session.
-     *
-     * @param context The context requesting the start of the session.
-     *
-     * @throws IOException If the discovery session could not be started
+     * Reactivate discovery, i.e. poll quickly for network printers.
      */
-    private NetworkDiscovery(@NonNull Context context) throws IOException {
-        mDiscoveredPrinters = new LinkedHashMap<>();
+    public static void reactivate() {
+        // creation of the instance if synchronized by sListeners, see onListenerAdded and
+        // removeDiscoveryListener
+        synchronized (sListeners) {
+            if (sInstance != null) {
+                sInstance.mQueryThread.reactivate();
+            }
+        }
+    }
 
-        mDiscoveryMethod = new MDnsDiscovery(
-                context.getResources().getStringArray(R.array.mdns_services));
+    /**
+     * Start the session if the network is connected.
+     */
+    private void startDiscovery() {
+        synchronized (this) {
+            // if mSocket exist the discovery is running.
+            if (mSocket == null) {
+                ConnectivityManager cm =
+                        (ConnectivityManager) mContext
+                                .getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        mSocket = NetworkUtils.createMulticastSocket(context, null);
-        mSocket.setBroadcast(true);
-        mSocket.setReuseAddress(true);
-        mSocket.setSoTimeout(0);
+                NetworkInfo activeNetworkInfo = cm.getActiveNetworkInfo();
 
-        mListenerThread = new ListenerThread();
-        mQueryThread = new QueryThread();
+                if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+                    // Recreate socket
+                    try {
+                        mSocket = NetworkUtils.createMulticastSocket(mContext, null);
 
-        mListenerThread.start();
-        mQueryThread.start();
+                        mSocket.setBroadcast(true);
+                        mSocket.setReuseAddress(true);
+                        mSocket.setSoTimeout(0);
+
+                        // Restart session
+                        mListenerThread.start();
+                        mQueryThread.start();
+                    } catch (IOException e) {
+                        Log.e(LOG_TAG, "Cannot create socket", e);
+                        mSocket = null;
+                    }
+
+                }
+            }
+        }
+    }
+
+    /**
+     * Stop the discovery session if a session is running.
+     *
+     * @throws InterruptedException If the current thread was interrupted while the session was
+     *                              cleaned up.
+     */
+    private void stopDiscovery() throws InterruptedException {
+        synchronized (this) {
+            if (mSocket != null) {
+                // Closing the socket causes IOExceptions on operations on this socket. This in turn
+                // will end the threads.
+                mSocket.close();
+
+                mListenerThread.join();
+                mQueryThread.join();
+
+                mSocket = null;
+
+                synchronized (mDiscoveredPrinters) {
+                    for (NetworkDevice device : mDiscoveredPrinters.values()) {
+                        onDeviceRemoved(device);
+                    }
+
+                    mDiscoveredPrinters.clear();
+                }
+            }
+        }
     }
 
     /**
@@ -159,26 +263,11 @@ public class NetworkDiscovery {
     }
 
     /**
-     * Clean up discovery session.
-     *
-     * @throws InterruptedException If the current thread was interrupted while the session was
-     *                              cleaned up.
-     */
-    private void close() throws InterruptedException {
-        // Closing the socket causes IOExceptions on operations on this socket. This in turn will
-        // end the threads.
-        mSocket.close();
-
-        mListenerThread.join();
-        mQueryThread.join();
-    }
-
-    /**
      * Notify all currently registered listeners that a new device was removed.
      *
      * @param networkDevice The device that was removed
      */
-    private void fireDeviceRemoved(@NonNull NetworkDevice networkDevice) {
+    private void onDeviceRemoved(@NonNull NetworkDevice networkDevice) {
         synchronized (sListeners) {
             final int numListeners = sListeners.size();
             for (int i = 0; i < numListeners; i++) {
@@ -192,7 +281,7 @@ public class NetworkDiscovery {
      *
      * @param networkDevice The device that was found
      */
-    private void fireDeviceFound(@NonNull NetworkDevice networkDevice) {
+    private void onDeviceFound(@NonNull NetworkDevice networkDevice) {
         synchronized (sListeners) {
             final int numListeners = sListeners.size();
             for (int i = 0; i < numListeners; i++) {
@@ -202,7 +291,10 @@ public class NetworkDiscovery {
     }
 
     /**
-     * Thread receiving and processing the packets that announce network devices
+     * Thread receiving and processing the packets that announce network devices.
+     * <p/>
+     * If devices are found or removed {@link #onDeviceFound(NetworkDevice)} and {@link
+     * #onDeviceRemoved(NetworkDevice)} are called.
      */
     private class ListenerThread extends Thread {
         private static final int BUFFER_LENGTH = 4 * 1024;
@@ -231,9 +323,9 @@ public class NetworkDiscovery {
                         NetworkDevice discoveredNetworkDevice = mDiscoveredPrinters.get(key);
 
                         if (discoveredNetworkDevice != null) {
-                            if(!device.getInetAddress()
-                                        .equals(discoveredNetworkDevice.getInetAddress())) {
-                                fireDeviceRemoved(discoveredNetworkDevice);
+                            if (!device.getInetAddress()
+                                    .equals(discoveredNetworkDevice.getInetAddress())) {
+                                onDeviceRemoved(discoveredNetworkDevice);
                             } else {
                                 discoveredNetworkDevice.addDiscoveryInstance(device);
                                 device = discoveredNetworkDevice;
@@ -244,7 +336,7 @@ public class NetworkDiscovery {
                             }
                         }
 
-                        fireDeviceFound(device);
+                        onDeviceFound(device);
                     }
                 } catch (IOException e) {
                     // Socket got closed
@@ -257,73 +349,54 @@ public class NetworkDiscovery {
     /**
      * Thread that sends out the packages that make the devices announce them self. The announcement
      * are the received by the {@link ListenerThread listener thread}.
+     * <p/>
+     * For the fist {@value #FAST_QUERY_PERIOD_MS} ms the thread sends a query packet every {@value
+     * #FAST_DELAY_MS} ms. After that every {@value #SLOW_DELAY_MS} ms. The make the thread send the
+     * packets quickly again, {@link #reactivate()} can be called.
      */
     private class QueryThread extends Thread {
-        private static final int MAX_ACTIVE_QUERIES = 10;
-        private static final int MAX_DELAY_SECONDS = 60;
-
-        private boolean mUseFallback = false;
-        private boolean mIsActiveDiscovery = true;
-        private int mQueriesSent = 0;
+        private static final int FAST_DELAY_MS = 5_000;
+        private static final int FAST_QUERY_PERIOD_MS = 5 * 60_000;
+        private static final int SLOW_DELAY_MS = 20_000;
 
         /**
-         * @return the next wait interval, in milliseconds, using an exponential backoff algorithm.
+         * Last time {@link #reactivate} thread was reactivated or if never reactivated, the time
+         * the thread was created.
          */
-        private int getQueryDelayInMillis() {
-            int delayInSeconds = 1;
+        private long mLastActivity;
 
-            int first = 1;
-            int second = 1;
-            int index;
+        public QueryThread() {
+            mLastActivity = System.currentTimeMillis();
+        }
 
-            if (mQueriesSent > MAX_ACTIVE_QUERIES) {
-                delayInSeconds = MAX_DELAY_SECONDS;
-            } else {
-
-                for (index = 1; index < mQueriesSent; index++) {
-                    if (index <= 1) {
-                        delayInSeconds = index;
-                    } else {
-                        delayInSeconds = first + second;
-                        first = second;
-                        second = delayInSeconds;
-                    }
-                }
+        /**
+         * Reactivate thread, i.e. make the thread send out the query packets quickly again
+         */
+        public void reactivate() {
+            synchronized (this) {
+                mLastActivity = System.currentTimeMillis();
+                notifyAll();
             }
-
-            if (delayInSeconds >= MAX_DELAY_SECONDS) {
-                delayInSeconds = MAX_DELAY_SECONDS;
-                if (mIsActiveDiscovery) {
-                    mIsActiveDiscovery = false;
-                }
-            }
-
-            return delayInSeconds * 1000;
         }
 
         @Override
         public void run() {
-            mQueriesSent = (mIsActiveDiscovery ? 0 : MAX_ACTIVE_QUERIES);
-            mUseFallback = false;
-
             while (true) {
                 try {
                     ArrayList<DatagramPacket> datagramList = new ArrayList<>();
+                    Collections.addAll(datagramList, mDiscoveryMethod.createQueryPackets());
 
-                    if (!mDiscoveryMethod.isFallback() || mUseFallback) {
-                        Collections.addAll(datagramList, mDiscoveryMethod.createQueryPackets());
+                    final int numPackets = datagramList.size();
+                    for (int i = 0; i < numPackets; i++) {
+                        mSocket.send(datagramList.get(i));
                     }
 
-                    for (DatagramPacket packet : datagramList) {
-                        mSocket.send(packet);
-                    }
-
-                    mQueriesSent++;
-
-                    Thread.sleep(getQueryDelayInMillis());
-
-                    if (!mUseFallback) {
-                        mUseFallback = mDiscoveredPrinters.isEmpty();
+                    synchronized (this) {
+                        if (System.currentTimeMillis() < mLastActivity + FAST_QUERY_PERIOD_MS) {
+                            wait(FAST_DELAY_MS);
+                        } else {
+                            wait(SLOW_DELAY_MS);
+                        }
                     }
                 } catch (Exception e) {
                     // Socket got closed

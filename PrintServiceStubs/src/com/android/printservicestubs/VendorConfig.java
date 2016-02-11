@@ -130,7 +130,7 @@ public class VendorConfig {
      *
      * @param parser XML parser to read from
      *
-     * @return The test or "" if no text was found
+     * @return The text or "" if no text was found
      *
      * @throws IOException
      * @throws XmlPullParserException
