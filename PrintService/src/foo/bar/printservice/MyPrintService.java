@@ -23,6 +23,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -236,8 +237,10 @@ public class MyPrintService extends PrintService {
         if (progress == 100) {
             handleQueuedPrintJob(printJobId);
         } else {
-            printJob.setProgress((float)progress / 100);
-            printJob.setStatus("Printing progress: " + progress + "%");
+            if (Build.VERSION.SDK_INT >= 24) {
+                printJob.setProgress((float) progress / 100);
+                printJob.setStatus("Printing progress: " + progress + "%");
+            }
 
             Message message = mHandler.obtainMessage(
                     MyHandler.MSG_HANDLE_PRINT_JOB_PROGRESS, progress + 10, 0, printJobId);
@@ -393,21 +396,28 @@ public class MyPrintService extends PrintService {
                 }
 
                 if (i != 4) {
-                    builder.setIconResourceId(R.drawable.printer);
+                    if (Build.VERSION.SDK_INT >= 24) {
+                        builder.setIconResourceId(R.drawable.printer);
+                    }
                 }
 
                 if (i % 2 == 0) {
-                    Intent infoIntent = new Intent(MyPrintService.this, InfoActivity.class);
-                    infoIntent.putExtra(InfoActivity.PRINTER_NAME, name);
-                    PendingIntent infoPendingIntent = PendingIntent.getActivity(
-                            getApplicationContext(),
-                            i, infoIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    if (Build.VERSION.SDK_INT >= 24) {
+                        Intent infoIntent = new Intent(MyPrintService.this, InfoActivity.class);
+                        infoIntent.putExtra(InfoActivity.PRINTER_NAME, name);
 
-                    builder.setInfoIntent(infoPendingIntent);
+                        PendingIntent infoPendingIntent = PendingIntent.getActivity(
+                                getApplicationContext(),
+                                i, infoIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                        builder.setInfoIntent(infoPendingIntent);
+                    }
                 }
 
                 if (i == 5) {
-                    builder.setHasCustomPrinterIcon();
+                    if (Build.VERSION.SDK_INT >= 24) {
+                        builder.setHasCustomPrinterIcon();
+                    }
                 }
 
                 mFakePrinters.add(builder.build());
@@ -443,7 +453,7 @@ public class MyPrintService extends PrintService {
                 PrinterInfo printer = mFakePrinters.remove(i);
 
                 if (printer.getId().equals(printerId)) {
-                    PrinterCapabilitiesInfo capabilities = new PrinterCapabilitiesInfo.Builder(
+                    PrinterCapabilitiesInfo.Builder b = new PrinterCapabilitiesInfo.Builder(
                             printerId)
                                     .setMinMargins(new Margins(200, 200, 200, 200))
                                     .addMediaSize(MediaSize.ISO_A4, true)
@@ -455,11 +465,15 @@ public class MyPrintService extends PrintService {
                                             R.string.resolution_300x300), 300, 300), true)
                                     .setColorModes(PrintAttributes.COLOR_MODE_COLOR
                                             | PrintAttributes.COLOR_MODE_MONOCHROME,
-                                            PrintAttributes.COLOR_MODE_MONOCHROME)
-                                    .setDuplexModes(PrintAttributes.DUPLEX_MODE_LONG_EDGE
-                                            | PrintAttributes.DUPLEX_MODE_NONE,
-                                            PrintAttributes.DUPLEX_MODE_LONG_EDGE)
-                                    .build();
+                                            PrintAttributes.COLOR_MODE_MONOCHROME);
+
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        b.setDuplexModes(PrintAttributes.DUPLEX_MODE_LONG_EDGE
+                                        | PrintAttributes.DUPLEX_MODE_NONE,
+                                PrintAttributes.DUPLEX_MODE_LONG_EDGE);
+                    }
+
+                    PrinterCapabilitiesInfo capabilities = b.build();
 
                     printer = new PrinterInfo.Builder(printer)
                             .setCapabilities(capabilities)
