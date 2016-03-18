@@ -416,7 +416,7 @@ public class MyPrintService extends PrintService {
 
                 if (i == 5) {
                     if (Build.VERSION.SDK_INT >= 24) {
-                        builder.setHasCustomPrinterIcon();
+                        builder.setHasCustomPrinterIcon(true);
                     }
                 }
 
