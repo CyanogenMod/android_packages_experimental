@@ -24,6 +24,7 @@ import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.CancellationSignal;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -42,6 +43,7 @@ import android.printservice.PrintService;
 import android.printservice.PrinterDiscoverySession;
 import android.util.ArrayMap;
 import android.util.Log;
+import com.android.internal.os.SomeArgs;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -488,20 +490,19 @@ public class MyPrintService extends PrintService {
 
         @Override
         public void onRequestCustomPrinterIcon(final PrinterId printerId,
+                final CancellationSignal cancellationSignal,
                 final CustomPrinterIconCallback callbacks) {
             Log.i(LOG_TAG, "FakePrinterDiscoverySession#onRequestCustomPrinterIcon() " + printerId);
 
+            SomeArgs args = SomeArgs.obtain();
+            args.arg1 = cancellationSignal;
+            args.arg2 = callbacks;
+
+            Message msg = mSesionHandler.obtainMessage(
+                    SessionHandler.MSG_SUPPLY_CUSTOM_PRINTER_ICON, args);
+
             // Pretend the bitmap icon takes 5 seconds to load
-            mSesionHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    final int printerCount = mFakePrinters.size();
-                    for (int i = printerCount - 1; i >= 0; i--) {
-                        callbacks.onCustomPrinterIconLoaded(Icon.createWithBitmap(
-                                BitmapFactory.decodeResource(getResources(), R.raw.red_printer)));
-                    }
-                }
-            }, 5000);
+            mSesionHandler.sendMessageDelayed(msg, 5000);
         }
 
         @Override
@@ -525,6 +526,7 @@ public class MyPrintService extends PrintService {
 
         final class SessionHandler extends Handler {
             public static final int MSG_ADD_FIRST_BATCH_FAKE_PRINTERS = 1;
+            public static final int MSG_SUPPLY_CUSTOM_PRINTER_ICON = 2;
 
             public SessionHandler(Looper looper) {
                 super(looper);
@@ -535,6 +537,18 @@ public class MyPrintService extends PrintService {
                 switch (message.what) {
                     case MSG_ADD_FIRST_BATCH_FAKE_PRINTERS: {
                         addFirstBatchFakePrinters();
+                    } break;
+                    case MSG_SUPPLY_CUSTOM_PRINTER_ICON: {
+                        SomeArgs args = (SomeArgs) message.obj;
+                        CancellationSignal cancellationSignal = (CancellationSignal) args.arg1;
+                        CustomPrinterIconCallback callbacks = (CustomPrinterIconCallback) args.arg2;
+                        args.recycle();
+
+                        if (!cancellationSignal.isCanceled()) {
+                            callbacks.onCustomPrinterIconLoaded(Icon.createWithBitmap(
+                                    BitmapFactory.decodeResource(getResources(),
+                                    R.raw.red_printer)));
+                        }
                     } break;
                 }
             }
