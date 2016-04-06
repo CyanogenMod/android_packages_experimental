@@ -5,9 +5,6 @@
     <string name="post_button_label">Post Notifications</string>
     <string name="remove_button_label">Remove Notifications</string>
     <string name="prefs_button_label">Preferences</string>
-    <string name="disable_button_label">Disable Notifications</string>
-    <string name="enable_button_label">Enable Notifications</string>
-    <string name="no_button_label">No Idea Dog</string>
     <string name="answered">call answered</string>
     <string name="ignored">call ignored</string>
     <string name="full_screen_name">Full Screen Activity</string>

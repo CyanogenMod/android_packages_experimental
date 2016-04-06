@@ -19,6 +19,7 @@ package com.android.example.notificationshowcase;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -35,7 +36,6 @@ import android.net.Uri;
 import android.os.SystemClock;
 import android.provider.ContactsContract;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -185,7 +185,8 @@ public class NotificationService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        NotificationManagerCompat noMa = NotificationManagerCompat.from(this);
+        NotificationManager noMa =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (ACTION_DESTROY.equals(intent.getAction())) {
             noMa.cancelAll();
             return;

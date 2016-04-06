@@ -59,7 +59,7 @@ public class ProgressService extends IntentService {
                 noMa.notify(NotificationService.NOTIFICATION_ID + mId,
                         NotificationService.makeUploadNotification(
                                 ProgressService.this, mProgress, mWhen));
-                mProgress += 2;
+                mProgress += 10;
             if (mProgress <= 100) {
                 handler.postDelayed(this, 1000);
             }
