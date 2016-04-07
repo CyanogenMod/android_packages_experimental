@@ -269,6 +269,11 @@ public class Listener extends NotificationListenerService {
     }
 
     @Override
+    public void onListenerDisconnected() {
+        Log.w(TAG, "onListenerDisconnected: ");
+    }
+
+    @Override
     public void onNotificationRankingUpdate(RankingMap rankingMap) {
         Log.w(TAG, "onNotificationRankingUpdate");
         Message.obtain(sHandler, MSG_ORDER,
