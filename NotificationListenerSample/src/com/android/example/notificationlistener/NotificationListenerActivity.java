@@ -244,7 +244,7 @@ public class NotificationListenerActivity extends ListActivity {
             if (child == null) {
                 Notification.Builder builder =
                         Notification.Builder.recoverBuilder(mContext, sbn.getNotification());
-                child = builder.makeContentView().apply(mContext, null);
+                child = builder.createContentView().apply(mContext, null);
             }
             container.setTag(sbn);
             container.removeAllViews();
