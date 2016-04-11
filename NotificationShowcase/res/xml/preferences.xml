@@ -61,6 +61,13 @@
             android:entries="@array/priority_names"
             android:entryValues="@array/priority_values"
             android:defaultValue="0"/>
+      <CheckBoxPreference
+              android:persistent="true"
+              android:key="pref_key_sms_once"
+              android:dependency="pref_key_sms_enable"
+              android:summary="@string/pref_summary_sms_once"
+              android:title="@string/pref_title_sms_once"
+              android:defaultValue="true" />
     <CheckBoxPreference
             android:persistent="true"
             android:dependency="pref_key_sms_enable"

@@ -143,7 +143,7 @@ public class NotificationService extends IntentService {
                 .addAction(R.drawable.ic_media_next, context.getString(R.string.sms_reply), ai)
                 .setSmallIcon(R.drawable.stat_notify_talk_text)
                 .setStyle(bigTextStyle)
-                .setOnlyAlertOnce(true);
+                .setOnlyAlertOnce(sharedPref.getBoolean(SettingsActivity.KEY_SMS_ONCE, true));
 
         if (TextUtils.isEmpty(personUri)) {
             Log.w(TAG, "failed to find contact for Mike Cleron");

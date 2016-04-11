@@ -79,6 +79,8 @@
     <string name="pref_title_sms_buzzy">Vibration</string>
     <string name="pref_summary_sms_buzzy">Allow the SMS example to vibrate</string>
     <string name="pref_title_sms_priority">SMS Priority</string>
+    <string name="pref_title_sms_once">Alert Only Once</string>
+    <string name="pref_summary_sms_once">Updates should not interrupt the user.</string>
     <string name="pref_title_sms_person">SMS Person</string>
     <string name="pref_summary_sms_person">Add a person to the SMS notification</string>
 
